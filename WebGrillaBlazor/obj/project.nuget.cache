@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "AlarMTPs/Z0=",
+  "dgSpecHash": "rsCjozTdiMY=",
   "success": true,
-  "projectFilePath": "C:\\Users\\PC\\Documents\\PS\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
+  "projectFilePath": "C:\\Users\\PC\\Documents\\REPOSITORIOWEB\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\PC\\.nuget\\packages\\blazor.bootstrap\\3.3.1\\blazor.bootstrap.3.3.1.nupkg.sha512",
     "C:\\Users\\PC\\.nuget\\packages\\microsoft.aspnetcore.authorization\\7.0.7\\microsoft.aspnetcore.authorization.7.0.7.nupkg.sha512",

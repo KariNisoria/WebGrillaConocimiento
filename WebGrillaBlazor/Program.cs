@@ -29,3 +29,4 @@ builder.Services.AddSingleton(typeof(ApiClientGeneric<>));
 builder.Services.AddBlazorBootstrap();
 
 await builder.Build().RunAsync();
+/*KARI CAMBIO*/
