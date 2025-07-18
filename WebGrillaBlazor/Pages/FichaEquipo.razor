@@ -1,0 +1,179 @@
+﻿@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.ApiClient
+@inject ApiClientGeneric<EquipoDesarrolloDTO> _apiClient
+@inject ApiClientGeneric<ClienteDTO> _apiClient2
+
+@if (_loadedClientes == null)
+{
+    
+}
+else
+{
+    <EditForm EditContext="@editContext" OnValidSubmit="HandleOnValidSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">Id:</label>
+            <label class="col-md-10">@equipo.IdEquipoDesarrollo</label>
+        </div>
+
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">Nombre:</label>
+            <div class="col-md-10">
+                <TextInput @bind-Value="@equipo.Nombre" Placeholder="Ingrese el nombre"></TextInput>
+            </div>
+        </div>
+
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">Cliente:</label>
+            <div class="col-md-10">
+                <InputSelect Value="@selectedIdCliente"
+                             ValueChanged="@((int selectedIdCliente) => OnSelectionChanged(selectedIdCliente))"
+                             ValueExpression="@(()=>selectedIdCliente)">
+
+                    <option value"">--Seleccione un cliente...</option>
+                    @foreach(var item in _loadedClientes)
+                    {
+                        if (selectedIdCliente == item.IdCliente)
+                        {
+                            <option selected value="@item.IdCliente">@item.Nombre</option>
+                        }
+                        <option value="@item.IdCliente">@item.Nombre</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+
+    </EditForm>
+
+    <div class="row">
+        <div class="col-md-12 text-right">
+            <Button Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="ModificarEquipo">Grabar</Button>
+            <Button Type="ButtonType.Button" Color="ButtonColor.Warning" @onclick="EliminarEquipo">Eliminar</Button>
+            <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" @onclick="OnClickCallBack"> Cerrar</Button>
+        </div>
+    </div>
+
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="row mt-3">
+        <Alert Color="AlertColor.Danger">@errorMessage</Alert>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback<MouseEventArgs> OnClickCallBack { get; set; }
+    [Parameter] public EquipoDesarrolloDTO equipo { get; set; }
+    private EditContext editContext;
+
+    private string errorMessage = "";
+    private System.Timers.Timer _timer;
+
+    private List<ClienteDTO> _loadedClientes;
+    private int selectedIdCliente { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine($"OnInitializedAsync() idEquipoDesarrollo: {equipo.IdEquipoDesarrollo}");
+
+        editContext = new EditContext(equipo);
+
+        var existeEquipo = await ExisteEquipo();
+
+        Console.WriteLine($"OnInitializedAsync() existeEquipo: {existeEquipo}");
+
+        if (!existeEquipo)
+        {
+            Console.WriteLine("No existe Equipo");
+            await AltaEquipo();
+        }
+
+        await LoadClientes();
+
+        selectedIdCliente = equipo.IdCliente;
+
+        base.OnInitialized();
+    }
+
+    public void HandleOnValidSubmit()
+    {
+        // additional check
+        if (editContext.Validate())
+        {
+            // do something
+            // submit the form
+            Console.WriteLine("Form submitted successfully");
+        }
+    }
+
+    private async Task<bool> ExisteEquipo()
+    {
+        Console.WriteLine("ExisteEquipo()");
+        var encontrado = await _apiClient.GetByIdAsync(equipo.IdEquipoDesarrollo);
+        if (encontrado == null)
+        {
+            return false;
+        }
+        Console.WriteLine($"ExisteEquipo() variable idEquipo: {encontrado.IdEquipoDesarrollo}");
+        return (encontrado.IdEquipoDesarrollo != null);
+    }
+
+    private async Task AltaEquipo()
+    {
+        Console.WriteLine("AltaEquipo()");
+        var nuevo = await _apiClient.CreateAsync(equipo);
+        equipo.IdEquipoDesarrollo = nuevo.IdEquipoDesarrollo;
+
+    }
+
+    private async Task ModificarEquipo()
+    {
+        Console.WriteLine("ModificarEquipo()");
+        await _apiClient.UpdateAsync(equipo.IdEquipoDesarrollo, equipo);
+    }
+
+    private async Task EliminarEquipo()
+    {
+        Console.WriteLine("EliminarEquipo()");
+        //var resultado = await _apiClient.DeleteAsync(equipo.IdEquipoDesarrollo);
+        await _apiClient.DeleteAsync(equipo.IdEquipoDesarrollo);
+
+        /*if (!resultado.IsSuccess)
+        {
+        Console.WriteLine("Error en el borrado");
+        errorMessage = resultado.Error; //muestra el mensaje de la api
+
+        // Inicia Temporizador
+        _timer = new System.Timers.Timer(3000); // 3000ms = 3 segundos
+        _timer.Elapsed += async (sender, e) =>
+            {
+            errorMessage = ""; // retorna a vacio
+        StateHasChanged();
+        };
+        _timer.Start();
+    }
+    else*/
+        {
+            // Notificar al componente padre para cerrar la ficha
+            if (OnClickCallBack.HasDelegate)
+            {
+                await OnClickCallBack.InvokeAsync(null); // Dispara el callback
+            }
+        }
+
+    }
+
+    private async Task LoadClientes()
+    {
+        Console.WriteLine("LoadClientes()");
+        _loadedClientes = await _apiClient2.GetAllAsync();
+    }
+
+    private void OnSelectionChanged(int newValue)
+    {
+        selectedIdCliente = newValue;
+        equipo.IdCliente = selectedIdCliente;
+    }
+}

@@ -1,0 +1,272 @@
+﻿@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.ApiClient
+@inject ApiClientRecurso _apiClient
+@inject ApiClientGeneric<RolDTO> _apiClientRol
+@inject ApiClientGeneric<TipoDocumentoDTO> _apiClientTipo
+@inject ApiClientGeneric<EquipoDesarrolloDTO> _apiClientEquipoDesarrollo
+
+@if (_loadedRol == null || _loadedTipo == null || _loadedEquipo == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <EditForm EditContext="@editContext" OnValidSubmit="HandleOnValidSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">Id:</label>
+            <label class="col-md-10">@recurso.IdRecurso</label>
+        </div>
+
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">Nombre:</label>
+            <div class="col-md-10">
+                <TextInput @bind-Value="@recurso.Nombre" Placeholder="Ingrese el nombre"></TextInput>
+            </div>
+        </div>
+
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">Apellido:</label>
+            <div class="col-md-10">
+                <TextInput @bind-Value="@recurso.Apellido" Placeholder="Ingrese el apellido"></TextInput>
+            </div>
+        </div>
+
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">Fecha de Ingreso:</label>
+            <div class="col-md-10">
+                <DateInput @bind-Value="@recurso.FechaIngreso" Placeholder="Ingrese la fecha de ingreso"></DateInput>
+            </div>
+        </div>
+
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">Tipo Documento:</label>
+            <div class="col-md-10">
+                <InputSelect Value="@selectedIdTipo"
+                             ValueChanged="@((int selectedIdTipo) => OnSelectionRolChanged(selectedIdTipo))"
+                             ValueExpression="@(()=>selectedIdTipo)">
+
+                    <option value"">--Seleccione un tipo documento...</option>
+                    @foreach (var item in _loadedTipo)
+                    {
+                        if (selectedIdTipo == item.IdTipoDocumento)
+                        {
+                            <option selected value="@item.IdTipoDocumento">@item.Nombre</option>
+                        }
+                        <option value="@item.IdTipoDocumento">@item.Nombre</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">Numero Documento:</label>
+            <div class="col-md-10">
+                <NumberInput @bind-Value="@recurso.NumeroDocumento" Placeholder="Ingrese el numero de documento"></NumberInput>
+            </div>
+        </div>
+
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">Correo Electronico:</label>
+            <div class="col-md-10">
+                <TextInput @bind-Value="@recurso.CorreoElectronico" Placeholder="Ingrese el correo electronico"></TextInput>
+            </div>
+        </div>
+
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">Perfil Seguridad:</label>
+            <div class="col-md-10">
+                <TextInput @bind-Value="@recurso.PerfilSeguridad" Placeholder="Ingrese el perfil"></TextInput>
+            </div>
+        </div>
+
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">Equipo:</label>
+            <div class="col-md-10">
+                <InputSelect Value="@selectedIdEquipo"
+                             ValueChanged="@((int selectedIdEquipo) => OnSelectionEquipoChanged(selectedIdEquipo))"
+                             ValueExpression="@(()=>selectedIdEquipo)">
+
+                    <option value"">--Seleccione un equipo...</option>
+                    @foreach (var item in _loadedEquipo)
+                    {
+                        if (selectedIdRol == item.IdEquipoDesarrollo)
+                        {
+                            <option selected value="@item.IdEquipoDesarrollo">@item.Nombre</option>
+                        }
+                        <option value="@item.IdEquipoDesarrollo">@item.Nombre</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">Rol:</label>
+            <div class="col-md-10">
+                <InputSelect Value="@selectedIdRol"
+                             ValueChanged="@((int selectedIdRol) => OnSelectionRolChanged(selectedIdRol))"
+                             ValueExpression="@(()=>selectedIdRol)">
+
+                    <option value"">--Seleccione un rol...</option>
+                    @foreach (var item in _loadedRol)
+                    {
+                        if (selectedIdRol == item.IdRol)
+                        {
+                            <option selected value="@item.IdRol">@item.Nombre</option>
+                        }
+                        <option value="@item.IdRol">@item.Nombre</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+
+    </EditForm>
+
+    <div class="row">
+        <div class="col-md-12 text-right">
+            <Button Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="ModificarRecurso">Grabar</Button>
+            <Button Type="ButtonType.Button" Color="ButtonColor.Warning" @onclick="EliminarRecurso">Eliminar</Button>
+            <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" @onclick="OnClickCallBack"> Cerrar</Button>
+        </div>
+    </div>
+
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="row mt-3">
+        <Alert Color="AlertColor.Danger">@errorMessage</Alert>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback<MouseEventArgs> OnClickCallBack { get; set; }
+    [Parameter] public RecursoDTO recurso { get; set; }
+    private EditContext editContext;
+
+    private string errorMessage = "";
+    private System.Timers.Timer _timer;
+
+    private List<RolDTO> _loadedRol;
+    private List<EquipoDesarrolloDTO> _loadedEquipo;
+    private List<TipoDocumentoDTO> _loadedTipo;
+
+    private int selectedIdRol { get; set; }
+    private int selectedIdTipo { get; set; }
+    private int selectedIdEquipo { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine($"OnInitializedAsync() idRecurso: {recurso.IdRecurso}");
+
+        editContext = new EditContext(recurso);
+
+        var existeRecurso = await ExisteRecurso();
+
+        Console.WriteLine($"OnInitializedAsync() existeRecurso: {existeRecurso}");
+
+        if (!existeRecurso)
+        {
+            Console.WriteLine("No existe Recurso");
+            await AltaRecurso();
+        }
+
+        await LoadRol();
+        await LoadTipo();
+        await LoadEquipo();
+
+        selectedIdRol = recurso.IdRol;
+        selectedIdTipo = recurso.IdTipoDocumento;
+        selectedIdEquipo = recurso.IdEquipoDesarrollo;
+
+        base.OnInitialized();
+    }
+
+    public void HandleOnValidSubmit()
+    {
+        // additional check
+        if (editContext.Validate())
+        {
+            // do something
+            // submit the form
+            Console.WriteLine("Form submitted successfully");
+        }
+    }
+
+    private async Task<bool> ExisteRecurso()
+    {
+        Console.WriteLine("ExisteRecurso()");
+        var encontrado = await _apiClient.GetByIdAsync(recurso.IdRecurso);
+        if (encontrado == null)
+        {
+            return false;
+        }
+        Console.WriteLine($"ExisteRecurso() variable idRecurso: {encontrado.IdRecurso}");
+        return (encontrado.IdRecurso!= null);
+    }
+
+    private async Task AltaRecurso()
+    {
+        Console.WriteLine("AltaRecurso()");
+        var nuevo = await _apiClient.CreateAsync(recurso);
+        recurso.IdRecurso= nuevo.IdRecurso;
+
+    }
+
+    private async Task ModificarRecurso()
+    {
+        Console.WriteLine("ModificarRecurso()");
+        await _apiClient.UpdateAsync(recurso.IdRecurso, recurso);
+    }
+
+    private async Task EliminarRecurso()
+    {
+        Console.WriteLine("EliminarRecurso()");
+        await _apiClient.DeleteAsync(recurso.IdRecurso);
+        {
+            // Notificar al componente padre para cerrar la ficha
+            if (OnClickCallBack.HasDelegate)
+            {
+                await OnClickCallBack.InvokeAsync(null); // Dispara el callback
+            }
+        }
+
+    }
+
+    private async Task LoadRol()
+    {
+        Console.WriteLine("LoadRol()");
+        _loadedRol = await _apiClientRol.GetAllAsync();
+    }
+
+    private async Task LoadTipo()
+    {
+        Console.WriteLine("LoadTipo()");
+        _loadedTipo = await _apiClientTipo.GetAllAsync();
+    }
+
+    private async Task LoadEquipo()
+    {
+        Console.WriteLine("LoadEquipo()");
+        _loadedEquipo = await _apiClientEquipoDesarrollo.GetAllAsync();
+    }
+
+    private void OnSelectionRolChanged(int newValue)
+    {
+        selectedIdRol = newValue;
+        recurso.IdRol = selectedIdRol;
+    }
+
+    private void OnSelectionTipoChanged(int newValue)
+    {
+        selectedIdTipo = newValue;
+        recurso.IdTipoDocumento = selectedIdTipo;
+    }
+
+    private void OnSelectionEquipoChanged(int newValue)
+    {
+        selectedIdEquipo = newValue;
+        recurso.IdEquipoDesarrollo = selectedIdEquipo;
+    }
+}

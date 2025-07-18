@@ -1,0 +1,133 @@
+﻿@page "/roles"
+@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.ApiClient
+@inject ApiClientGeneric<RolDTO> ApiClient
+
+<h3>Gestion de Roles</h3>
+
+<div class="row mb-3">
+    <div class="col-2">
+        <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddRol">+Rol</Button>
+    </div>
+</div>
+
+<!-- Grilla de roles -->
+
+<Grid @ref="gridRol"
+      TItem="RolDTO"
+      Class="table table-hover table-bordered table-striped"
+      DataProvider="GetAllRoles"
+      AllowPaging="true"
+      PageSize="5"
+      AllowSorting="true"
+      AllowRowClick="true"
+      OnRowDoubleClick="OnRolDobleClick"
+      SelectionMode="GridSelectionMode.Single"
+      Responsive="true">
+
+    <GridColumns>
+        <GridColumn TItem="RolDTO" HeaderText="IdRol" PropertyName="IdRol" SortKeySelector="item => item.IdRol">
+            @context.IdRol
+        </GridColumn>
+
+        <GridColumn TItem="RolDTO" HeaderText="Nombre" PropertyName="Descripcion" SortKeySelector="item => item.Nombre">
+            @context.Nombre
+        </GridColumn>
+    </GridColumns>
+</Grid>
+
+<!-- Ficha Edicion Rol -->
+<Modal @ref="_EdicionRol" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
+
+
+@code {
+    private IEnumerable<RolDTO> roles = default!;
+    private int currentIdRol = 0;    
+
+    private Modal _EdicionRol = default!;
+
+    private Grid<RolDTO> gridRol = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("OnInitializedAsync");
+
+        await base.OnInitializedAsync();
+
+    }
+
+    private async Task<GridDataProviderResult<RolDTO>> GetAllRoles(GridDataProviderRequest<RolDTO> request)
+    {
+        Console.WriteLine("GetAllRoles");
+
+        if (roles is null) // pull employees only one time for client-side filtering, sorting, and paging
+            roles = await ApiClient.GetAllAsync(); // call a service or an API to pull the employees
+
+        return await Task.FromResult(request.ApplyTo(roles));
+    }
+
+    //-----------------------------
+    // Para la creacion de un rol
+    //-----------------------------
+
+    private async Task AddRol()
+    {
+        var lista = roles.ToList();
+        var nuevo = CreateRol();
+        lista.Add(nuevo);
+        roles = lista;
+        await gridRol.RefreshDataAsync();
+    }
+
+    private RolDTO CreateRol()
+    {
+        var numero = roles!.Max(x => x.IdRol) + 1;
+
+        var nuevo = new RolDTO();
+
+        nuevo.IdRol = 0;
+        nuevo.Nombre = $"Nuevo Rol {numero}";
+
+        return nuevo;
+    }
+
+    //----------------------------
+    // Para la edicion de un rol
+    //----------------------------
+
+    private async Task OnRolDobleClick(GridRowEventArgs<RolDTO> args)
+    {
+        Console.WriteLine("Evento OnRolClick");
+        var param = new Dictionary<string, object>();
+        param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionRol));
+        param.Add("rol", args.Item);
+        await _EdicionRol.ShowAsync<FichaRol>(title: "Edicion Rol", parameters: param);
+
+    }
+
+    private async Task OnCloseModalEdicionRol()
+    {
+        Console.WriteLine("OnCloseModalEdicionRol()");
+        await _EdicionRol.HideAsync(); // Ocultar el formulario de Edicion
+        await RefreshGrid(); // Refrescar la grilla
+
+    }
+
+    private async Task RefreshGrid()
+    {
+        roles = null; // Limpiar la caché local de roles
+        await gridRol.RefreshDataAsync();
+        StateHasChanged(); // Forzar la actualización de la grilla
+    }
+
+    //-------------------
+    // Prueba de Onclick
+    //-------------------
+
+    private async Task OnRowClick(GridRowEventArgs<RolDTO> args)
+    {
+        Console.WriteLine($"OnRowClick Rol current: {currentIdRol} nuevo: {args.Item.IdRol} ");
+        currentIdRol = args.Item.IdRol;
+    }
+
+}

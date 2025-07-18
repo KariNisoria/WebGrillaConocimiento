@@ -1,0 +1,129 @@
+﻿@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.ApiClient
+@inject ApiClientGeneric<ClienteDTO> _apiClient
+
+<EditForm EditContext="@editContext" OnValidSubmit="HandleOnValidSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="form-group row mb-3">
+        <label class="col-md-2 col-form-label">Id:</label>
+        <label class="col-md-10">@cliente.IdCliente</label>
+    </div>
+
+    <div class="form-group row mb-3">
+        <label class="col-md-2 col-form-label">Nombre:</label>
+        <div class="col-md-10">
+            <TextInput @bind-Value="@cliente.Nombre" Placeholder="Ingrese el nombre"></TextInput>
+        </div>
+    </div>
+
+</EditForm>
+
+<div class="row">
+    <div class="col-md-12 text-right">
+        <Button Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="ModificarCliente">Grabar</Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Warning" @onclick="EliminarCliente">Eliminar</Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" @onclick="OnClickCallBack"> Cerrar</Button>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="row mt-3">
+        <Alert Color="AlertColor.Danger">@errorMessage</Alert>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback<MouseEventArgs> OnClickCallBack { get; set; }
+    [Parameter] public ClienteDTO cliente { get; set; }
+    private EditContext editContext;
+
+    private string errorMessage = "";
+    private System.Timers.Timer _timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine($"OnInitializedAsync() idCliente: {cliente.IdCliente}");
+
+        editContext = new EditContext(cliente);
+
+        var existeCliente = await ExisteCliente();
+
+        Console.WriteLine($"OnInitializedAsync() existeCliente: {existeCliente}");
+
+        if (!existeCliente)
+        {
+            await AltaCliente();
+        }
+
+        base.OnInitialized();
+    }
+
+    public void HandleOnValidSubmit()
+    {
+        // additional check
+        if (editContext.Validate())
+        {
+            // do something
+            // submit the form
+            Console.WriteLine("Form submitted successfully");
+        }
+    }
+
+    private async Task<bool> ExisteCliente()
+    {
+        var encontrado = await _apiClient.GetByIdAsync(cliente.IdCliente);
+        if (encontrado == null)
+        {
+            return false;
+        }
+        Console.WriteLine($"ExisteCliente() variable idCliente: {encontrado.IdCliente}");
+        return (encontrado.IdCliente != null);
+    }
+
+    private async Task AltaCliente()
+    {
+        Console.WriteLine("AltaCliente()");
+        var nuevo = await _apiClient.CreateAsync(cliente);
+        cliente.IdCliente = nuevo.IdCliente;
+
+    }
+
+    private async Task ModificarCliente()
+    {
+        Console.WriteLine("ModificarCliente()");
+        await _apiClient.UpdateAsync(cliente.IdCliente, cliente);
+    }
+
+    private async Task EliminarCliente()
+    {
+        Console.WriteLine("EliminarCliente()");
+        //var resultado = await _apiClient.DeleteAsync(cliente.IdCliente);
+        await _apiClient.DeleteAsync(cliente.IdCliente);
+
+        /*if (!resultado.IsSuccess)
+        {
+            Console.WriteLine("Error en el borrado");
+            errorMessage = resultado.Error; //muestra el mensaje de la api
+
+            // Inicia Temporizador
+            _timer = new System.Timers.Timer(3000); // 3000ms = 3 segundos
+            _timer.Elapsed += async (sender, e) =>
+            {
+                errorMessage = ""; // retorna a vacio
+                StateHasChanged();
+            };
+            _timer.Start();
+        }
+        else*/
+        {
+            // Notificar al componente padre para cerrar la ficha
+            if (OnClickCallBack.HasDelegate)
+            {
+                await OnClickCallBack.InvokeAsync(null); // Dispara el callback
+            }
+        }
+
+    }
+}

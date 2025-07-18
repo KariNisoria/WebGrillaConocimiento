@@ -1,0 +1,269 @@
+﻿@page "/temas"
+@using WebGrillaBlazor.DTOs
+@inject WebGrillaBlazor.ApiClient.ApiClientTema ApiClient
+@inject WebGrillaBlazor.ApiClient.ApiClientSubtema ApiClient2
+
+<div class="row mb-3">
+    <div class="col-2">
+        <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddTema">+Tema</Button>
+    </div>
+</div>
+
+<!-- Grilla de temas -->
+
+<Grid 
+      @ref="gridTema"
+      TItem="TemaDTO"
+      Class="table table-hover table-bordered table-striped"
+      DataProvider="GetAllTemas"
+      AllowPaging="true"
+      PageSize="10"
+      AllowDetailView="true"
+      AllowSorting="true"
+      AllowRowClick="true"
+      OnRowClick="OnRowClick"
+      OnRowDoubleClick="OnTemaDobleClick"
+      SelectionMode="GridSelectionMode.Single"
+      Responsive="true">
+      
+      <GridColumns>
+            <GridColumn TItem="TemaDTO" HeaderText="IdTema" PropertyName="IdTema" SortKeySelector="item => item.IdTema">
+                @context.IdTema
+            </GridColumn>
+
+            <GridColumn TItem="TemaDTO" HeaderText="Nombre" PropertyName="Descripcion" SortKeySelector="item => item.Nombre">
+                @context.Nombre
+            </GridColumn>
+
+            <GridColumn TItem="TemaDTO" HeaderText="Orden" PropertyName="Orden" SortKeySelector="item => item.Orden">
+                @context.Orden
+            </GridColumn>
+      </GridColumns>
+
+      <GridDetailView TItem="TemaDTO">
+          <div class="row mb-3">
+              <div class="col-2">
+                <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="()=>AddSubtema(context.IdTema)">+Subtema</Button>
+              </div>
+          </div>
+          <Grid 
+              @ref="gridSubtema"
+              TItem="SubtemaDTO"
+              AllowRowClick="true"
+              Class="table table-hover border-top"
+              Data="GetSubtemas(context.IdTema)"
+              OnRowClick="OnRowClick"
+              OnRowDoubleClick="OnSubtemaDobleClick">
+
+              <GridColumns>
+                  <GridColumn TItem="SubtemaDTO" Context="subtema" HeaderText="IdSubtema" PropertyName="IdSubtema">
+                      @subtema.IdSubtema
+                  </GridColumn>
+                <GridColumn TItem="SubtemaDTO" Context="subtema" HeaderText="Nombre" PropertyName="Nombre">
+                    @subtema.Nombre
+                </GridColumn>
+                <GridColumn TItem="SubtemaDTO" Context="subtema" HeaderText="Orden" PropertyName="Orden">
+                    @subtema.Orden
+                </GridColumn>
+              </GridColumns>
+          </Grid>
+      </GridDetailView>
+
+
+</Grid>
+
+<!-- Ficha Edicion Tema -->
+<Modal @ref="_EdicionTema" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
+
+<!-- Ficha Edicion Tema -->
+<Modal @ref="_EdicionSubtema" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
+
+@code {
+    private IEnumerable<TemaDTO> temas= default!;
+    private IEnumerable<SubtemaDTO> subtemas = default!;
+
+    private Modal _AltaTema = default!;
+    private Modal _EdicionTema = default!;
+    private Modal _EdicionSubtema = default!;
+
+    private Grid<TemaDTO> gridTema = default!;
+    private Grid<SubtemaDTO> gridSubtema = default!;
+
+    private int currentIdTema = 0;
+    private int currentIdSubtema = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("OnInitializedAsync");
+
+        subtemas = await GetAllSubtemas(); // Dispara Api de subtemas totales
+
+        await base.OnInitializedAsync();
+
+    }
+
+    private async Task<GridDataProviderResult<TemaDTO>> GetAllTemas(GridDataProviderRequest<TemaDTO> request)
+    {
+        Console.WriteLine("GetAllTemas");
+
+        if (temas is null) // pull employees only one time for client-side filtering, sorting, and paging
+            temas = await ApiClient.GetAllTemasAsync(); // call a service or an API to pull the employees
+
+        return await Task.FromResult(request.ApplyTo(temas));
+    }
+
+    private async Task<IEnumerable<SubtemaDTO>> GetAllSubtemas()
+    {
+        Console.WriteLine($"GetAllSubtemas");
+
+        var resultado = await ApiClient2.GetAllSubtemas(); // Recuperar los subtemas
+
+        return resultado; // Asigna el resultado subtemas
+
+    }
+
+    private IEnumerable<SubtemaDTO> GetSubtemas(int idTema)
+    {
+        Console.WriteLine($"GetSubtemas idTema: {idTema}");
+
+        // Verifica si subtemas es null
+        if (subtemas == null)
+        {
+            Console.WriteLine("La lista de subtemas es null. Devolviendo lista vacía.");
+            return Enumerable.Empty<SubtemaDTO>(); // Retorna una colección vacía
+        }
+
+        // Filtra subtemas por el IdTema recibido
+        return subtemas.Where(x => x.IdTema == idTema);
+    }
+
+    //-----------------------------
+    // Para la creacion de un tema
+    //-----------------------------
+
+    private async Task AddTema()
+    {
+        var lista = temas.ToList();
+        var nuevo = CreateTema();
+        lista.Add(nuevo);
+        temas = lista;
+        await gridTema.RefreshDataAsync();
+    }
+
+    private TemaDTO CreateTema()
+    {
+        var numero = temas!.Max(x => x.IdTema) + 1;
+
+        var nuevo = new TemaDTO();
+
+        nuevo.IdTema = 0;
+        nuevo.Nombre = $"Nuevo Tema {numero}";
+        nuevo.Orden = temas!.Max(x => x.Orden) + 1;
+
+        return nuevo;
+    }
+
+    //--------------------------------
+    // Para la creacion de un subtema 
+    //--------------------------------
+
+    private async Task AddSubtema(int idTema)
+    {
+        var lista = subtemas.ToList();
+        lista.Add(CreateSubtema(idTema));
+        subtemas = lista;
+        await gridSubtema.RefreshDataAsync();
+    }
+
+    private SubtemaDTO CreateSubtema(int idTema)
+    {
+
+        var numero = subtemas!.Max(x => x.IdSubtema) + 1;
+
+        var nuevo = new SubtemaDTO();
+
+        nuevo.IdSubtema = 0;
+        nuevo.Nombre = $"Nuevo Subtema {numero}";
+        nuevo.Orden = 0;
+        nuevo.IdTema = idTema;
+
+        return nuevo;
+    }
+
+    //----------------------------
+    // Para la edicion de un tema
+    //----------------------------
+
+    private async Task OnTemaDobleClick(GridRowEventArgs<TemaDTO> args)
+    {
+        Console.WriteLine("Evento OnTemaClick");
+        var param = new Dictionary<string, object>();
+        param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionTema));
+        param.Add("tema", args.Item);
+        await _EdicionTema.ShowAsync<FichaTema>(title: "Edicion Tema", parameters: param);
+
+    }
+
+    private async Task OnCloseModalEdicionTema()
+    {
+        Console.WriteLine("OnCloseModalEdicionTema()");
+        await _EdicionTema.HideAsync(); // Ocultar el formulario de Edicion
+        await RefreshGrid(); // Refrescar la grilla
+
+    }
+
+    private async Task RefreshGrid()
+    {
+        temas = null; // Limpiar la caché local de temas
+        await gridTema.RefreshDataAsync();
+        StateHasChanged(); // Forzar la actualización de la grilla
+    }
+
+    //-------------------------------
+    // Para la edicion de un subtema
+    //-------------------------------
+
+    private async Task OnSubtemaDobleClick(GridRowEventArgs<SubtemaDTO> args)
+    {
+        Console.WriteLine("Evento OnSubtemaClick");
+        var param = new Dictionary<string, object>();
+        param.Add("OnClickCallbackSubtema", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionSubtema));
+        param.Add("subtema", args.Item);
+        await _EdicionSubtema.ShowAsync<FichaSubtema>(title: "Edicion Subtema", parameters: param);
+
+    }
+
+    private async Task OnCloseModalEdicionSubtema()
+    {
+        Console.WriteLine("OnCloseModalEdicionSubtema()");
+        await _EdicionSubtema.HideAsync(); // Ocultar el formulario de Edicion
+        await RefreshGridDetail(); // Refrescar la grilla
+
+    }
+
+    private async Task RefreshGridDetail()
+    {
+        subtemas = null; // Limpiar la caché local de subtemas
+        subtemas = await GetAllSubtemas(); // Dispara Api de subtemas totales
+        await gridSubtema.RefreshDataAsync();
+        StateHasChanged(); // Forzar la actualización de la grilla
+    }
+
+    //-------------------
+    // Prueba de Onclick
+    //-------------------
+
+    private async Task OnRowClick(GridRowEventArgs<TemaDTO> args)
+    {
+        Console.WriteLine($"OnRowClick Tema current: {currentIdTema} nuevo: {args.Item.IdTema} ");
+        currentIdTema = args.Item.IdTema;
+        currentIdSubtema = 0;
+    }
+
+    private async Task OnRowClick(GridRowEventArgs<SubtemaDTO> args)
+    {
+        Console.WriteLine($"OnRowClick Subtema current: {currentIdSubtema} nuevo: {args.Item.IdSubtema} ");
+        currentIdSubtema = args.Item.IdSubtema;
+    }
+
+}   

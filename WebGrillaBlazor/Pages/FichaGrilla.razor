@@ -1,0 +1,129 @@
+﻿@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.ApiClient
+@inject ApiClientGeneric<GrillaDTO> _apiClient
+
+<EditForm EditContext="@editContext" OnValidSubmit="HandleOnValidSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="form-group row mb-3">
+        <label class="col-md-2 col-form-label">Id:</label>
+        <label class="col-md-10">@grilla.IdGrilla</label>
+    </div>
+
+    <div class="form-group row mb-3">
+        <label class="col-md-2 col-form-label">Nombre:</label>
+        <div class="col-md-10">
+            <TextInput @bind-Value="@grilla.Nombre" Placeholder="Ingrese el nombre"></TextInput>
+        </div>
+    </div>
+
+    <div class="form-group row mb-3">
+        <label class="col-md-2 col-form-label">Descripcion:</label>
+        <div class="col-md-10">
+            <TextInput @bind-Value="@grilla.Descripcion" Placeholder="Ingrese la descripcion"></TextInput>
+        </div>
+    </div>
+
+    <div class="form-group row mb-3">
+        <label class="col-md-2 col-form-label">FechaVigencia:</label>
+        <div class="col-md-10">
+            <DateInput @bind-Value="@grilla.FechaVigencia" Placeholder="Ingrese la fecha de vigencia"></DateInput>
+        </div>
+    </div>
+
+</EditForm>
+
+<div class="row">
+    <div class="col-md-12 text-right">
+        <Button Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="ModificarGrilla">Grabar</Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Warning" @onclick="EliminarGrilla">Eliminar</Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" @onclick="OnClickCallBack"> Cerrar</Button>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="row mt-3">
+        <Alert Color="AlertColor.Danger">@errorMessage</Alert>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback<MouseEventArgs> OnClickCallBack { get; set; }
+    [Parameter] public GrillaDTO grilla { get; set; }
+    private EditContext editContext;
+
+    private string errorMessage = "";
+    private System.Timers.Timer _timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine($"OnInitializedAsync() idGrilla: {grilla.IdGrilla}");
+
+        editContext = new EditContext(grilla);
+
+        var existeGrilla = await ExisteGrilla();
+
+        Console.WriteLine($"OnInitializedAsync() existeGrilla: {existeGrilla}");
+
+        if (!existeGrilla)
+        {
+            Console.WriteLine("No existe Grilla");
+            await AltaGrilla();
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    public void HandleOnValidSubmit()
+    {
+        // additional check
+        if (editContext.Validate())
+        {
+            // do something
+            // submit the form
+            Console.WriteLine("Form submitted successfully");
+        }
+    }
+
+    private async Task<bool> ExisteGrilla()
+    {
+        Console.WriteLine($"ExisteGrilla() {grilla.IdGrilla}");
+        var encontrado = await _apiClient.GetByIdAsync(grilla.IdGrilla);
+        if (encontrado == null)
+        {
+            Console.WriteLine("No existe!");
+            return false;
+        }
+        Console.WriteLine($"ExisteGrilla() variable idGrilla: {encontrado.IdGrilla}");
+        return (encontrado.IdGrilla != null);
+    }
+
+    private async Task AltaGrilla()
+    {
+        Console.WriteLine("AltaGrilla()");
+        var nuevo = await _apiClient.CreateAsync(grilla);
+        grilla.IdGrilla= nuevo.IdGrilla;
+
+    }
+
+    private async Task ModificarGrilla()
+    {
+        Console.WriteLine("ModificarGrilla()");
+        await _apiClient.UpdateAsync(grilla.IdGrilla, grilla);
+    }
+
+    private async Task EliminarGrilla()
+    {
+        Console.WriteLine("EliminarGrilla()");
+        await _apiClient.DeleteAsync(grilla.IdGrilla);
+        {
+            // Notificar al componente padre para cerrar la ficha
+            if (OnClickCallBack.HasDelegate)
+            {
+                await OnClickCallBack.InvokeAsync(null); // Dispara el callback
+            }
+        }
+
+    }
+}

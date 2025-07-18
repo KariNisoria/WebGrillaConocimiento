@@ -1,0 +1,54 @@
+﻿@inherits LayoutComponentBase
+
+<BlazorBootstrapLayout StickyHeader="true">
+    <HeaderSection>
+        <ThemeSwitcher Class="ps-3 ps-lg-2" />
+    </HeaderSection>
+
+    <SidebarSection>
+        <Sidebar2 Href="/"
+                  ImageSrc="https://demos.blazorbootstrap.com/images/logo/logo-white.svg"
+                  Title="Grilla Blazor"
+                  BadgeText="1.0.0"
+                  DataProvider="Sidebar2DataProvider"
+                  WidthUnit="Unit.Px" />
+    </SidebarSection>
+
+    <ContentSection>
+        @Body
+    </ContentSection>
+
+    <FooterSection>
+        Footer links...
+    </FooterSection>
+</BlazorBootstrapLayout>
+
+@code {
+    private IEnumerable<NavItem> navItems = default!;
+
+    private async Task<Sidebar2DataProviderResult> Sidebar2DataProvider(Sidebar2DataProviderRequest request)
+    {
+        if (navItems is null)
+            navItems = GetNavItems();
+
+        return await Task.FromResult(request.ApplyTo(navItems));
+    }
+
+    private IEnumerable<NavItem> GetNavItems()
+    {
+        navItems = new List<NavItem>
+        {
+            new NavItem { Id = "1", Href = "/", IconName = IconName.HouseDoorFill, Text = "Home", Match=NavLinkMatch.All},
+            new NavItem { Id = "2", Href = "/Clientes", IconName = IconName.Table, Text = "Clientes"},
+            new NavItem { Id = "3", Href = "/Temas", IconName = IconName.Table, Text = "Temas"},
+            new NavItem { Id = "4", Href = "/Roles", IconName = IconName.Table, Text = "Roles"},
+            new NavItem { Id = "5", Href = "/Tipos", IconName = IconName.Table, Text = "Tipos de Documento"},
+            new NavItem { Id = "6", Href = "/Equipos", IconName = IconName.Table, Text = "Equipos"},
+            new NavItem { Id = "6", Href = "/Recursos", IconName = IconName.Table, Text = "Recursos"},
+            new NavItem { Id = "7", Href = "/Grillas", IconName = IconName.Table, Text = "Grillas"},
+            new NavItem { Id = "8", Href = "/Prueba01", IconName = IconName.Table, Text = "Prueba"},
+        };
+
+        return navItems;
+    }
+}

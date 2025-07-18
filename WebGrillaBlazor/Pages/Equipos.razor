@@ -1,0 +1,135 @@
+﻿@page "/equipos"
+@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.ApiClient
+@inject ApiClientGeneric<EquipoDesarrolloDTO> ApiClient
+
+<h3>Gestion de Equipos</h3>
+
+<div class="row mb-3">
+    <div class="col-2">
+        <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddEquipo">+Equipo</Button>
+    </div>
+</div>
+
+<!-- Grilla de Equipos -->
+
+<Grid @ref="gridEquipo"
+      TItem="EquipoDesarrolloDTO"
+      Class="table table-hover table-bordered table-striped"
+      DataProvider="GetAllEquipos"
+      AllowPaging="true"
+      PageSize="5"
+      AllowSorting="true"
+      AllowRowClick="true"
+      OnRowDoubleClick="OnEquipoDobleClick"
+      SelectionMode="GridSelectionMode.Single"
+      Responsive="true">
+
+    <GridColumns>
+        <GridColumn TItem="EquipoDesarrolloDTO" HeaderText="IdEquipoDesarrollo" PropertyName="IdEquipoDesarrollo" SortKeySelector="item => item.IdEquipoDesarrollo">
+            @context.IdEquipoDesarrollo
+        </GridColumn>
+
+        <GridColumn TItem="EquipoDesarrolloDTO" HeaderText="Nombre" PropertyName="Descripcion" SortKeySelector="item => item.Nombre">
+            @context.Nombre
+        </GridColumn>
+
+    </GridColumns>
+</Grid>
+
+<!-- Ficha Edicion Rol -->
+<Modal @ref="_EdicionEquipo" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
+
+
+@code {
+    private IEnumerable<EquipoDesarrolloDTO> equipos = default!;
+    private int currentIdEquipo = 0;
+
+    private Modal _EdicionEquipo = default!;
+
+    private Grid<EquipoDesarrolloDTO> gridEquipo = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("OnInitializedAsync");
+
+        await base.OnInitializedAsync();
+
+    }
+
+    private async Task<GridDataProviderResult<EquipoDesarrolloDTO>> GetAllEquipos(GridDataProviderRequest<EquipoDesarrolloDTO> request)
+    {
+        Console.WriteLine("GetAllEquipos");
+
+        if (equipos is null) // pull employees only one time for client-side filtering, sorting, and paging
+            equipos = await ApiClient.GetAllAsync(); // call a service or an API to pull the employees
+
+        return await Task.FromResult(request.ApplyTo(equipos));
+    }
+
+    //-------------------------------
+    // Para la creacion de un Equipo
+    //-------------------------------
+
+    private async Task AddEquipo()
+    {
+        var lista = equipos.ToList();
+        var nuevo = CreateEquipo();
+        lista.Add(nuevo);
+        equipos = lista;
+        await gridEquipo.RefreshDataAsync();
+    }
+
+    private EquipoDesarrolloDTO CreateEquipo()
+    {
+        var numero = equipos!.Max(x => x.IdEquipoDesarrollo) + 1;
+
+        var nuevo = new EquipoDesarrolloDTO();
+
+        nuevo.IdEquipoDesarrollo = 0;
+        nuevo.Nombre = $"Nuevo Equipo {numero}";
+        nuevo.IdCliente = 1;
+
+        return nuevo;
+    }
+
+    //------------------------------
+    // Para la edicion de un Equipo
+    //------------------------------
+
+    private async Task OnEquipoDobleClick(GridRowEventArgs<EquipoDesarrolloDTO> args)
+    {
+        Console.WriteLine("Evento OnEquipoDobleClick");
+        var param = new Dictionary<string, object>();
+        param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionEquipo));
+        param.Add("equipo", args.Item);
+        await _EdicionEquipo.ShowAsync<FichaEquipo>(title: "Edicion Equipo", parameters: param);
+
+    }
+
+    private async Task OnCloseModalEdicionEquipo()
+    {
+        Console.WriteLine("OnCloseModalEdicionEquipo()");
+        await _EdicionEquipo.HideAsync(); // Ocultar el formulario de Edicion
+        await RefreshGrid(); // Refrescar la grilla
+
+    }
+
+    private async Task RefreshGrid()
+    {
+        equipos= null; // Limpiar la caché local de equipos
+        await gridEquipo.RefreshDataAsync();
+        StateHasChanged(); // Forzar la actualización de la grilla
+    }
+
+    //-------------------
+    // Prueba de Onclick
+    //-------------------
+
+    private async Task OnRowClick(GridRowEventArgs<EquipoDesarrolloDTO> args)
+    {
+        Console.WriteLine($"OnRowClick Equipo current: {currentIdEquipo} nuevo: {args.Item.IdEquipoDesarrollo} ");
+        currentIdEquipo = args.Item.IdEquipoDesarrollo;
+    }
+
+}

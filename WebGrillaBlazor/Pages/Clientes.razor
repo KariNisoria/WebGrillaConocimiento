@@ -1,0 +1,134 @@
+﻿@page "/clientes"
+@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.ApiClient
+@inject ApiClientGeneric<ClienteDTO> ClienteClient
+
+<h3>Gestion de Clientes</h3>
+
+<div class="row mb-3">
+    <div class="col-2">
+        <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddCliente">+Cliente</Button>
+    </div>
+</div>
+
+<Grid @ref="gridCliente"
+      TItem="ClienteDTO"
+      Class="table table-hover table-bordered table-striped"
+      DataProvider="GetAllClientes"
+      AllowPaging="true"
+      PageSize="5"
+      AllowSorting="true"
+      AllowRowClick="true"
+      OnRowDoubleClick="OnClienteDobleClick"
+      SelectionMode="GridSelectionMode.Single"
+      Responsive="true">
+
+    <GridColumns>
+        <GridColumn TItem="ClienteDTO" HeaderText="IdCliente" PropertyName="IdCliente" SortKeySelector="item => item.IdCliente">
+            @context.IdCliente
+        </GridColumn>
+
+        <GridColumn TItem="ClienteDTO" HeaderText="Nombre" PropertyName="Descripcion" SortKeySelector="item => item.Nombre">
+            @context.Nombre
+        </GridColumn>
+
+    </GridColumns>
+
+      
+</Grid>
+
+<!-- Ficha Edicion Cliente -->
+<Modal @ref="_EdicionCliente" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
+
+
+@code {
+    private List<ClienteDTO> clientes;
+    private int currentIdCliente = 0;
+
+    private Modal _EdicionCliente = default!;
+
+    private Grid<ClienteDTO> gridCliente = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("OnInitializedAsync");
+        clientes = await ClienteClient.GetAllAsync();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task<GridDataProviderResult<ClienteDTO>> GetAllClientes(GridDataProviderRequest<ClienteDTO> request)
+    {
+        Console.WriteLine("GetAllClientes");
+
+        if (clientes is null) // pull employees only one time for client-side filtering, sorting, and paging
+            clientes = await ClienteClient.GetAllAsync(); // call a service or an API to pull the employees
+
+        return await Task.FromResult(request.ApplyTo(clientes));
+    }
+
+    //-----------------------------
+    // Para la creacion de un cliente
+    //-----------------------------
+
+    private async Task AddCliente()
+    {
+        var lista = clientes.ToList();
+        var nuevo = CreateCliente();
+        lista.Add(nuevo);
+        clientes = lista;
+        await gridCliente.RefreshDataAsync();
+    }
+
+    private ClienteDTO CreateCliente()
+    {
+        var numero = clientes!.Max(x => x.IdCliente) + 1;
+
+        var nuevo = new ClienteDTO();
+
+        nuevo.IdCliente = 0;
+        nuevo.Nombre = $"Nuevo Cliente {numero}";
+
+        return nuevo;
+    }
+
+    //------------------------------
+    // Para la edicion de un cliente
+    //------------------------------
+
+    private async Task OnClienteDobleClick(GridRowEventArgs<ClienteDTO> args)
+    {
+        Console.WriteLine("Evento OnClienteClick");
+        var param = new Dictionary<string, object>();
+        param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionCliente));
+        param.Add("cliente", args.Item);
+        await _EdicionCliente.ShowAsync<FichaCliente>(title: "Edicion Cliente", parameters: param);
+
+    }
+
+    private async Task OnCloseModalEdicionCliente()
+    {
+        Console.WriteLine("OnCloseModalEdicionCliente()");
+        await _EdicionCliente.HideAsync(); // Ocultar el formulario de Edicion
+        await RefreshGrid(); // Refrescar la grilla
+
+    }
+
+    private async Task RefreshGrid()
+    {
+        clientes = null; // Limpiar la caché local de clientes
+        await gridCliente.RefreshDataAsync();
+        StateHasChanged(); // Forzar la actualización de la grilla
+    }
+
+    //-------------------
+    // Prueba de Onclick
+    //-------------------
+
+    private async Task OnRowClick(GridRowEventArgs<ClienteDTO> args)
+    {
+        Console.WriteLine($"OnRowClick Cliente current: {currentIdCliente} nuevo: {args.Item.IdCliente} ");
+        currentIdCliente = args.Item.IdCliente;
+    }
+
+
+}

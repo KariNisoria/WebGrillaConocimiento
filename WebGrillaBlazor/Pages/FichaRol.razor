@@ -1,0 +1,131 @@
+﻿@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.ApiClient
+@inject ApiClientGeneric<RolDTO> _apiClient
+
+<EditForm EditContext="@editContext" OnValidSubmit="HandleOnValidSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="form-group row mb-3">
+        <label class="col-md-2 col-form-label">Id:</label>
+        <label class="col-md-10">@rol.IdRol</label>
+    </div>
+
+    <div class="form-group row mb-3">
+        <label class="col-md-2 col-form-label">Nombre:</label>
+        <div class="col-md-10">
+            <TextInput @bind-Value="@rol.Nombre" Placeholder="Ingrese el nombre"></TextInput>
+        </div>
+    </div>
+
+</EditForm>
+
+<div class="row">
+    <div class="col-md-12 text-right">
+        <Button Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="ModificarRol">Grabar</Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Warning" @onclick="EliminarRol">Eliminar</Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" @onclick="OnClickCallBack"> Cerrar</Button>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="row mt-3">
+        <Alert Color="AlertColor.Danger">@errorMessage</Alert>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback<MouseEventArgs> OnClickCallBack { get; set; }
+    [Parameter] public RolDTO rol { get; set; }
+    private EditContext editContext;
+
+    private string errorMessage = "";
+    private System.Timers.Timer _timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine($"OnInitializedAsync() idRol: {rol.IdRol}");
+
+        editContext = new EditContext(rol);
+
+        var existeRol = await ExisteRol();
+
+        Console.WriteLine($"OnInitializedAsync() existeRol: {existeRol}");
+
+        if (!existeRol)
+        {
+            Console.WriteLine("No existe Rol");
+            await AltaRol();
+        }
+
+        base.OnInitialized();
+    }
+
+    public void HandleOnValidSubmit()
+    {
+        // additional check
+        if (editContext.Validate())
+        {
+            // do something
+            // submit the form
+            Console.WriteLine("Form submitted successfully");
+        }
+    }
+
+    private async Task<bool> ExisteRol()
+    {
+        Console.WriteLine("ExisteRol()");
+        var encontrado = await _apiClient.GetByIdAsync(rol.IdRol);
+        if (encontrado == null)
+        {
+            return false;
+        }
+        Console.WriteLine($"ExisteRol() variable idRol: {encontrado.IdRol}");
+        return (encontrado.IdRol != null);
+    }
+
+    private async Task AltaRol()
+    {
+        Console.WriteLine("AltaRol()");
+        var nuevo = await _apiClient.CreateAsync(rol);
+        rol.IdRol = nuevo.IdRol;
+
+    }
+
+    private async Task ModificarRol()
+    {
+        Console.WriteLine("ModificarRol()");
+        await _apiClient.UpdateAsync(rol.IdRol, rol);
+    }
+
+    private async Task EliminarRol()
+    {
+        Console.WriteLine("EliminarRol()");
+        //var resultado = await _apiClient.DeleteAsync(rol.IdRol);
+        await _apiClient.DeleteAsync(rol.IdRol);
+
+        /*if (!resultado.IsSuccess)
+        {
+            Console.WriteLine("Error en el borrado");
+            errorMessage = resultado.Error; //muestra el mensaje de la api
+
+            // Inicia Temporizador
+            _timer = new System.Timers.Timer(3000); // 3000ms = 3 segundos
+            _timer.Elapsed += async (sender, e) =>
+            {
+                errorMessage = ""; // retorna a vacio
+                StateHasChanged();
+            };
+            _timer.Start();
+        }
+        else*/
+        {
+            // Notificar al componente padre para cerrar la ficha
+            if (OnClickCallBack.HasDelegate)
+            {
+                await OnClickCallBack.InvokeAsync(null); // Dispara el callback
+            }
+        }
+
+    }
+}

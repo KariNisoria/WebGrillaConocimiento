@@ -1,0 +1,107 @@
+﻿@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.ApiClient
+@inject ApiClientSubtema _apiClientSubtema
+
+<EditForm EditContext="@editContext" OnValidSubmit="HandleOnValidSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="form-group row mb-3">
+        <label class="col-md-2 col-form-label">Id:</label>
+        <label class="col-md-10">@subtema.IdTema</label>
+    </div>
+
+    <div class="form-group row mb-3">
+        <label class="col-md-2 col-form-label">Nombre:</label>
+        <div class="col-md-10">
+            <TextInput @bind-Value="@subtema.Nombre" Placeholder="Ingrese el nombre"></TextInput>
+        </div>
+    </div>
+
+    <div class="form-group row mb-3">
+        <label class="col-md-2 col-form-label">Orden:</label>
+        <div class="col-md-10">
+            <NumberInput @bind-Value="@subtema.Orden" Placeholder="Ingrese el Orden"></NumberInput>
+        </div>
+    </div>
+
+</EditForm>
+
+<div class="row">
+    <div class="col-md-12 text-right">
+        <Button Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="ModificarSubtema">Grabar</Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Warning" @onclick="EliminarSubtema">Delete</Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" @onclick="OnClickCallBackSubtema"> Cerrar</Button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback<MouseEventArgs> OnClickCallBackSubtema { get; set; }
+    [Parameter] public SubtemaDTO subtema { get; set; }
+    private EditContext editContext;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine($"OnInitializedAsync() idSubtema: {subtema.IdTema}");
+
+        editContext = new EditContext(subtema);
+
+        var existeSubtema = await ExisteSubtema();
+
+        Console.WriteLine($"OnInitializedAsync() existeTema: {existeSubtema}");
+
+        if (!existeSubtema)
+        {
+            await AltaSubtema();
+        }
+
+        base.OnInitialized();
+    }
+
+    public void HandleOnValidSubmit()
+    {
+        // additional check
+        if (editContext.Validate())
+        {
+            // do something
+            // submit the form
+            Console.WriteLine("Form submitted successfully");
+        }
+    }
+
+    private async Task<bool> ExisteSubtema()
+    {
+        var encontrado = await _apiClientSubtema.GetSubtemaByIdAsync(subtema.IdSubtema);
+        if (encontrado == null)
+        {
+            return false;
+        }
+        Console.WriteLine($"ExisteSubtema() variable idTema: {encontrado.IdSubtema}");
+        return (encontrado.IdSubtema != null);
+    }
+
+    private async Task AltaSubtema()
+    {
+        Console.WriteLine("AltaSubtema()");
+        var nuevo = await _apiClientSubtema.AddSubtemaAsync(subtema);
+        subtema.IdSubtema = nuevo.IdSubtema;
+    }
+
+    private async Task ModificarSubtema()
+    {
+        Console.WriteLine("ModificarSubtema()");
+        await _apiClientSubtema.UpdateSubtemaAsync(subtema.IdSubtema, subtema);
+    }
+
+    private async Task EliminarSubtema()
+    {
+        Console.WriteLine("EliminarSubtema()");
+        await _apiClientSubtema.DeleteSubtemaAsync(subtema.IdSubtema);
+
+        // Notificar al componente padre para cerrar la ficha
+        if (OnClickCallBackSubtema.HasDelegate)
+        {
+            await OnClickCallBackSubtema.InvokeAsync(null); // Dispara el callback
+        }
+    }
+
+}

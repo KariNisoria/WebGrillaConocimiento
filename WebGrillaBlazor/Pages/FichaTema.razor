@@ -1,0 +1,135 @@
+﻿@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.ApiClient
+@inject ApiClientTema _apiClientTema
+
+<EditForm EditContext="@editContext" OnValidSubmit="HandleOnValidSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="form-group row mb-3">
+        <label class="col-md-2 col-form-label">Id:</label>
+        <label class="col-md-10">@tema.IdTema</label>
+    </div>
+
+    <div class="form-group row mb-3">
+        <label class="col-md-2 col-form-label">Nombre:</label>
+        <div class="col-md-10">
+            <TextInput @bind-Value="@tema.Nombre" Placeholder="Ingrese el nombre"></TextInput>
+        </div>
+    </div>
+
+    <div class="form-group row mb-3">
+        <label class="col-md-2 col-form-label">Orden:</label>
+        <div class="col-md-10">
+            <NumberInput @bind-Value="@tema.Orden" Placeholder="Ingrese el Orden"></NumberInput>
+        </div>
+    </div>
+
+</EditForm>
+
+<div class="row">
+    <div class="col-md-12 text-right">
+        <Button Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="ModificarTema">Grabar</Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Warning" @onclick="EliminarTema">Eliminar</Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" @onclick="OnClickCallBack"> Cerrar</Button>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="row mt-3">
+        <Alert Color="AlertColor.Danger">@errorMessage</Alert>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback<MouseEventArgs> OnClickCallBack { get; set; }
+    [Parameter] public TemaDTO tema { get; set; }
+    private EditContext editContext;
+
+    private string errorMessage = "";
+    private System.Timers.Timer _timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine($"OnInitializedAsync() idTema: {tema.IdTema}");
+
+        editContext = new EditContext(tema);
+
+        var existeTema = await ExisteTema();
+
+        Console.WriteLine($"OnInitializedAsync() existeTema: {existeTema}");
+
+        if (!existeTema)
+        {
+            await AltaTema();
+        }
+
+        base.OnInitialized();
+    }
+
+    public void HandleOnValidSubmit()
+    {
+        // additional check
+        if (editContext.Validate())
+        {
+            // do something
+            // submit the form
+            Console.WriteLine("Form submitted successfully");
+        }
+    }
+
+    private async Task<bool> ExisteTema()
+    {
+        var encontrado = await _apiClientTema.GetTemaByIdAsync(tema.IdTema);
+        if (encontrado == null)
+        {
+            return false;
+        }
+        Console.WriteLine($"ExisteTema() variable idTema: {encontrado.IdTema}");
+        return (encontrado.IdTema != null);
+    }
+
+    private async Task AltaTema()
+    {
+        Console.WriteLine("AltaTema()");
+        var nuevo = await _apiClientTema.AddTemaAsync(tema);
+        tema.IdTema = nuevo.IdTema;
+
+    }
+
+    private async Task ModificarTema()
+    {
+        Console.WriteLine("ModificarTema()");
+        await _apiClientTema.UpdateTemaAsync(tema.IdTema, tema);
+    }
+
+    private async Task EliminarTema()
+    {
+        Console.WriteLine("EliminarTema()");
+        var resultado = await _apiClientTema.DeleteTemaAsync(tema.IdTema);
+
+        if (!resultado.IsSuccess)
+        {
+            Console.WriteLine("Error en el borrado");
+            errorMessage = resultado.Error; //muestra el mensaje de la api
+
+            // Inicia Temporizador
+            _timer = new System.Timers.Timer(3000); // 3000ms = 3 segundos
+            _timer.Elapsed += async (sender, e) =>
+            {
+                errorMessage = ""; // retorna a vacio
+                StateHasChanged();
+            };
+            _timer.Start();
+        }
+        else
+        {
+            // Notificar al componente padre para cerrar la ficha
+            if (OnClickCallBack.HasDelegate)
+            {
+                await OnClickCallBack.InvokeAsync(null); // Dispara el callback
+            }
+        }
+
+    }
+}

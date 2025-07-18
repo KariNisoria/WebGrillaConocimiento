@@ -1,0 +1,117 @@
+is_global = true
+build_property.EnableAotAnalyzer = 
+build_property.EnableSingleFileAnalyzer = 
+build_property.EnableTrimAnalyzer = false
+build_property.IncludeAllContentForSelfExtract = 
+build_property.TargetFramework = net7.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = 
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = false
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = browser
+build_property.RootNamespace = WebGrillaBlazor
+build_property.RootNamespace = WebGrillaBlazor
+build_property.ProjectDir = C:\Users\PC\Documents\PS\WebGrillaBlazor\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 7.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Users\PC\Documents\PS\WebGrillaBlazor
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 7.0
+build_property.EnableCodeStyleSeverity = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Pages/Clientes.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpZW50ZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Pages/Equipos.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRXF1aXBvcy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Pages/FichaCliente.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmljaGFDbGllbnRlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Pages/FichaEquipo.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmljaGFFcXVpcG8ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Pages/FichaGrilla.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmljaGFHcmlsbGEucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Pages/FichaRecurso.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmljaGFSZWN1cnNvLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Pages/FichaRol.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmljaGFSb2wucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Pages/FichaSubtema.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmljaGFTdWJ0ZW1hLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Pages/FichaTema.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmljaGFUZW1hLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Pages/FichaTipoDocumento.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmljaGFUaXBvRG9jdW1lbnRvLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Pages/Grillas.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcR3JpbGxhcy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Pages/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Pages/Prueba01.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJ1ZWJhMDEucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Pages/Recursos.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVjdXJzb3MucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Pages/Roles.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUm9sZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Pages/Temas.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVGVtYXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Pages/TemaSelector.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVGVtYVNlbGVjdG9yLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Pages/Tipos.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVGlwb3MucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Shared/SurveyPrompt.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFN1cnZleVByb21wdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Shared/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE1haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-gx6gzi1hjj
+
+[C:/Users/PC/Documents/PS/WebGrillaBlazor/Shared/NavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE5hdk1lbnUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-kbg7g5kk3t

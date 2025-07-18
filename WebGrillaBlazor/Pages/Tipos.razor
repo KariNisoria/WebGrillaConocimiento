@@ -1,0 +1,133 @@
+﻿@page "/tipos"
+@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.ApiClient
+@inject ApiClientGeneric<TipoDocumentoDTO> ApiClient
+
+<h3>Gestion de Tipos de Documento</h3>
+
+<div class="row mb-3">
+    <div class="col-2">
+        <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddTipoDocumento">+TipoDocumento</Button>
+    </div>
+</div>
+
+<!-- Grilla de tipos de documentos -->
+
+<Grid @ref="gridTipo"
+      TItem="TipoDocumentoDTO"
+      Class="table table-hover table-bordered table-striped"
+      DataProvider="GetAllTipoDocumento"
+      AllowPaging="true"
+      PageSize="5"
+      AllowSorting="true"
+      AllowRowClick="true"
+      OnRowDoubleClick="OnTipoDocumentoDobleClick"
+      SelectionMode="GridSelectionMode.Single"
+      Responsive="true">
+
+    <GridColumns>
+        <GridColumn TItem="TipoDocumentoDTO" HeaderText="IdTipoDocumento" PropertyName="IdTipoDocumento" SortKeySelector="item => item.IdTipoDocumento">
+            @context.IdTipoDocumento
+        </GridColumn>
+
+        <GridColumn TItem="TipoDocumentoDTO" HeaderText="Nombre" PropertyName="Descripcion" SortKeySelector="item => item.Nombre">
+            @context.Nombre
+        </GridColumn>
+    </GridColumns>
+</Grid>
+
+<!-- Ficha Edicion Tipo Documento -->
+<Modal @ref="_EdicionTipoDocumento" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
+
+
+@code {
+    private IEnumerable<TipoDocumentoDTO> tipos= default!;
+    private int currentIdTipoDocumento = 0;
+
+    private Modal _EdicionTipoDocumento = default!;
+
+    private Grid<TipoDocumentoDTO> gridTipo = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("OnInitializedAsync");
+
+        await base.OnInitializedAsync();
+
+    }
+
+    private async Task<GridDataProviderResult<TipoDocumentoDTO>> GetAllTipoDocumento(GridDataProviderRequest<TipoDocumentoDTO> request)
+    {
+        Console.WriteLine("GetAllTipoDocumento");
+
+        if (tipos is null) // pull employees only one time for client-side filtering, sorting, and paging
+            tipos = await ApiClient.GetAllAsync(); // call a service or an API to pull the employees
+
+        return await Task.FromResult(request.ApplyTo(tipos));
+    }
+
+    //-----------------------------
+    // Para la creacion de un rol
+    //-----------------------------
+
+    private async Task AddTipoDocumento()
+    {
+        var lista = tipos.ToList();
+        var nuevo = CreateTipoDocumento();
+        lista.Add(nuevo);
+        tipos = lista;
+        await gridTipo.RefreshDataAsync();
+    }
+
+    private TipoDocumentoDTO CreateTipoDocumento()
+    {
+        var numero = tipos!.Max(x => x.IdTipoDocumento) + 1;
+
+        var nuevo = new TipoDocumentoDTO();
+
+        nuevo.IdTipoDocumento = 0;
+        nuevo.Nombre = $"Nuevo Tipo Documento {numero}";
+
+        return nuevo;
+    }
+
+    //----------------------------
+    // Para la edicion de un tipo
+    //----------------------------
+
+    private async Task OnTipoDocumentoDobleClick(GridRowEventArgs<TipoDocumentoDTO> args)
+    {
+        Console.WriteLine("Evento OnRolClick");
+        var param = new Dictionary<string, object>();
+        param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionTipoDocumento));
+        param.Add("tipodocumento", args.Item);
+        await _EdicionTipoDocumento.ShowAsync<FichaTipoDocumento>(title: "Edicion Tipo Documento", parameters: param);
+
+    }
+
+    private async Task OnCloseModalEdicionTipoDocumento()
+    {
+        Console.WriteLine("OnCloseModalEdicionRol()");
+        await _EdicionTipoDocumento.HideAsync(); // Ocultar el formulario de Edicion
+        await RefreshGrid(); // Refrescar la grilla
+
+    }
+
+    private async Task RefreshGrid()
+    {
+        tipos= null; // Limpiar la caché local de roles
+        await gridTipo.RefreshDataAsync();
+        StateHasChanged(); // Forzar la actualización de la grilla
+    }
+
+    //-------------------
+    // Prueba de Onclick
+    //-------------------
+
+    private async Task OnRowClick(GridRowEventArgs<RolDTO> args)
+    {
+        Console.WriteLine($"OnRowClick Tipo current: {currentIdTipoDocumento} nuevo: {args.Item.IdRol} ");
+        currentIdTipoDocumento = args.Item.IdRol;
+    }
+
+}

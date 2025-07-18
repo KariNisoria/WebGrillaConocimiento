@@ -1,0 +1,36 @@
+﻿@using WebGrillaBlazor.DTOs
+
+@page "/prueba01"
+<h3>Prueba01</h3>
+
+<TemaSelector Temas="TemasDisponibles" OnTemaSeleccionado="HandleTemaSeleccionado" />
+
+<p>Tema seleccionado: @IdTemaSeleccionado</p>
+
+@code {
+    // Lista de temas disponibles
+    private List<TemaDTO> TemasDisponibles = new()
+    {
+        new TemaDTO { IdTema = 1, Nombre= "Matemáticas", Orden = 1 },
+        new TemaDTO { IdTema = 2, Nombre= "Historia" , Orden = 2 },
+        new TemaDTO { IdTema = 3, Nombre= "Ciencias",  Orden = 3 },
+        new TemaDTO { IdTema = 4, Nombre= "Ingles",  Orden = 4 },
+        new TemaDTO { IdTema = 5, Nombre= "Computacion",  Orden = 5 },
+        new TemaDTO { IdTema = 6, Nombre= "Quimica",  Orden = 6},
+        new TemaDTO { IdTema = 7, Nombre= "Fisica",  Orden = 7 },
+        new TemaDTO { IdTema = 8, Nombre= "Religion",  Orden = 8 },
+        new TemaDTO { IdTema = 9, Nombre= "Dibujo",  Orden = 9 },
+        new TemaDTO { IdTema = 10, Nombre= "Oratoria",  Orden = 10 }
+
+    };
+
+    // Variable para almacenar el Id del tema seleccionado
+    private string IdTemaSeleccionado;
+
+    // Método para manejar la selección del tema
+    private void HandleTemaSeleccionado(string idTema)
+    {
+        Console.WriteLine($"HandleTemaSeleccionado {idTema}");
+        IdTemaSeleccionado = idTema;
+    }
+}

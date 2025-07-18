@@ -1,0 +1,173 @@
+﻿@page "/grillas"
+@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.ApiClient
+@inject ApiClientGeneric<GrillaDTO> ApiClient
+
+<h3>Gestion de Grillas</h3>
+
+<div class="row mb-3">
+    <div class="col-2">
+        <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddGrilla">+Grilla</Button>
+    </div>
+</div>
+
+<!-- Grilla de roles -->
+
+<Grid @ref="gridGrilla"
+      TItem="GrillaDTO"
+      Class="table table-hover table-bordered table-striped"
+      DataProvider="GetAllGrillas"
+      AllowPaging="true"
+      PageSize="5"
+      AllowSorting="true"
+      AllowRowClick="true"
+      OnRowClick="OnRowClick"
+      OnRowDoubleClick="OnGrillaDobleClick"
+      Responsive="true">
+
+    <GridColumns>
+        <GridColumn TItem="GrillaDTO" HeaderText="IdGrilla" PropertyName="IdGrilla" SortKeySelector="item => item.IdGrilla">
+            @context.IdGrilla
+        </GridColumn>
+
+        <GridColumn TItem="GrillaDTO" HeaderText="Nombre" PropertyName="Descripcion" SortKeySelector="item => item.Nombre">
+            @context.Nombre
+        </GridColumn>
+    </GridColumns>
+
+    <GridColumns>
+        <GridColumn TItem="GrillaDTO" HeaderText="Descripcion" PropertyName="Descripcion" SortKeySelector="item => item.Descripcion">
+            @context.Descripcion
+        </GridColumn>
+    </GridColumns>
+
+    <GridColumns>
+        <GridColumn TItem="GrillaDTO" HeaderText="FechaVigencia" PropertyName="FechaVigencia" SortKeySelector="item => item.FechaVigencia">
+            @context.FechaVigencia.ToString("dd-MM-yyyy")
+        </GridColumn>
+    </GridColumns>
+
+    <GridColumns>
+        <GridColumn TItem="GrillaDTO" HeaderText="Estado" PropertyName="Estado" SortKeySelector="item => item.Estado">
+            @context.Estado
+        </GridColumn>
+    </GridColumns>
+
+</Grid>
+
+<!-- Ficha Edicion Grilla -->
+<Modal @ref="_EdicionGrilla" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
+
+@if (currentIdGrilla == 0)
+{
+    <div class="row">
+        <label class="col-1">Grilla Actual:</label>
+        <p class="col-6">No seleccionada</p>
+    </div>
+}
+else
+{
+    <div class="row">
+    <label class="col-1">Grilla Actual:</label>
+    <p class="col-6">@selectedGrilla.Descripcion</p>
+    </div>
+}
+
+
+@code {
+    private IEnumerable<GrillaDTO> grillas = default!;
+    private int currentIdGrilla = 0;
+
+    private Modal _EdicionGrilla = default!;
+
+    private Grid<GrillaDTO> gridGrilla = default!;
+
+    private GrillaDTO selectedGrilla = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("OnInitializedAsync");
+
+        await base.OnInitializedAsync();
+
+    }
+
+    private async Task<GridDataProviderResult<GrillaDTO>> GetAllGrillas(GridDataProviderRequest<GrillaDTO> request)
+    {
+        Console.WriteLine("GetAllGrillas");
+
+        if (grillas is null) // pull employees only one time for client-side filtering, sorting, and paging
+            grillas = await ApiClient.GetAllAsync(); // call a service or an API to pull the employees
+
+        return await Task.FromResult(request.ApplyTo(grillas));
+    }
+
+    //--------------------------------
+    // Para la creacion de una grilla
+    //--------------------------------
+
+    private async Task AddGrilla()
+    {
+        var lista = grillas.ToList();
+        var nuevo = CreateGrilla();
+        lista.Add(nuevo);
+        grillas = lista;
+        await gridGrilla.RefreshDataAsync();
+    }
+
+    private GrillaDTO CreateGrilla()
+    {
+        var numero = grillas!.Max(x => x.IdGrilla) + 1;
+
+        var nuevo = new GrillaDTO();
+
+        nuevo.IdGrilla = 0;
+        nuevo.Nombre = $"Nuevo Grilla {numero}";
+        nuevo.Descripcion = $"Descripcion Grilla {numero}";
+        nuevo.FechaVigencia = DateTime.Today;
+        nuevo.Estado = 1; // inactiva
+
+        return nuevo;
+    }
+
+    //-------------------------------
+    // Para la edicion de una grilla
+    //-------------------------------
+
+    private async Task OnGrillaDobleClick(GridRowEventArgs<GrillaDTO> args)
+    {
+        Console.WriteLine("Evento OnGrillaClick");
+        var param = new Dictionary<string, object>();
+        param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionGrilla));
+        param.Add("grilla", args.Item);
+        await _EdicionGrilla.ShowAsync<FichaGrilla>(title: "Edicion Grilla", parameters: param);
+
+    }
+
+    private async Task OnCloseModalEdicionGrilla()
+    {
+        Console.WriteLine("OnCloseModalEdicionGrilla()");
+        await _EdicionGrilla.HideAsync(); // Ocultar el formulario de Edicion
+        await RefreshGrid(); // Refrescar la grilla
+
+    }
+
+    private async Task RefreshGrid()
+    {
+        grillas = null; // Limpiar la caché local de grillas
+        await gridGrilla.RefreshDataAsync();
+        StateHasChanged(); // Forzar la actualización de la grilla
+    }
+
+    //-------------------
+    // Prueba de Onclick
+    //-------------------
+
+    private async Task OnRowClick(GridRowEventArgs<GrillaDTO> args)
+    {
+        Console.WriteLine($"OnRowClick Grilla current: {currentIdGrilla} nuevo: {args.Item.IdGrilla} ");
+        currentIdGrilla = args.Item.IdGrilla;
+        selectedGrilla = await ApiClient.GetByIdAsync(currentIdGrilla);
+    }
+
+}

@@ -1,0 +1,35 @@
+﻿@using WebGrillaBlazor.DTOs
+@* TemaSelector.razor *@
+<div>
+    <label>Tema:</label>
+    <select class="form-select w-50" @onchange="HandleSelection">
+        <option value="">-- Selecciona un tema --</option>
+        @foreach (var tema in Temas)
+        {
+            <option value="@tema.IdTema">@tema.Nombre</option>
+        }
+    </select>
+</div>
+
+@code {
+    // Lista de temas disponibles
+    [Parameter]
+    public List<TemaDTO> Temas { get; set; } = new();
+
+    // Propiedad para almacenar el Id del tema seleccionado
+    private string SelectedTemaId { get; set; }
+
+    // Evento para notificar a la página padre cuando cambia la selección
+    [Parameter]
+    public EventCallback<string> OnTemaSeleccionado { get; set; }
+
+    // Manejar el cambio de selección
+    private async Task HandleSelection(ChangeEventArgs e)
+    {
+        var selectedId = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(selectedId))
+        {
+            await OnTemaSeleccionado.InvokeAsync(selectedId);
+        }
+    }
+}
