@@ -1,0 +1,542 @@
+@page "/grillas/{IdGrilla:int}/temas"
+@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.ApiClient
+@inject ApiClientGeneric<GrillaTemaDTO> GrillaTemaClient
+@inject ApiClientGeneric<TemaDTO> TemaClient
+@inject NavigationManager Navigation
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <h3>Gestión de Temas - Grilla @IdGrilla</h3>
+        </div>
+        <div class="col-auto">
+            <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" @onclick="VolverAGrillas">
+                <Icon Name="IconName.ArrowLeft" /> Volver a Grillas
+            </Button>
+        </div>
+    </div>
+
+    <!-- Indicador de ponderación total -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="alert @GetAlertClassForPonderacion() d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>Total Ponderación: @totalPonderacion.ToString("F2")%</strong>
+                    <small class="ms-2">@GetMensajePonderacion()</small>
+                </div>
+                <div class="progress" style="width: 300px; height: 20px;">
+                    <div class="progress-bar @GetProgressBarClass()" 
+                         role="progressbar" 
+                         style="width: @Math.Min(totalPonderacion, 100)%" 
+                         aria-valuenow="@totalPonderacion" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                        @totalPonderacion.ToString("F1")%
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Panel izquierdo: Temas disponibles -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Temas Disponibles</h5>
+                    <small class="text-muted">Haz clic en "Agregar" para incluir un tema en la grilla</small>
+                    
+                    <!-- Buscador de temas -->
+                    <div class="mt-2">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <Icon Name="IconName.Search" />
+                            </span>
+                            <input type="text" 
+                                   class="form-control" 
+                                   placeholder="Buscar tema por nombre..." 
+                                   @bind="filtroNombre" 
+                                   @oninput="OnFiltroChanged" />
+                            @if (!string.IsNullOrEmpty(filtroNombre))
+                            {
+                                <button class="btn btn-outline-secondary" type="button" @onclick="LimpiarFiltro">
+                                    <Icon Name="IconName.X" />
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <Grid @ref="gridTemasDisponibles"
+                          TItem="TemaDTO"
+                          Class="table table-hover table-bordered table-striped"
+                          DataProvider="GetTemasFiltrados"
+                          AllowPaging="true"
+                          PageSize="10"
+                          AllowSorting="true"
+                          Responsive="true">
+                        <GridColumns>
+                            <GridColumn TItem="TemaDTO" HeaderText="ID" PropertyName="IdTema" SortKeySelector="item => item.IdTema">
+                                @context.IdTema
+                            </GridColumn>
+                            <GridColumn TItem="TemaDTO" HeaderText="Nombre" PropertyName="Nombre" SortKeySelector="item => item.Nombre">
+                                <span class="@(TemasYaAsignados.Contains(context.IdTema) ? "text-muted" : "")">
+                                    @GetNombreConResaltado(context.Nombre)
+                                </span>
+                                @if (TemasYaAsignados.Contains(context.IdTema))
+                                {
+                                    <small class="text-success ms-2">
+                                        <Icon Name="IconName.CheckCircle" /> Ya asignado
+                                    </small>
+                                }
+                            </GridColumn>
+                            <GridColumn TItem="TemaDTO" HeaderText="Orden" PropertyName="Orden" SortKeySelector="item => item.Orden">
+                                @context.Orden
+                            </GridColumn>
+                            <GridColumn TItem="TemaDTO" HeaderText="Acciones">
+                                @if (TemasYaAsignados.Contains(context.IdTema))
+                                {
+                                    <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" Disabled="true">
+                                        <Icon Name="IconName.Check" /> Asignado
+                                    </Button>
+                                }
+                                else
+                                {
+                                    <Button Color="ButtonColor.Primary" Size="ButtonSize.Small" @onclick="() => AgregarTemaAGrilla(context.IdTema, context.Nombre)">
+                                        <Icon Name="IconName.Plus" /> Agregar
+                                    </Button>
+                                }
+                            </GridColumn>
+                        </GridColumns>
+                    </Grid>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel derecho: Temas de la grilla -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">Temas en la Grilla</h5>
+                            <small class="text-muted">Temas asignados: @grillaTemas.Count</small>
+                        </div>
+                        @if (grillaTemas.Any())
+                        {
+                            <div class="text-end">
+                                <small class="text-muted">Total: </small>
+                                <strong class="@(totalPonderacion > 100 ? "text-danger" : totalPonderacion < 100 ? "text-warning" : "text-success")">
+                                    @totalPonderacion.ToString("F2")%
+                                </strong>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (!grillaTemas.Any())
+                    {
+                        <div class="text-center text-muted py-4">
+                            <Icon Name="IconName.ExclamationTriangle" Size="IconSize.x2" />
+                            <p class="mt-2">No hay temas asignados a esta grilla</p>
+                            <small>Agrega temas desde el panel izquierdo</small>
+                        </div>
+                    }
+                    else
+                    {
+                        <Grid @ref="gridGrillaTemas"
+                              TItem="GrillaTemaDTO"
+                              Class="table table-hover table-bordered table-striped"
+                              DataProvider="GetGrillaTemas"
+                              AllowPaging="true"
+                              PageSize="10"
+                              AllowSorting="true"
+                              Responsive="true">
+                            <GridColumns>
+                                <GridColumn TItem="GrillaTemaDTO" HeaderText="ID" PropertyName="IdGrillaTema" SortKeySelector="item => item.IdGrillaTema">
+                                    @context.IdGrillaTema
+                                </GridColumn>
+                                <GridColumn TItem="GrillaTemaDTO" HeaderText="Tema" PropertyName="Nombre" SortKeySelector="item => item.Nombre">
+                                    @context.Nombre
+                                </GridColumn>
+                                <GridColumn TItem="GrillaTemaDTO" HeaderText="Ponderación" PropertyName="Ponderacion" SortKeySelector="item => item.Ponderacion">
+                                    <span class="@(context.Ponderacion > 50 ? "fw-bold" : "")">
+                                        @context.Ponderacion.ToString("F2")%
+                                    </span>
+                                </GridColumn>
+                                <GridColumn TItem="GrillaTemaDTO" HeaderText="Acciones">
+                                    <div class="btn-group" role="group">
+                                        <Button Color="ButtonColor.Warning" Size="ButtonSize.Small" @onclick="() => EditarPonderacion(context)">
+                                            <Icon Name="IconName.Pencil" /> Editar
+                                        </Button>
+                                        <Button Color="ButtonColor.Danger" Size="ButtonSize.Small" @onclick="() => EliminarTemaDeGrilla(context.IdGrillaTema)">
+                                            <Icon Name="IconName.Trash" /> Quitar
+                                        </Button>
+                                    </div>
+                                </GridColumn>
+                            </GridColumns>
+                        </Grid>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para editar ponderación -->
+<Modal @ref="modalEditarPonderacion" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Regular">
+    <HeaderTemplate>
+        <ModalTitle>Editar Ponderación</ModalTitle>
+    </HeaderTemplate>
+    <BodyTemplate>
+        @if (grillaTemaoEditar != null)
+        {
+            <div class="mb-3">
+                <label class="form-label">Tema: <strong>@grillaTemaoEditar.Nombre</strong></label>
+            </div>
+            <div class="mb-3">
+                <label for="ponderacion" class="form-label">
+                    Ponderación (%)
+                    <small class="text-muted ms-1">
+                        - Total actual: @totalPonderacion.ToString("F2")%
+                    </small>
+                </label>
+                <input type="number" 
+                       class="form-control @(errorValidacionPonderacion ? "is-invalid" : "")" 
+                       id="ponderacion" 
+                       @bind="nuevaPonderacion" 
+                       @oninput="ValidarPonderacion"
+                       min="0" 
+                       max="100" 
+                       step="0.01" />
+                @if (errorValidacionPonderacion)
+                {
+                    <div class="invalid-feedback">
+                        @mensajeErrorPonderacion
+                    </div>
+                }
+                else if (nuevaPonderacion > 0)
+                {
+                    <div class="form-text">
+                        Total con este cambio: <strong class="@(totalPonderacionConCambio > 100 ? "text-danger" : "text-success")">
+                            @totalPonderacionConCambio.ToString("F2")%
+                        </strong>
+                    </div>
+                }
+            </div>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="CerrarModalPonderacion">Cancelar</Button>
+        <Button Color="ButtonColor.Primary" 
+                @onclick="GuardarPonderacion" 
+                Disabled="@(errorValidacionPonderacion || nuevaPonderacion <= 0)">
+            Guardar
+        </Button>
+    </FooterTemplate>
+</Modal>
+
+@code {
+    [Parameter] public int IdGrilla { get; set; }
+    
+    private List<GrillaTemaDTO> grillaTemas = new();
+    private List<TemaDTO> temasDisponibles = new();
+    private List<TemaDTO> temasFiltrados = new();
+    private string filtroNombre = string.Empty;
+    
+    private Grid<TemaDTO> gridTemasDisponibles = default!;
+    private Grid<GrillaTemaDTO> gridGrillaTemas = default!;
+    
+    private Modal modalEditarPonderacion = default!;
+    private GrillaTemaDTO? grillaTemaoEditar;
+    private decimal nuevaPonderacion = 0;
+    private bool errorValidacionPonderacion = false;
+    private string mensajeErrorPonderacion = string.Empty;
+    
+    // Propiedades calculadas
+    private decimal totalPonderacion => grillaTemas.Sum(gt => gt.Ponderacion);
+    private decimal totalPonderacionConCambio => grillaTemas.Where(gt => gt.IdGrillaTema != (grillaTemaoEditar?.IdGrillaTema ?? 0)).Sum(gt => gt.Ponderacion) + nuevaPonderacion;
+    private HashSet<int> TemasYaAsignados => grillaTemas.Select(gt => gt.IdTema).ToHashSet();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        try
+        {
+            // Cargar temas disponibles y temas de la grilla en paralelo
+            var tareasAsync = new List<Task>
+            {
+                CargarTemasDisponibles(),
+                CargarGrillaTemas()
+            };
+            
+            await Task.WhenAll(tareasAsync);
+            
+            // Aplicar filtro inicial
+            AplicarFiltro();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar datos: {ex.Message}");
+        }
+    }
+
+    private async Task CargarTemasDisponibles()
+    {
+        try
+        {
+            temasDisponibles = await TemaClient.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar temas disponibles: {ex.Message}");
+            temasDisponibles = new List<TemaDTO>();
+        }
+    }
+
+    private async Task CargarGrillaTemas()
+    {
+        try
+        {
+            grillaTemas = await GrillaTemaClient.GetAsync($"ByGrilla/{IdGrilla}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar temas de grilla: {ex.Message}");
+            grillaTemas = new List<GrillaTemaDTO>();
+        }
+    }
+
+    // Filtrado de temas
+    private void AplicarFiltro()
+    {
+        if (string.IsNullOrWhiteSpace(filtroNombre))
+        {
+            temasFiltrados = new List<TemaDTO>(temasDisponibles);
+        }
+        else
+        {
+            temasFiltrados = temasDisponibles
+                .Where(t => t.Nombre.Contains(filtroNombre, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+    }
+
+    private async Task OnFiltroChanged(ChangeEventArgs e)
+    {
+        filtroNombre = e.Value?.ToString() ?? string.Empty;
+        AplicarFiltro();
+        if (gridTemasDisponibles != null)
+        {
+            await gridTemasDisponibles.RefreshDataAsync();
+        }
+    }
+
+    private async Task LimpiarFiltro()
+    {
+        filtroNombre = string.Empty;
+        AplicarFiltro();
+        await gridTemasDisponibles.RefreshDataAsync();
+    }
+
+    private MarkupString GetNombreConResaltado(string nombre)
+    {
+        if (string.IsNullOrWhiteSpace(filtroNombre))
+        {
+            return new MarkupString(nombre);
+        }
+
+        var index = nombre.IndexOf(filtroNombre, StringComparison.OrdinalIgnoreCase);
+        if (index >= 0)
+        {
+            var antes = nombre.Substring(0, index);
+            var coincidencia = nombre.Substring(index, filtroNombre.Length);
+            var despues = nombre.Substring(index + filtroNombre.Length);
+            
+            return new MarkupString($"{antes}<mark>{coincidencia}</mark>{despues}");
+        }
+        
+        return new MarkupString(nombre);
+    }
+
+    // Validación de ponderación
+    private void ValidarPonderacion(ChangeEventArgs e)
+    {
+        if (decimal.TryParse(e.Value?.ToString(), out var valor))
+        {
+            nuevaPonderacion = valor;
+        }
+        
+        errorValidacionPonderacion = false;
+        mensajeErrorPonderacion = string.Empty;
+
+        if (nuevaPonderacion < 0)
+        {
+            errorValidacionPonderacion = true;
+            mensajeErrorPonderacion = "La ponderación no puede ser negativa";
+        }
+        else if (nuevaPonderacion > 100)
+        {
+            errorValidacionPonderacion = true;
+            mensajeErrorPonderacion = "La ponderación no puede ser mayor a 100%";
+        }
+        else if (totalPonderacionConCambio > 100)
+        {
+            errorValidacionPonderacion = true;
+            mensajeErrorPonderacion = $"El total excedería 100% (sería {totalPonderacionConCambio:F2}%)";
+        }
+    }
+
+    // Métodos para la barra de progreso y alertas
+    private string GetAlertClassForPonderacion()
+    {
+        return totalPonderacion switch
+        {
+            100 => "alert-success",
+            > 100 => "alert-danger",
+            > 80 => "alert-warning",
+            _ => "alert-info"
+        };
+    }
+
+    private string GetProgressBarClass()
+    {
+        return totalPonderacion switch
+        {
+            100 => "bg-success",
+            > 100 => "bg-danger",
+            > 80 => "bg-warning",
+            _ => "bg-info"
+        };
+    }
+
+    private string GetMensajePonderacion()
+    {
+        return totalPonderacion switch
+        {
+            100 => "? ¡Perfecto! Ponderación completa",
+            > 100 => $"?? Excede en {totalPonderacion - 100:F2}%",
+            > 80 => $"?? Faltan {100 - totalPonderacion:F2}% para completar",
+            _ => $"?? Faltan {100 - totalPonderacion:F2}% para completar"
+        };
+    }
+
+    // Métodos de datos para los grids
+    private async Task<GridDataProviderResult<TemaDTO>> GetTemasFiltrados(GridDataProviderRequest<TemaDTO> request)
+    {
+        return await Task.FromResult(request.ApplyTo(temasFiltrados));
+    }
+
+    private async Task<GridDataProviderResult<GrillaTemaDTO>> GetGrillaTemas(GridDataProviderRequest<GrillaTemaDTO> request)
+    {
+        return await Task.FromResult(request.ApplyTo(grillaTemas));
+    }
+
+    private async Task AgregarTemaAGrilla(int idTema, string nombreTema)
+    {
+        try
+        {
+            // Verificar si ya existe el tema en la grilla
+            if (grillaTemas.Any(gt => gt.IdTema == idTema))
+            {
+                Console.WriteLine($"El tema '{nombreTema}' ya está en la grilla");
+                return;
+            }
+
+            // Validar que no exceda 100% con una ponderación mínima
+            var ponderacionPorDefecto = 10.0m;
+            if (totalPonderacion + ponderacionPorDefecto > 100)
+            {
+                ponderacionPorDefecto = Math.Max(0, 100 - totalPonderacion);
+            }
+
+            var nuevoGrillaTema = new GrillaTemaDTO
+            {
+                IdGrilla = IdGrilla,
+                IdTema = idTema,
+                Nombre = nombreTema,
+                Ponderacion = ponderacionPorDefecto
+            };
+
+            await GrillaTemaClient.CreateAsync(nuevoGrillaTema);
+            
+            // Recargar datos
+            await CargarGrillaTemas();
+            await gridGrillaTemas.RefreshDataAsync();
+            await gridTemasDisponibles.RefreshDataAsync(); // Para actualizar el estado de los botones
+            
+            Console.WriteLine($"Tema '{nombreTema}' agregado a la grilla exitosamente");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al agregar tema a grilla: {ex.Message}");
+        }
+    }
+
+    private async Task EliminarTemaDeGrilla(int idGrillaTema)
+    {
+        try
+        {
+            await GrillaTemaClient.DeleteAsync(idGrillaTema);
+            
+            // Recargar datos
+            await CargarGrillaTemas();
+            await gridGrillaTemas.RefreshDataAsync();
+            await gridTemasDisponibles.RefreshDataAsync(); // Para actualizar el estado de los botones
+            
+            Console.WriteLine("Tema eliminado de la grilla exitosamente");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al eliminar tema de grilla: {ex.Message}");
+        }
+    }
+
+    private async Task EditarPonderacion(GrillaTemaDTO grillaTema)
+    {
+        grillaTemaoEditar = grillaTema;
+        nuevaPonderacion = grillaTema.Ponderacion;
+        errorValidacionPonderacion = false;
+        mensajeErrorPonderacion = string.Empty;
+        await modalEditarPonderacion.ShowAsync();
+    }
+
+    private async Task GuardarPonderacion()
+    {
+        try
+        {
+            if (grillaTemaoEditar != null && !errorValidacionPonderacion)
+            {
+                grillaTemaoEditar.Ponderacion = nuevaPonderacion;
+                await GrillaTemaClient.UpdateAsync(grillaTemaoEditar.IdGrillaTema, grillaTemaoEditar);
+                
+                // Recargar datos
+                await CargarGrillaTemas();
+                await gridGrillaTemas.RefreshDataAsync();
+                
+                await modalEditarPonderacion.HideAsync();
+                
+                Console.WriteLine("Ponderación actualizada exitosamente");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al actualizar ponderación: {ex.Message}");
+        }
+    }
+
+    private async Task CerrarModalPonderacion()
+    {
+        await modalEditarPonderacion.HideAsync();
+    }
+
+    private void VolverAGrillas()
+    {
+        Navigation.NavigateTo("/grillas");
+    }
+}

@@ -8,7 +8,7 @@ namespace WebGrilla.Models
         [Key]
         public int IdGrillaTema { get; set; }
         [Required]
-        public string Nombre { get; set; }
+        public string Nombre { get; set; } = string.Empty;
         [Required]
         public decimal Ponderacion { get; set; }
         // Fk

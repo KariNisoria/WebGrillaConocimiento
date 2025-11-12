@@ -6,16 +6,19 @@ namespace WebGrillaBlazor.ApiClient
 {
     public class ApiClientRecurso : ApiClientGeneric<RecursoDTO>
     {
+        private readonly IConfiguration _configuration;
 
         public ApiClientRecurso(HttpClient httpClient, IConfiguration configuration)
-            : base(httpClient, configuration)
+            : base(httpClient)
         {
-            Console.WriteLine($"ApiClienteRecurso()-> Constructor {_endpoint}");
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
             if (httpClient == null)
             {
                 throw new ArgumentNullException(nameof(httpClient), "HttpClient no fue inyectado.");
             }
+
+            Console.WriteLine($"ApiClienteRecurso()-> Constructor {_endpoint}");
         }
 
         public async Task<List<RecursoDTO>> GetRecursoByCorreo(string correo)

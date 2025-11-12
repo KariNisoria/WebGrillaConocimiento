@@ -9,27 +9,21 @@ namespace WebGrillaBlazor.ApiClient
         protected readonly HttpClient _httpClient;
         protected readonly string _endpoint;
 
-        public ApiClientGeneric(HttpClient httpClient, IConfiguration configuration)
+        public ApiClientGeneric(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            //_httpClient.BaseAddress = new Uri(configuration["ApiSettings:BaseUrl"]);
-
+            
             // Procesar el nombre de la entidad
             string entityName = typeof(T).Name;
 
             // 1. Eliminar el sufijo "DTO" (si existe)
             if (entityName.EndsWith("DTO", StringComparison.OrdinalIgnoreCase))
             {
-                entityName = entityName.Substring(0, entityName.Length - 3);
+                entityName = entityName[..^3];
             }
 
-            // 2. Asegurar primera letra mayúscula
-            if (!string.IsNullOrEmpty(entityName))
-            {
-                entityName = char.ToUpper(entityName[0]) + entityName.Substring(1).ToLower();
-            }
-
-            _endpoint = $"api/{entityName}"; // Ej: "api/Cliente"
+            // 2. Asegurar que el nombre coincida con el controlador
+            _endpoint = $"api/{entityName}";
 
             Console.WriteLine($"baseurl :{_httpClient.BaseAddress}");
             Console.WriteLine($"endpoint :{_endpoint}");
@@ -87,6 +81,24 @@ namespace WebGrillaBlazor.ApiClient
             response.EnsureSuccessStatusCode();
         }
 
+        // GET with custom route
+        public async Task<List<T>> GetAsync(string route)
+        {
+            try 
+            {
+                string endpoint = $"{_endpoint}/{route}";
+                Console.WriteLine($"GET custom route: {endpoint}");
+                var response = await _httpClient.GetAsync(endpoint);
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<List<T>>() ?? new List<T>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en GetAsync: {ex.Message}");
+                throw;
+            }
+        }
+
         // Configuración futura para JWT
         public void SetJwtToken(string token)
         {
@@ -95,3 +107,4 @@ namespace WebGrillaBlazor.ApiClient
         }
     }
 }
+

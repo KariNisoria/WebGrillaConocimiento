@@ -81,6 +81,8 @@ builder.Services.AddScoped<IRecursoService, RecursoService>();
 builder.Services.AddScoped<IRepository<Grilla>, GrillaRepository>();
 builder.Services.AddScoped<IGrillaService, GrillaService>();
 
+builder.Services.AddScoped<IRepository<GrillaTema>, GrillaTemaRepository>();
+builder.Services.AddScoped<IGrillaTemaService, GrillaTemaService>();
 
 var app = builder.Build();
 

@@ -1,12 +1,15 @@
 ﻿@page "/grillas"
 @using WebGrillaBlazor.DTOs
 @using WebGrillaBlazor.ApiClient
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
 @inject ApiClientGeneric<GrillaDTO> ApiClient
 
 <h3>Gestion de Grillas</h3>
 
 <div class="row mb-3">
     <div class="col-2">
+        @* Cambia el uso de <Button> por el componente específico de la librería *@
         <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddGrilla">+Grilla</Button>
     </div>
 </div>
@@ -24,35 +27,26 @@
       OnRowClick="OnRowClick"
       OnRowDoubleClick="OnGrillaDobleClick"
       Responsive="true">
-
     <GridColumns>
         <GridColumn TItem="GrillaDTO" HeaderText="IdGrilla" PropertyName="IdGrilla" SortKeySelector="item => item.IdGrilla">
             @context.IdGrilla
         </GridColumn>
-
-        <GridColumn TItem="GrillaDTO" HeaderText="Nombre" PropertyName="Descripcion" SortKeySelector="item => item.Nombre">
+        <GridColumn TItem="GrillaDTO" HeaderText="Nombre" PropertyName="Nombre" SortKeySelector="item => item.Nombre">
             @context.Nombre
         </GridColumn>
-    </GridColumns>
-
-    <GridColumns>
         <GridColumn TItem="GrillaDTO" HeaderText="Descripcion" PropertyName="Descripcion" SortKeySelector="item => item.Descripcion">
             @context.Descripcion
         </GridColumn>
-    </GridColumns>
-
-    <GridColumns>
         <GridColumn TItem="GrillaDTO" HeaderText="FechaVigencia" PropertyName="FechaVigencia" SortKeySelector="item => item.FechaVigencia">
             @context.FechaVigencia.ToString("dd-MM-yyyy")
         </GridColumn>
-    </GridColumns>
-
-    <GridColumns>
         <GridColumn TItem="GrillaDTO" HeaderText="Estado" PropertyName="Estado" SortKeySelector="item => item.Estado">
             @context.Estado
         </GridColumn>
+        <GridColumn TItem="GrillaDTO" HeaderText="Ver Temas">
+            <a href="@($"/grillas/{@context.IdGrilla}/temas")" class="btn btn-info btn-sm">Ver temas</a>
+        </GridColumn>
     </GridColumns>
-
 </Grid>
 
 <!-- Ficha Edicion Grilla -->
@@ -69,7 +63,7 @@ else
 {
     <div class="row">
     <label class="col-1">Grilla Actual:</label>
-    <p class="col-6">@selectedGrilla.Descripcion</p>
+    <p class="col-6">@(selectedGrilla?.Descripcion ?? "Cargando...")</p>
     </div>
 }
 
@@ -108,22 +102,32 @@ else
 
     private async Task AddGrilla()
     {
-        var lista = grillas.ToList();
-        var nuevo = CreateGrilla();
-        lista.Add(nuevo);
-        grillas = lista;
-        await gridGrilla.RefreshDataAsync();
+        try
+        {
+            var nuevo = CreateGrilla();
+            
+            // Guardar en la base de datos a través de la API
+            var grillaGuardada = await ApiClient.CreateAsync(nuevo);
+            
+            // Refrescar la lista desde la base de datos
+            grillas = null; // Limpiar caché para forzar recarga
+            await gridGrilla.RefreshDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al agregar grilla: {ex.Message}");
+            // Aquí podrías mostrar un mensaje de error al usuario
+        }
     }
 
     private GrillaDTO CreateGrilla()
     {
-        var numero = grillas!.Max(x => x.IdGrilla) + 1;
-
+        // No asignar ID manualmente, dejar que la base de datos lo genere
         var nuevo = new GrillaDTO();
-
-        nuevo.IdGrilla = 0;
-        nuevo.Nombre = $"Nuevo Grilla {numero}";
-        nuevo.Descripcion = $"Descripcion Grilla {numero}";
+        
+        nuevo.IdGrilla = 0; // La base de datos asignará el ID
+        nuevo.Nombre = $"Nueva Grilla {DateTime.Now:yyyyMMdd-HHmmss}";
+        nuevo.Descripcion = $"Descripcion de nueva grilla";
         nuevo.FechaVigencia = DateTime.Today;
         nuevo.Estado = 1; // inactiva
 
@@ -140,8 +144,8 @@ else
         var param = new Dictionary<string, object>();
         param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionGrilla));
         param.Add("grilla", args.Item);
+        // Especifico el tipo del componente que quiero mostrar en el modal
         await _EdicionGrilla.ShowAsync<FichaGrilla>(title: "Edicion Grilla", parameters: param);
-
     }
 
     private async Task OnCloseModalEdicionGrilla()
@@ -167,7 +171,17 @@ else
     {
         Console.WriteLine($"OnRowClick Grilla current: {currentIdGrilla} nuevo: {args.Item.IdGrilla} ");
         currentIdGrilla = args.Item.IdGrilla;
-        selectedGrilla = await ApiClient.GetByIdAsync(currentIdGrilla);
+        
+        try
+        {
+            selectedGrilla = await ApiClient.GetByIdAsync(currentIdGrilla);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al obtener grilla {currentIdGrilla}: {ex.Message}");
+            selectedGrilla = new GrillaDTO { Descripcion = "Error al cargar" };
+        }
+        
+        StateHasChanged(); // Forzar actualización de la UI
     }
-
 }

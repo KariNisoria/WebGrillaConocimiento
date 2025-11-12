@@ -8,25 +8,24 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// Agregado de componentes al contenedor de dependencias
-
-builder.Services.AddSingleton(sp =>
+// Configurar HttpClient con la URL base
+builder.Services.AddScoped(sp =>
 {
-    var config = sp.GetRequiredService<IConfiguration>();
     return new HttpClient
     {
-        BaseAddress = new Uri(config["ApiSettings:BaseUrl"])
+        BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7093/")
     };
 });
 
-
-// Registrar el cliente genérico
+// Registrar los clientes API
 builder.Services.AddScoped<ApiClientTema>();
 builder.Services.AddScoped<ApiClientSubtema>();
 builder.Services.AddScoped<ApiClientRecurso>();
-builder.Services.AddSingleton(typeof(ApiClientGeneric<>));
+builder.Services.AddScoped(typeof(ApiClientGeneric<>));
 
 builder.Services.AddBlazorBootstrap();
 
-await builder.Build().RunAsync();
-/*KARI CAMBIO*/
+var app = builder.Build();
+
+
+await app.RunAsync();

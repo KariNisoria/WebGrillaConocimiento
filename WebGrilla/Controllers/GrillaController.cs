@@ -44,13 +44,19 @@ namespace WebGrilla.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteGrilla(int id)
         {
-            var resultado = await _service.DeleteGrilla(id);
-            if (!resultado.isSuccess)
+            _service.DeleteGrilla(id);
             {
-                return BadRequest(resultado.message);
+                var resultado = await _service.DeleteGrilla(id);
+                if (!resultado.isSuccess)
+                {
+                    return BadRequest(resultado.message);
+                }
+                return NoContent();
             }
-            return NoContent();
+
+
         }
+
         [HttpPut("{id}")]
         public async Task<ActionResult> UpdateGrilla(int id, [FromBody] GrillaDTO grilla)
         {
@@ -60,7 +66,6 @@ namespace WebGrilla.Controllers
                 return BadRequest(resultado.message);
             }
             return NoContent();
-        } 
-
+        }
     }
-}
+}//             return NoContent();

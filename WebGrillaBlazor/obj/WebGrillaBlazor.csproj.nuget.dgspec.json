@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\PC\\Documents\\REPOSITORIOWEB\\WebGrillaBlazor\\WebGrillaBlazor.csproj": {}
+    "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj": {}
   },
   "projects": {
-    "C:\\Users\\PC\\Documents\\REPOSITORIOWEB\\WebGrillaBlazor\\WebGrillaBlazor.csproj": {
+    "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\PC\\Documents\\REPOSITORIOWEB\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
+        "projectUniqueName": "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
         "projectName": "WebGrillaBlazor",
-        "projectPath": "C:\\Users\\PC\\Documents\\REPOSITORIOWEB\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
-        "packagesPath": "C:\\Users\\PC\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\PC\\Documents\\REPOSITORIOWEB\\WebGrillaBlazor\\obj\\",
+        "projectPath": "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
+        "packagesPath": "C:\\Users\\Karina\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\PC\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Karina\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -26,7 +26,6 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -53,7 +52,23 @@
           "dependencies": {
             "Blazor.Bootstrap": {
               "target": "Package",
-              "version": "[3.3.1, )"
+              "version": "[3.4.0, )"
+            },
+            "Blazorise": {
+              "target": "Package",
+              "version": "[1.8.5, )"
+            },
+            "Blazorise.Bootstrap": {
+              "target": "Package",
+              "version": "[1.8.5, )"
+            },
+            "Blazorise.DataGrid": {
+              "target": "Package",
+              "version": "[1.8.5, )"
+            },
+            "Blazorise.Icons.FontAwesome": {
+              "target": "Package",
+              "version": "[1.8.5, )"
             },
             "Microsoft.AspNetCore.Components.WebAssembly": {
               "target": "Package",
@@ -79,7 +94,7 @@
             "Microsoft.NET.Sdk.WebAssembly.Pack": {
               "suppressParent": "All",
               "target": "Package",
-              "version": "[9.0.6, )",
+              "version": "[9.0.9, )",
               "autoReferenced": true
             }
           },
@@ -94,12 +109,18 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.NETCore.App.Runtime.Mono.browser-wasm",
+              "version": "[7.0.20, 7.0.20]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305\\RuntimeIdentifierGraph.json"
         }
       },
       "runtimes": {

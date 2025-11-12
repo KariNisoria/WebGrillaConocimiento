@@ -2,7 +2,7 @@
   "version": 3,
   "targets": {
     "net7.0": {
-      "Blazor.Bootstrap/3.3.1": {
+      "Blazor.Bootstrap/3.4.0": {
         "type": "package",
         "dependencies": {
           "Microsoft.AspNetCore.Components.Web": "6.0.36"
@@ -20,10 +20,111 @@
           "buildMultiTargeting/Blazor.Bootstrap.props": {}
         }
       },
-      "Microsoft.AspNetCore.Authorization/7.0.7": {
+      "Blazorise/1.8.5": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Metadata": "7.0.7",
+          "Blazorise.Licensing": "1.3.0",
+          "Microsoft.AspNetCore.Components": "7.0.20",
+          "Microsoft.AspNetCore.Components.Web": "7.0.20",
+          "Microsoft.Extensions.Logging.Abstractions": "7.0.1"
+        },
+        "compile": {
+          "lib/net7.0/Blazorise.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net7.0/Blazorise.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/Blazorise.props": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Blazorise.props": {}
+        }
+      },
+      "Blazorise.Bootstrap/1.8.5": {
+        "type": "package",
+        "dependencies": {
+          "Blazorise": "1.8.5",
+          "Microsoft.AspNetCore.Components": "7.0.20",
+          "Microsoft.AspNetCore.Components.Web": "7.0.20",
+          "Microsoft.Extensions.Logging.Abstractions": "7.0.1"
+        },
+        "compile": {
+          "lib/net7.0/Blazorise.Bootstrap.dll": {}
+        },
+        "runtime": {
+          "lib/net7.0/Blazorise.Bootstrap.dll": {}
+        },
+        "build": {
+          "buildTransitive/Blazorise.Bootstrap.props": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Blazorise.Bootstrap.props": {}
+        }
+      },
+      "Blazorise.DataGrid/1.8.5": {
+        "type": "package",
+        "dependencies": {
+          "Blazorise": "1.8.5",
+          "Microsoft.AspNetCore.Components": "7.0.20",
+          "Microsoft.AspNetCore.Components.Web": "7.0.20",
+          "Microsoft.Extensions.Logging.Abstractions": "7.0.1"
+        },
+        "compile": {
+          "lib/net7.0/Blazorise.DataGrid.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net7.0/Blazorise.DataGrid.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/Blazorise.DataGrid.props": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Blazorise.DataGrid.props": {}
+        }
+      },
+      "Blazorise.Icons.FontAwesome/1.8.5": {
+        "type": "package",
+        "dependencies": {
+          "Blazorise": "1.8.5",
+          "Microsoft.AspNetCore.Components": "7.0.20",
+          "Microsoft.AspNetCore.Components.Web": "7.0.20",
+          "Microsoft.Extensions.Logging.Abstractions": "7.0.1"
+        },
+        "compile": {
+          "lib/net7.0/Blazorise.Icons.FontAwesome.dll": {}
+        },
+        "runtime": {
+          "lib/net7.0/Blazorise.Icons.FontAwesome.dll": {}
+        },
+        "build": {
+          "buildTransitive/Blazorise.Icons.FontAwesome.props": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Blazorise.Icons.FontAwesome.props": {}
+        }
+      },
+      "Blazorise.Licensing/1.3.0": {
+        "type": "package",
+        "compile": {
+          "lib/net7.0/Blazorise.Licensing.dll": {}
+        },
+        "runtime": {
+          "lib/net7.0/Blazorise.Licensing.dll": {}
+        }
+      },
+      "Microsoft.AspNetCore.Authorization/7.0.20": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.AspNetCore.Metadata": "7.0.20",
           "Microsoft.Extensions.Logging.Abstractions": "7.0.1",
           "Microsoft.Extensions.Options": "7.0.1"
         },
@@ -38,11 +139,11 @@
           }
         }
       },
-      "Microsoft.AspNetCore.Components/7.0.7": {
+      "Microsoft.AspNetCore.Components/7.0.20": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Authorization": "7.0.7",
-          "Microsoft.AspNetCore.Components.Analyzers": "7.0.7"
+          "Microsoft.AspNetCore.Authorization": "7.0.20",
+          "Microsoft.AspNetCore.Components.Analyzers": "7.0.20"
         },
         "compile": {
           "lib/net7.0/Microsoft.AspNetCore.Components.dll": {
@@ -55,16 +156,16 @@
           }
         }
       },
-      "Microsoft.AspNetCore.Components.Analyzers/7.0.7": {
+      "Microsoft.AspNetCore.Components.Analyzers/7.0.20": {
         "type": "package",
         "build": {
           "buildTransitive/netstandard2.0/Microsoft.AspNetCore.Components.Analyzers.targets": {}
         }
       },
-      "Microsoft.AspNetCore.Components.Forms/7.0.7": {
+      "Microsoft.AspNetCore.Components.Forms/7.0.20": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Components": "7.0.7"
+          "Microsoft.AspNetCore.Components": "7.0.20"
         },
         "compile": {
           "lib/net7.0/Microsoft.AspNetCore.Components.Forms.dll": {
@@ -77,13 +178,13 @@
           }
         }
       },
-      "Microsoft.AspNetCore.Components.Web/7.0.7": {
+      "Microsoft.AspNetCore.Components.Web/7.0.20": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Components": "7.0.7",
-          "Microsoft.AspNetCore.Components.Forms": "7.0.7",
+          "Microsoft.AspNetCore.Components": "7.0.20",
+          "Microsoft.AspNetCore.Components.Forms": "7.0.20",
           "Microsoft.Extensions.DependencyInjection": "7.0.0",
-          "Microsoft.JSInterop": "7.0.7",
+          "Microsoft.JSInterop": "7.0.20",
           "System.IO.Pipelines": "7.0.0"
         },
         "compile": {
@@ -126,7 +227,7 @@
           "build/Microsoft.AspNetCore.Components.WebAssembly.DevServer.targets": {}
         }
       },
-      "Microsoft.AspNetCore.Metadata/7.0.7": {
+      "Microsoft.AspNetCore.Metadata/7.0.20": {
         "type": "package",
         "compile": {
           "lib/net7.0/Microsoft.AspNetCore.Metadata.dll": {
@@ -408,7 +509,7 @@
           "buildTransitive/net6.0/_._": {}
         }
       },
-      "Microsoft.JSInterop/7.0.7": {
+      "Microsoft.JSInterop/7.0.20": {
         "type": "package",
         "compile": {
           "lib/net7.0/Microsoft.JSInterop.dll": {
@@ -449,7 +550,7 @@
           "build/Microsoft.NET.ILLink.Tasks.props": {}
         }
       },
-      "Microsoft.NET.Sdk.WebAssembly.Pack/9.0.6": {
+      "Microsoft.NET.Sdk.WebAssembly.Pack/9.0.9": {
         "type": "package",
         "build": {
           "build/Microsoft.NET.Sdk.WebAssembly.Pack.props": {},
@@ -515,7 +616,7 @@
       }
     },
     "net7.0/browser-wasm": {
-      "Blazor.Bootstrap/3.3.1": {
+      "Blazor.Bootstrap/3.4.0": {
         "type": "package",
         "dependencies": {
           "Microsoft.AspNetCore.Components.Web": "6.0.36"
@@ -533,10 +634,111 @@
           "buildMultiTargeting/Blazor.Bootstrap.props": {}
         }
       },
-      "Microsoft.AspNetCore.Authorization/7.0.7": {
+      "Blazorise/1.8.5": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Metadata": "7.0.7",
+          "Blazorise.Licensing": "1.3.0",
+          "Microsoft.AspNetCore.Components": "7.0.20",
+          "Microsoft.AspNetCore.Components.Web": "7.0.20",
+          "Microsoft.Extensions.Logging.Abstractions": "7.0.1"
+        },
+        "compile": {
+          "lib/net7.0/Blazorise.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net7.0/Blazorise.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/Blazorise.props": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Blazorise.props": {}
+        }
+      },
+      "Blazorise.Bootstrap/1.8.5": {
+        "type": "package",
+        "dependencies": {
+          "Blazorise": "1.8.5",
+          "Microsoft.AspNetCore.Components": "7.0.20",
+          "Microsoft.AspNetCore.Components.Web": "7.0.20",
+          "Microsoft.Extensions.Logging.Abstractions": "7.0.1"
+        },
+        "compile": {
+          "lib/net7.0/Blazorise.Bootstrap.dll": {}
+        },
+        "runtime": {
+          "lib/net7.0/Blazorise.Bootstrap.dll": {}
+        },
+        "build": {
+          "buildTransitive/Blazorise.Bootstrap.props": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Blazorise.Bootstrap.props": {}
+        }
+      },
+      "Blazorise.DataGrid/1.8.5": {
+        "type": "package",
+        "dependencies": {
+          "Blazorise": "1.8.5",
+          "Microsoft.AspNetCore.Components": "7.0.20",
+          "Microsoft.AspNetCore.Components.Web": "7.0.20",
+          "Microsoft.Extensions.Logging.Abstractions": "7.0.1"
+        },
+        "compile": {
+          "lib/net7.0/Blazorise.DataGrid.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net7.0/Blazorise.DataGrid.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/Blazorise.DataGrid.props": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Blazorise.DataGrid.props": {}
+        }
+      },
+      "Blazorise.Icons.FontAwesome/1.8.5": {
+        "type": "package",
+        "dependencies": {
+          "Blazorise": "1.8.5",
+          "Microsoft.AspNetCore.Components": "7.0.20",
+          "Microsoft.AspNetCore.Components.Web": "7.0.20",
+          "Microsoft.Extensions.Logging.Abstractions": "7.0.1"
+        },
+        "compile": {
+          "lib/net7.0/Blazorise.Icons.FontAwesome.dll": {}
+        },
+        "runtime": {
+          "lib/net7.0/Blazorise.Icons.FontAwesome.dll": {}
+        },
+        "build": {
+          "buildTransitive/Blazorise.Icons.FontAwesome.props": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Blazorise.Icons.FontAwesome.props": {}
+        }
+      },
+      "Blazorise.Licensing/1.3.0": {
+        "type": "package",
+        "compile": {
+          "lib/net7.0/Blazorise.Licensing.dll": {}
+        },
+        "runtime": {
+          "lib/net7.0/Blazorise.Licensing.dll": {}
+        }
+      },
+      "Microsoft.AspNetCore.Authorization/7.0.20": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.AspNetCore.Metadata": "7.0.20",
           "Microsoft.Extensions.Logging.Abstractions": "7.0.1",
           "Microsoft.Extensions.Options": "7.0.1"
         },
@@ -551,11 +753,11 @@
           }
         }
       },
-      "Microsoft.AspNetCore.Components/7.0.7": {
+      "Microsoft.AspNetCore.Components/7.0.20": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Authorization": "7.0.7",
-          "Microsoft.AspNetCore.Components.Analyzers": "7.0.7"
+          "Microsoft.AspNetCore.Authorization": "7.0.20",
+          "Microsoft.AspNetCore.Components.Analyzers": "7.0.20"
         },
         "compile": {
           "lib/net7.0/Microsoft.AspNetCore.Components.dll": {
@@ -568,16 +770,16 @@
           }
         }
       },
-      "Microsoft.AspNetCore.Components.Analyzers/7.0.7": {
+      "Microsoft.AspNetCore.Components.Analyzers/7.0.20": {
         "type": "package",
         "build": {
           "buildTransitive/netstandard2.0/Microsoft.AspNetCore.Components.Analyzers.targets": {}
         }
       },
-      "Microsoft.AspNetCore.Components.Forms/7.0.7": {
+      "Microsoft.AspNetCore.Components.Forms/7.0.20": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Components": "7.0.7"
+          "Microsoft.AspNetCore.Components": "7.0.20"
         },
         "compile": {
           "lib/net7.0/Microsoft.AspNetCore.Components.Forms.dll": {
@@ -590,13 +792,13 @@
           }
         }
       },
-      "Microsoft.AspNetCore.Components.Web/7.0.7": {
+      "Microsoft.AspNetCore.Components.Web/7.0.20": {
         "type": "package",
         "dependencies": {
-          "Microsoft.AspNetCore.Components": "7.0.7",
-          "Microsoft.AspNetCore.Components.Forms": "7.0.7",
+          "Microsoft.AspNetCore.Components": "7.0.20",
+          "Microsoft.AspNetCore.Components.Forms": "7.0.20",
           "Microsoft.Extensions.DependencyInjection": "7.0.0",
-          "Microsoft.JSInterop": "7.0.7",
+          "Microsoft.JSInterop": "7.0.20",
           "System.IO.Pipelines": "7.0.0"
         },
         "compile": {
@@ -639,7 +841,7 @@
           "build/Microsoft.AspNetCore.Components.WebAssembly.DevServer.targets": {}
         }
       },
-      "Microsoft.AspNetCore.Metadata/7.0.7": {
+      "Microsoft.AspNetCore.Metadata/7.0.20": {
         "type": "package",
         "compile": {
           "lib/net7.0/Microsoft.AspNetCore.Metadata.dll": {
@@ -921,7 +1123,7 @@
           "buildTransitive/net6.0/_._": {}
         }
       },
-      "Microsoft.JSInterop/7.0.7": {
+      "Microsoft.JSInterop/7.0.20": {
         "type": "package",
         "compile": {
           "lib/net7.0/Microsoft.JSInterop.dll": {
@@ -962,7 +1164,7 @@
           "build/Microsoft.NET.ILLink.Tasks.props": {}
         }
       },
-      "Microsoft.NET.Sdk.WebAssembly.Pack/9.0.6": {
+      "Microsoft.NET.Sdk.WebAssembly.Pack/9.0.9": {
         "type": "package",
         "build": {
           "build/Microsoft.NET.Sdk.WebAssembly.Pack.props": {},
@@ -1023,16 +1225,16 @@
     }
   },
   "libraries": {
-    "Blazor.Bootstrap/3.3.1": {
-      "sha512": "YJUyRsTYXr2SbDugC6zWSr2dz2hPK+8BYdigZ6oI0ERkFWkebzxMsDlF3eiomqBnVuG/PBB5KUfgw4Vp2LBCHA==",
+    "Blazor.Bootstrap/3.4.0": {
+      "sha512": "RlK531tJCXGEoESwjDIARttoRPtOCXXQqrNwfaai7sIWir2pqsBop0gySBqN742m+K2vY9p9J7Mwwl6XcNXm6g==",
       "type": "package",
-      "path": "blazor.bootstrap/3.3.1",
+      "path": "blazor.bootstrap/3.4.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "128X128.png",
         "README.md",
-        "blazor.bootstrap.3.3.1.nupkg.sha512",
+        "blazor.bootstrap.3.4.0.nupkg.sha512",
         "blazor.bootstrap.nuspec",
         "build/Blazor.Bootstrap.props",
         "build/Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
@@ -1053,10 +1255,194 @@
         "staticwebassets/pdfjs-4.0.379.worker.min.js"
       ]
     },
-    "Microsoft.AspNetCore.Authorization/7.0.7": {
-      "sha512": "1w7+mJU4atTeHqd2P53WrAsSnifm/YV8/nDWL16QyfGRTQiyezvQKMbM3qof9QPGeqMfjQPbaphaIYDSqYPAig==",
+    "Blazorise/1.8.5": {
+      "sha512": "GC/ac3MiEScebyLmaYHTthjsZAJDjMh9/WSEhYYCMbX2OSi23rbTVEGiaI8SVS5K6yDaAnjeTOBCWixIsiq6rA==",
       "type": "package",
-      "path": "microsoft.aspnetcore.authorization/7.0.7",
+      "path": "blazorise/1.8.5",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Blazorise.png",
+        "LICENSE.md",
+        "blazorise.1.8.5.nupkg.sha512",
+        "blazorise.nuspec",
+        "build/Blazorise.props",
+        "build/Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+        "build/Microsoft.AspNetCore.StaticWebAssets.props",
+        "buildMultiTargeting/Blazorise.props",
+        "buildTransitive/Blazorise.props",
+        "lib/net6.0/Blazorise.dll",
+        "lib/net6.0/Blazorise.xml",
+        "lib/net7.0/Blazorise.dll",
+        "lib/net7.0/Blazorise.xml",
+        "lib/net8.0/Blazorise.dll",
+        "lib/net8.0/Blazorise.xml",
+        "lib/net9.0/Blazorise.dll",
+        "lib/net9.0/Blazorise.xml",
+        "staticwebassets/blazorise.css",
+        "staticwebassets/blazorise.min.css",
+        "staticwebassets/breakpoint.js",
+        "staticwebassets/button.js",
+        "staticwebassets/closable.js",
+        "staticwebassets/colorPicker.js",
+        "staticwebassets/datePicker.js",
+        "staticwebassets/dragDrop.js",
+        "staticwebassets/dropdown.js",
+        "staticwebassets/fileEdit.js",
+        "staticwebassets/filePicker.js",
+        "staticwebassets/floatingUi.js",
+        "staticwebassets/inputMask.js",
+        "staticwebassets/io.js",
+        "staticwebassets/memoEdit.js",
+        "staticwebassets/numericPicker.js",
+        "staticwebassets/observer.js",
+        "staticwebassets/table.js",
+        "staticwebassets/textEdit.js",
+        "staticwebassets/theme.js",
+        "staticwebassets/timePicker.js",
+        "staticwebassets/tooltip.js",
+        "staticwebassets/utilities.js",
+        "staticwebassets/validators/DateTimeMaskValidator.js",
+        "staticwebassets/validators/NoValidator.js",
+        "staticwebassets/validators/NumericMaskValidator.js",
+        "staticwebassets/validators/RegExMaskValidator.js",
+        "staticwebassets/vendors/Behave.js",
+        "staticwebassets/vendors/Pickr.js",
+        "staticwebassets/vendors/autoNumeric.js",
+        "staticwebassets/vendors/flatpickr-monthselect.js",
+        "staticwebassets/vendors/flatpickr.js",
+        "staticwebassets/vendors/floating-ui-core.js",
+        "staticwebassets/vendors/floating-ui.js",
+        "staticwebassets/vendors/inputmask.js",
+        "staticwebassets/vendors/jsencrypt.js",
+        "staticwebassets/vendors/popper.js",
+        "staticwebassets/vendors/sha512.js",
+        "staticwebassets/vendors/tippy.js"
+      ]
+    },
+    "Blazorise.Bootstrap/1.8.5": {
+      "sha512": "KhqJ86Eu/rzKAaBmQbfL9zB3y+5JxYZMaRdxW36QztYmCq9MqgWnh3yxIhjXGsMDIf01f33XvHLZ18uvmemVIw==",
+      "type": "package",
+      "path": "blazorise.bootstrap/1.8.5",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Blazorise.png",
+        "LICENSE.md",
+        "blazorise.bootstrap.1.8.5.nupkg.sha512",
+        "blazorise.bootstrap.nuspec",
+        "build/Blazorise.Bootstrap.props",
+        "build/Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+        "build/Microsoft.AspNetCore.StaticWebAssets.props",
+        "buildMultiTargeting/Blazorise.Bootstrap.props",
+        "buildTransitive/Blazorise.Bootstrap.props",
+        "lib/net6.0/Blazorise.Bootstrap.dll",
+        "lib/net7.0/Blazorise.Bootstrap.dll",
+        "lib/net8.0/Blazorise.Bootstrap.dll",
+        "lib/net9.0/Blazorise.Bootstrap.dll",
+        "staticwebassets/blazorise.bootstrap.css",
+        "staticwebassets/blazorise.bootstrap.min.css",
+        "staticwebassets/modal.js",
+        "staticwebassets/tooltip.js"
+      ]
+    },
+    "Blazorise.DataGrid/1.8.5": {
+      "sha512": "BxfVkd+l+fAkEvKlRIAmBTvRwkFx2fi5vME1hAjruGUwKzUF2+pykhLNjRRzMBzbZrGTEMwH9tbnXQCkevlJbw==",
+      "type": "package",
+      "path": "blazorise.datagrid/1.8.5",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Blazorise.png",
+        "LICENSE.md",
+        "blazorise.datagrid.1.8.5.nupkg.sha512",
+        "blazorise.datagrid.nuspec",
+        "build/Blazorise.DataGrid.props",
+        "build/Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+        "build/Microsoft.AspNetCore.StaticWebAssets.props",
+        "buildMultiTargeting/Blazorise.DataGrid.props",
+        "buildTransitive/Blazorise.DataGrid.props",
+        "lib/net6.0/Blazorise.DataGrid.dll",
+        "lib/net6.0/Blazorise.DataGrid.xml",
+        "lib/net7.0/Blazorise.DataGrid.dll",
+        "lib/net7.0/Blazorise.DataGrid.xml",
+        "lib/net8.0/Blazorise.DataGrid.dll",
+        "lib/net8.0/Blazorise.DataGrid.xml",
+        "lib/net9.0/Blazorise.DataGrid.dll",
+        "lib/net9.0/Blazorise.DataGrid.xml",
+        "staticwebassets/datagrid.js"
+      ]
+    },
+    "Blazorise.Icons.FontAwesome/1.8.5": {
+      "sha512": "aHkSLAe0g9tZtRnuCmnlpzXwYK7YoFy1N6RYPhZ0ye2cOtNX/aCDmw87T3p1ZlMQpvV9fgTbo9GCmm6Yv1+mVQ==",
+      "type": "package",
+      "path": "blazorise.icons.fontawesome/1.8.5",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Blazorise.png",
+        "LICENSE.md",
+        "blazorise.icons.fontawesome.1.8.5.nupkg.sha512",
+        "blazorise.icons.fontawesome.nuspec",
+        "build/Blazorise.Icons.FontAwesome.props",
+        "build/Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+        "build/Microsoft.AspNetCore.StaticWebAssets.props",
+        "buildMultiTargeting/Blazorise.Icons.FontAwesome.props",
+        "buildTransitive/Blazorise.Icons.FontAwesome.props",
+        "lib/net6.0/Blazorise.Icons.FontAwesome.dll",
+        "lib/net7.0/Blazorise.Icons.FontAwesome.dll",
+        "lib/net8.0/Blazorise.Icons.FontAwesome.dll",
+        "lib/net9.0/Blazorise.Icons.FontAwesome.dll",
+        "staticwebassets/v5/css/all.css",
+        "staticwebassets/v5/css/all.min.css",
+        "staticwebassets/v5/webfonts/fa-brands-400.eot",
+        "staticwebassets/v5/webfonts/fa-brands-400.svg",
+        "staticwebassets/v5/webfonts/fa-brands-400.ttf",
+        "staticwebassets/v5/webfonts/fa-brands-400.woff",
+        "staticwebassets/v5/webfonts/fa-brands-400.woff2",
+        "staticwebassets/v5/webfonts/fa-regular-400.eot",
+        "staticwebassets/v5/webfonts/fa-regular-400.svg",
+        "staticwebassets/v5/webfonts/fa-regular-400.ttf",
+        "staticwebassets/v5/webfonts/fa-regular-400.woff",
+        "staticwebassets/v5/webfonts/fa-regular-400.woff2",
+        "staticwebassets/v5/webfonts/fa-solid-900.eot",
+        "staticwebassets/v5/webfonts/fa-solid-900.svg",
+        "staticwebassets/v5/webfonts/fa-solid-900.ttf",
+        "staticwebassets/v5/webfonts/fa-solid-900.woff",
+        "staticwebassets/v5/webfonts/fa-solid-900.woff2",
+        "staticwebassets/v6/css/all.css",
+        "staticwebassets/v6/css/all.min.css",
+        "staticwebassets/v6/webfonts/fa-brands-400.ttf",
+        "staticwebassets/v6/webfonts/fa-brands-400.woff2",
+        "staticwebassets/v6/webfonts/fa-regular-400.ttf",
+        "staticwebassets/v6/webfonts/fa-regular-400.woff2",
+        "staticwebassets/v6/webfonts/fa-solid-900.ttf",
+        "staticwebassets/v6/webfonts/fa-solid-900.woff2",
+        "staticwebassets/v6/webfonts/fa-v4compatibility.ttf",
+        "staticwebassets/v6/webfonts/fa-v4compatibility.woff2"
+      ]
+    },
+    "Blazorise.Licensing/1.3.0": {
+      "sha512": "NvQlbUgd6jY/ZfkJPlhHLaMVyvfp24OMehFV8Y6mrqLHqC0CfcoE+6+YP9FZMZKNAWmcNZ85WXmYFWVl0UXGfw==",
+      "type": "package",
+      "path": "blazorise.licensing/1.3.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Blazorise.png",
+        "LICENSE.md",
+        "blazorise.licensing.1.3.0.nupkg.sha512",
+        "blazorise.licensing.nuspec",
+        "lib/net6.0/Blazorise.Licensing.dll",
+        "lib/net7.0/Blazorise.Licensing.dll",
+        "lib/net8.0/Blazorise.Licensing.dll",
+        "lib/net9.0/Blazorise.Licensing.dll"
+      ]
+    },
+    "Microsoft.AspNetCore.Authorization/7.0.20": {
+      "sha512": "hxQI2suog1C8i+AuWXJmoZ4cwj+Nnhbe6pcsrSL6xv/WBa/mxoPZDdF4g8WDt0UbetUTDLGPtMZFlCAMC9kWig==",
+      "type": "package",
+      "path": "microsoft.aspnetcore.authorization/7.0.20",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -1068,14 +1454,14 @@
         "lib/net7.0/Microsoft.AspNetCore.Authorization.xml",
         "lib/netstandard2.0/Microsoft.AspNetCore.Authorization.dll",
         "lib/netstandard2.0/Microsoft.AspNetCore.Authorization.xml",
-        "microsoft.aspnetcore.authorization.7.0.7.nupkg.sha512",
+        "microsoft.aspnetcore.authorization.7.0.20.nupkg.sha512",
         "microsoft.aspnetcore.authorization.nuspec"
       ]
     },
-    "Microsoft.AspNetCore.Components/7.0.7": {
-      "sha512": "AVoTnHtkemVtw2ufE6pRKCGlcaJNLk+eSqmnU5Rot6qcsDfHnrf6latpfeMFz5jvOZdoAJ9PKp9r84O+zn9YPA==",
+    "Microsoft.AspNetCore.Components/7.0.20": {
+      "sha512": "Ii2QWs022tm7kAerxLpkNeSKUx/TPZP4T/+5c+u5TaNtiYFyn4bJKWP/KQRmGkahradngifYpqn2ACZlm4l47A==",
       "type": "package",
-      "path": "microsoft.aspnetcore.components/7.0.7",
+      "path": "microsoft.aspnetcore.components/7.0.20",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -1083,14 +1469,14 @@
         "THIRD-PARTY-NOTICES.txt",
         "lib/net7.0/Microsoft.AspNetCore.Components.dll",
         "lib/net7.0/Microsoft.AspNetCore.Components.xml",
-        "microsoft.aspnetcore.components.7.0.7.nupkg.sha512",
+        "microsoft.aspnetcore.components.7.0.20.nupkg.sha512",
         "microsoft.aspnetcore.components.nuspec"
       ]
     },
-    "Microsoft.AspNetCore.Components.Analyzers/7.0.7": {
-      "sha512": "gNJ4W8YvkfgcrPUNxsplpYVuE3jtRTYKjV7EDUBg1GV0Xkg7KbhXjakeIEuLl5EzvifyhDDTf/XQZlWkWTB9xg==",
+    "Microsoft.AspNetCore.Components.Analyzers/7.0.20": {
+      "sha512": "C1x0/pPILayW1t/pG6Phq5Yf1TtCqxI+6mVqCV3I+iDPQ2POsQdNx2Cd0PvjlJMDyVoS3XR2f05B6XmiFJ7WDg==",
       "type": "package",
-      "path": "microsoft.aspnetcore.components.analyzers/7.0.7",
+      "path": "microsoft.aspnetcore.components.analyzers/7.0.20",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -1099,14 +1485,14 @@
         "analyzers/dotnet/cs/Microsoft.AspNetCore.Components.Analyzers.dll",
         "build/netstandard2.0/Microsoft.AspNetCore.Components.Analyzers.targets",
         "buildTransitive/netstandard2.0/Microsoft.AspNetCore.Components.Analyzers.targets",
-        "microsoft.aspnetcore.components.analyzers.7.0.7.nupkg.sha512",
+        "microsoft.aspnetcore.components.analyzers.7.0.20.nupkg.sha512",
         "microsoft.aspnetcore.components.analyzers.nuspec"
       ]
     },
-    "Microsoft.AspNetCore.Components.Forms/7.0.7": {
-      "sha512": "V4kKSogvFgdXveDopY8/b/lKFsIJEBlaWL38VtUD+QAi3iZhcyFoggzHmXqGUEtibsGtqkl+L0xTAu4L8siSgA==",
+    "Microsoft.AspNetCore.Components.Forms/7.0.20": {
+      "sha512": "abw2o9MnZW3IfHcyv1FUQCBzvg7qP3TEL7nKWDBwWwU5041LTzU15F6oktSOBE8HEvSx1OgR6XQqhKyHuKekjQ==",
       "type": "package",
-      "path": "microsoft.aspnetcore.components.forms/7.0.7",
+      "path": "microsoft.aspnetcore.components.forms/7.0.20",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -1114,14 +1500,14 @@
         "THIRD-PARTY-NOTICES.txt",
         "lib/net7.0/Microsoft.AspNetCore.Components.Forms.dll",
         "lib/net7.0/Microsoft.AspNetCore.Components.Forms.xml",
-        "microsoft.aspnetcore.components.forms.7.0.7.nupkg.sha512",
+        "microsoft.aspnetcore.components.forms.7.0.20.nupkg.sha512",
         "microsoft.aspnetcore.components.forms.nuspec"
       ]
     },
-    "Microsoft.AspNetCore.Components.Web/7.0.7": {
-      "sha512": "CSMrPltof1Iv+Bu0jG3pcmofXbabImvONAnrNlA2I1bfdzfYEwWc6GIpyczhNHPe99AA4QaqUqjjDyuiL9CcCA==",
+    "Microsoft.AspNetCore.Components.Web/7.0.20": {
+      "sha512": "KwpwYfghK2oURoWmjOmIKGRVnaNWBge9f8kTF0zw9ldH9iJWG24VC5bhFKz5+ZpwuP0ZaN+rN8SAAYei/Fldeg==",
       "type": "package",
-      "path": "microsoft.aspnetcore.components.web/7.0.7",
+      "path": "microsoft.aspnetcore.components.web/7.0.20",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -1129,7 +1515,7 @@
         "THIRD-PARTY-NOTICES.txt",
         "lib/net7.0/Microsoft.AspNetCore.Components.Web.dll",
         "lib/net7.0/Microsoft.AspNetCore.Components.Web.xml",
-        "microsoft.aspnetcore.components.web.7.0.7.nupkg.sha512",
+        "microsoft.aspnetcore.components.web.7.0.20.nupkg.sha512",
         "microsoft.aspnetcore.components.web.nuspec"
       ]
     },
@@ -1288,10 +1674,10 @@
         "tools/x86/aspnetcorev2_inprocess.dll"
       ]
     },
-    "Microsoft.AspNetCore.Metadata/7.0.7": {
-      "sha512": "cbSFS7rnPIrwIpTO71AHxF+ToTHvvN6Yq0NzoAeGhf3m6eKO1eyeVv/p9YKp/9zSr3udA5uGYTp/ycaVGV3p5w==",
+    "Microsoft.AspNetCore.Metadata/7.0.20": {
+      "sha512": "c+dDosAEkOI1K48ImIy0pxxvOgXR/pbqodOqQ43k/hY8cGI8jbhRopDP/xbqqW+mkWmxbVIRaCJqDALeG8VKYA==",
       "type": "package",
-      "path": "microsoft.aspnetcore.metadata/7.0.7",
+      "path": "microsoft.aspnetcore.metadata/7.0.20",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -1303,7 +1689,7 @@
         "lib/net7.0/Microsoft.AspNetCore.Metadata.xml",
         "lib/netstandard2.0/Microsoft.AspNetCore.Metadata.dll",
         "lib/netstandard2.0/Microsoft.AspNetCore.Metadata.xml",
-        "microsoft.aspnetcore.metadata.7.0.7.nupkg.sha512",
+        "microsoft.aspnetcore.metadata.7.0.20.nupkg.sha512",
         "microsoft.aspnetcore.metadata.nuspec"
       ]
     },
@@ -1738,10 +2124,10 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "Microsoft.JSInterop/7.0.7": {
-      "sha512": "dfZWcwYuw2aVqtvAV9VC6D9LimVABI1Jmj5DqEhXcwWadFzWTDqfgngEi5GBJG+XZVnuRp2EG6nzllP8Nno3Lw==",
+    "Microsoft.JSInterop/7.0.20": {
+      "sha512": "ug47NElJo58cnA8+YcZx5+mDScrtnkd+Fgi/pLio76O0WYvAc9qGT4cXEVEqX1YcqwHmLgP1NBol6uzYyUqbAw==",
       "type": "package",
-      "path": "microsoft.jsinterop/7.0.7",
+      "path": "microsoft.jsinterop/7.0.20",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -1749,7 +2135,7 @@
         "THIRD-PARTY-NOTICES.TXT",
         "lib/net7.0/Microsoft.JSInterop.dll",
         "lib/net7.0/Microsoft.JSInterop.xml",
-        "microsoft.jsinterop.7.0.7.nupkg.sha512",
+        "microsoft.jsinterop.7.0.20.nupkg.sha512",
         "microsoft.jsinterop.nuspec"
       ]
     },
@@ -1815,10 +2201,10 @@
         "tools/net7.0/illink.runtimeconfig.json"
       ]
     },
-    "Microsoft.NET.Sdk.WebAssembly.Pack/9.0.6": {
-      "sha512": "0KAM0CWU4v1KbKdsyOAkqY3txcrvwVkgYkgRwCnKJS8so0B+O562YAUwDcok5YWC3qFK/+dBAwtn9KK1JL4Xrw==",
+    "Microsoft.NET.Sdk.WebAssembly.Pack/9.0.9": {
+      "sha512": "Nx4yF/l8YyzwHM+xBRFOSGv77mjBZP0XkImzLMdrSBGYPB32nEZNXTSwhH9viDhxMhGij+fVUjJj5iAtUdMBww==",
       "type": "package",
-      "path": "microsoft.net.sdk.webassembly.pack/9.0.6",
+      "path": "microsoft.net.sdk.webassembly.pack/9.0.9",
       "hasTools": true,
       "files": [
         ".nupkg.metadata",
@@ -1849,7 +2235,7 @@
         "build/Microsoft.NET.Sdk.WebAssembly.Pack.targets",
         "build/Wasm.web.config",
         "build/browser.runtimeconfig.template.json",
-        "microsoft.net.sdk.webassembly.pack.9.0.6.nupkg.sha512",
+        "microsoft.net.sdk.webassembly.pack.9.0.9.nupkg.sha512",
         "microsoft.net.sdk.webassembly.pack.nuspec",
         "tools/net472/Microsoft.NET.Sdk.WebAssembly.Pack.Tasks.dll",
         "tools/net472/Microsoft.NET.WebAssembly.Webcil.dll",
@@ -1989,32 +2375,36 @@
   },
   "projectFileDependencyGroups": {
     "net7.0": [
-      "Blazor.Bootstrap >= 3.3.1",
+      "Blazor.Bootstrap >= 3.4.0",
+      "Blazorise >= 1.8.5",
+      "Blazorise.Bootstrap >= 1.8.5",
+      "Blazorise.DataGrid >= 1.8.5",
+      "Blazorise.Icons.FontAwesome >= 1.8.5",
       "Microsoft.AspNetCore.Components.WebAssembly >= 7.0.7",
       "Microsoft.AspNetCore.Components.WebAssembly.DevServer >= 7.0.7",
       "Microsoft.NET.ILLink.Analyzers >= 7.0.100-1.23211.1",
       "Microsoft.NET.ILLink.Tasks >= 7.0.100-1.23211.1",
-      "Microsoft.NET.Sdk.WebAssembly.Pack >= 9.0.6"
+      "Microsoft.NET.Sdk.WebAssembly.Pack >= 9.0.9"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\PC\\.nuget\\packages\\": {},
+    "C:\\Users\\Karina\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\PC\\Documents\\REPOSITORIOWEB\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
+      "projectUniqueName": "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
       "projectName": "WebGrillaBlazor",
-      "projectPath": "C:\\Users\\PC\\Documents\\REPOSITORIOWEB\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
-      "packagesPath": "C:\\Users\\PC\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\PC\\Documents\\REPOSITORIOWEB\\WebGrillaBlazor\\obj\\",
+      "projectPath": "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
+      "packagesPath": "C:\\Users\\Karina\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\PC\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Karina\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -2023,7 +2413,6 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -2050,7 +2439,23 @@
         "dependencies": {
           "Blazor.Bootstrap": {
             "target": "Package",
-            "version": "[3.3.1, )"
+            "version": "[3.4.0, )"
+          },
+          "Blazorise": {
+            "target": "Package",
+            "version": "[1.8.5, )"
+          },
+          "Blazorise.Bootstrap": {
+            "target": "Package",
+            "version": "[1.8.5, )"
+          },
+          "Blazorise.DataGrid": {
+            "target": "Package",
+            "version": "[1.8.5, )"
+          },
+          "Blazorise.Icons.FontAwesome": {
+            "target": "Package",
+            "version": "[1.8.5, )"
           },
           "Microsoft.AspNetCore.Components.WebAssembly": {
             "target": "Package",
@@ -2076,7 +2481,7 @@
           "Microsoft.NET.Sdk.WebAssembly.Pack": {
             "suppressParent": "All",
             "target": "Package",
-            "version": "[9.0.6, )",
+            "version": "[9.0.9, )",
             "autoReferenced": true
           }
         },
@@ -2091,12 +2496,18 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.NETCore.App.Runtime.Mono.browser-wasm",
+            "version": "[7.0.20, 7.0.20]"
+          }
+        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305\\RuntimeIdentifierGraph.json"
       }
     },
     "runtimes": {

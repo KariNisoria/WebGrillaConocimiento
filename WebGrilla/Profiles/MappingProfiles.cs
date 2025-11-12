@@ -16,6 +16,7 @@ namespace WebGrilla.Profiles
             CreateMap<Recurso, RecursoDTO>().ReverseMap();
             CreateMap<EquipoDesarrollo, EquipoDesarrolloDTO>().ReverseMap();
             CreateMap<Grilla, GrillaDTO>().ReverseMap();
+            CreateMap<GrillaTema, GrillaTemaDTO>().ReverseMap();
         }
 
     }
