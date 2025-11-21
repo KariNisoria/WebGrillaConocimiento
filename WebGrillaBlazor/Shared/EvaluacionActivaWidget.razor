@@ -1,0 +1,89 @@
+@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.ApiClient
+@inject ApiClientEvaluacion EvaluacionClient
+@inject NavigationManager Navigation
+@implements IDisposable
+
+@if (evaluacionActiva != null)
+{
+    <div class="alert alert-info alert-dismissible mb-2" role="alert">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <Icon Name="IconName.PlayFill" class="me-2" />
+                <div>
+                    <strong>Evaluación Activa:</strong> @evaluacionActiva.Descripcion
+                    <br/>
+                    <small class="text-muted">
+                        Finaliza: @evaluacionActiva.FechaFin.ToString("dd/MM/yyyy HH:mm")
+                    </small>
+                </div>
+            </div>
+            <div class="btn-group">
+                <Button Color="ButtonColor.Primary" Size="ButtonSize.ExtraSmall" @onclick="IrAEvaluacion">
+                    <Icon Name="IconName.ArrowRight" /> Ir a Evaluación
+                </Button>
+                <Button Color="ButtonColor.Secondary" Size="ButtonSize.ExtraSmall" @onclick="OcultarWidget">
+                    <Icon Name="IconName.X" />
+                </Button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private EvaluacionDTO? evaluacionActiva;
+    private bool widgetOculto = false;
+    private System.Timers.Timer? timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarEvaluacionActiva();
+        
+        // Configurar timer para refrescar cada 5 minutos
+        timer = new System.Timers.Timer(300000); // 5 minutos
+        timer.Elapsed += async (sender, e) => await InvokeAsync(CargarEvaluacionActiva);
+        timer.Start();
+    }
+
+    private async Task CargarEvaluacionActiva()
+    {
+        try
+        {
+            if (!widgetOculto)
+            {
+                evaluacionActiva = await EvaluacionClient.GetEvaluacionActivaAsync();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar evaluación activa en widget: {ex.Message}");
+        }
+    }
+
+    private void IrAEvaluacion()
+    {
+        if (evaluacionActiva != null)
+        {
+            if (evaluacionActiva.IdRecurso > 0)
+            {
+                Navigation.NavigateTo($"/evaluacion/{evaluacionActiva.IdEvaluacion}/recurso/{evaluacionActiva.IdRecurso}");
+            }
+            else
+            {
+                Navigation.NavigateTo("/evaluaciones");
+            }
+        }
+    }
+
+    private void OcultarWidget()
+    {
+        widgetOculto = true;
+        evaluacionActiva = null;
+    }
+
+    public void Dispose()
+    {
+        timer?.Dispose();
+    }
+}

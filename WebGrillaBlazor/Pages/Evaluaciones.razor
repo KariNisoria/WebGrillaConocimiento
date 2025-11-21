@@ -1,0 +1,670 @@
+@page "/evaluaciones"
+@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.ApiClient
+@inject ApiClientEvaluacion EvaluacionClient
+@inject ApiClientGeneric<RecursoDTO> RecursoClient
+@inject ApiClientGeneric<GrillaDTO> GrillaClient
+@inject NavigationManager Navigation
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <h3>Gestión de Evaluaciones</h3>
+        </div>
+    </div>
+
+    <!-- Sección de evaluación activa -->
+    @if (evaluacionActiva != null)
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-info">
+                    <div class="card-header bg-info text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-1">
+                                    <Icon Name="IconName.PlayFill" /> Evaluación Activa
+                                </h5>
+                                <p class="mb-0"><strong>@evaluacionActiva.Descripcion</strong></p>
+                            </div>
+                            <div class="text-end">
+                                <Button Color="ButtonColor.Light" Size="ButtonSize.Small" @onclick="VerDetalleEvaluacionActiva" class="me-2">
+                                    <Icon Name="IconName.Eye" /> Ver Detalle
+                                </Button>
+                                <Button Color="ButtonColor.Warning" Size="ButtonSize.Small" @onclick="FinalizarEvaluacionActiva">
+                                    <Icon Name="IconName.StopFill" /> Finalizar
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted">
+                                    <strong>Período:</strong><br/>
+                                    Desde: @evaluacionActiva.FechaInicio.ToString("dd/MM/yyyy HH:mm")<br/>
+                                    Hasta: @evaluacionActiva.FechaFin.ToString("dd/MM/yyyy HH:mm")
+                                </small>
+                            </div>
+                            <div class="col-md-6">
+                                @if (!string.IsNullOrEmpty(evaluacionActiva.NombreGrilla))
+                                {
+                                    <small class="text-muted">
+                                        <strong>Grilla:</strong> @evaluacionActiva.NombreGrilla<br/>
+                                        <strong>Recurso Principal:</strong> @(evaluacionActiva.NombreRecurso ?? "No especificado")
+                                    </small>
+                                }
+                            </div>
+                        </div>
+                        
+                        @if (evaluacionActiva.IdRecurso > 0)
+                        {
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <div class="alert alert-light border">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>Acceso rápido a la evaluación:</strong>
+                                                <br/>
+                                                <small class="text-muted">Ir directamente a evaluar el recurso principal</small>
+                                            </div>
+                                            <Button Color="ButtonColor.Primary" @onclick="() => IrAEvaluacionPrincipal()">
+                                                <Icon Name="IconName.PlayFill" /> Evaluar Ahora
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Sección para iniciar nueva evaluación -->
+    @if (evaluacionActiva == null)
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <Icon Name="IconName.Plus" /> Iniciar Nueva Evaluación
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="recursoEvaluacion" class="form-label">Recurso</label>
+                                    <select class="form-select" id="recursoEvaluacion" @bind="recursoSeleccionadoId">
+                                        <option value="0">Seleccionar recurso...</option>
+                                        @foreach (var recurso in recursos)
+                                        {
+                                            <option value="@recurso.IdRecurso">@recurso.Nombre @recurso.Apellido</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="grillaEvaluacion" class="form-label">Grilla</label>
+                                    <select class="form-select" id="grillaEvaluacion" @bind="grillaSeleccionadaId">
+                                        <option value="0">Seleccionar grilla...</option>
+                                        @foreach (var grilla in grillas)
+                                        {
+                                            <option value="@grilla.IdGrilla">@grilla.Nombre</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="descripcionEvaluacion" class="form-label">Descripción</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="descripcionEvaluacion" 
+                                           @bind="nuevaDescripcionEvaluacion"
+                                           placeholder="Ej: Evaluación Q1 2024" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="fechaFin" class="form-label">Fecha Fin</label>
+                                    <input type="datetime-local" 
+                                           class="form-control" 
+                                           id="fechaFin" 
+                                           @bind="fechaFinEvaluacion"
+                                           min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <Button Color="ButtonColor.Success" 
+                                        @onclick="CrearNuevaEvaluacion"
+                                        Disabled="@(string.IsNullOrWhiteSpace(nuevaDescripcionEvaluacion) || fechaFinEvaluacion <= DateTime.Now || grillaSeleccionadaId <= 0 || recursoSeleccionadoId <= 0)">
+                                    <Icon Name="IconName.PlayFill" /> Crear Evaluación
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Lista de recursos para evaluación -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <Icon Name="IconName.People" /> Recursos para Evaluación
+                        </h5>
+                        <div>
+                            <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" @onclick="RefrescarDatos">
+                                <Icon Name="IconName.ArrowClockwise" /> Refrescar
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (!recursos.Any())
+                    {
+                        <div class="text-center text-muted py-4">
+                            <Icon Name="IconName.ExclamationTriangle" Size="IconSize.x2" />
+                            <p class="mt-2">No hay recursos disponibles</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <Grid @ref="gridRecursos"
+                              TItem="RecursoEvaluacionInfo"
+                              Class="table table-hover table-bordered table-striped"
+                              DataProvider="GetRecursosEvaluacion"
+                              AllowPaging="true"
+                              PageSize="10"
+                              AllowSorting="true"
+                              Responsive="true">
+                            <GridColumns>
+                                <GridColumn TItem="RecursoEvaluacionInfo" HeaderText="ID" PropertyName="IdRecurso" SortKeySelector="item => item.IdRecurso">
+                                    @context.IdRecurso
+                                </GridColumn>
+                                <GridColumn TItem="RecursoEvaluacionInfo" HeaderText="Nombre" PropertyName="Nombre" SortKeySelector="item => item.Nombre">
+                                    <div>
+                                        @context.Nombre
+                                        @if (!string.IsNullOrEmpty(context.Apellidos))
+                                        {
+                                            <small class="text-muted d-block">@context.Apellidos</small>
+                                        }
+                                    </div>
+                                </GridColumn>
+                                <GridColumn TItem="RecursoEvaluacionInfo" HeaderText="Equipo" PropertyName="NombreEquipo" SortKeySelector="item => item.NombreEquipo">
+                                    @context.NombreEquipo
+                                </GridColumn>
+                                <GridColumn TItem="RecursoEvaluacionInfo" HeaderText="Grilla Asignada" PropertyName="NombreGrilla" SortKeySelector="item => item.NombreGrilla">
+                                    @if (!string.IsNullOrEmpty(context.NombreGrilla))
+                                    {
+                                        <span class="badge bg-info">@context.NombreGrilla</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Sin grilla asignada</span>
+                                    }
+                                </GridColumn>
+                                <GridColumn TItem="RecursoEvaluacionInfo" HeaderText="Estado" PropertyName="EstadoEvaluacion">
+                                    @if (evaluacionActiva == null)
+                                    {
+                                        <span class="badge bg-secondary">
+                                            <Icon Name="IconName.Pause" /> No hay evaluación activa
+                                        </span>
+                                    }
+                                    else if (context.IdRecurso == evaluacionActiva.IdRecurso)
+                                    {
+                                        <span class="badge bg-primary">
+                                            <Icon Name="IconName.Star" /> Recurso Principal
+                                        </span>
+                                    }
+                                    else if (context.TieneEvaluacionActiva)
+                                    {
+                                        <span class="badge bg-success">
+                                            <Icon Name="IconName.CheckCircle" /> Disponible
+                                        </span>
+                                    }
+                                    else if (string.IsNullOrEmpty(context.NombreGrilla))
+                                    {
+                                        <span class="badge bg-warning">
+                                            <Icon Name="IconName.ExclamationTriangle" /> Sin grilla
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-light text-dark">
+                                            <Icon Name="IconName.HourglassSplit" /> Grilla diferente
+                                        </span>
+                                    }
+                                </GridColumn>
+                                <GridColumn TItem="RecursoEvaluacionInfo" HeaderText="Acciones">
+                                    @if (evaluacionActiva != null && !string.IsNullOrEmpty(context.NombreGrilla))
+                                    {
+                                        <div class="btn-group" role="group">
+                                            <Button Color="ButtonColor.Primary" 
+                                                    Size="ButtonSize.Small" 
+                                                    @onclick="() => IniciarEvaluacionRecurso(context.IdRecurso, context.IdGrilla, context.Nombre)"
+                                                    Title="@($"Iniciar evaluación para {context.Nombre}")">
+                                                <Icon Name="IconName.PlayFill" /> Evaluar
+                                            </Button>
+                                            @if (context.TieneEvaluacionActiva)
+                                            {
+                                                <Button Color="ButtonColor.Success" 
+                                                        Size="ButtonSize.Small" 
+                                                        @onclick="() => VerProgreso(context.IdRecurso)"
+                                                        Title="@($"Ver progreso de evaluación de {context.Nombre}")">
+                                                    <Icon Name="IconName.Eye" /> Ver Progreso
+                                                </Button>
+                                            }
+                                            @if (context.IdRecurso == evaluacionActiva.IdRecurso)
+                                            {
+                                                <Button Color="ButtonColor.Info" 
+                                                        Size="ButtonSize.Small" 
+                                                        @onclick="() => VerProgreso(context.IdRecurso)"
+                                                        Title="Recurso principal de esta evaluación">
+                                                    <Icon Name="IconName.Star" /> Principal
+                                                </Button>
+                                            }
+                                        </div>
+                                    }
+                                    else if (evaluacionActiva == null)
+                                    {
+                                        <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" Disabled="true" Title="No hay evaluación activa">
+                                            <Icon Name="IconName.Pause" /> Sin evaluación
+                                        </Button>
+                                    }
+                                    else
+                                    {
+                                        <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" Disabled="true" Title="Recurso sin grilla asignada">
+                                            <Icon Name="IconName.XCircle" /> Sin grilla
+                                        </Button>
+                                    }
+                                </GridColumn>
+                            </GridColumns>
+                        </Grid>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de evaluaciones -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <Icon Name="IconName.Archive" /> Historial de Evaluaciones
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (!evaluacionesHistorial.Any())
+                    {
+                        <div class="text-center text-muted py-3">
+                            <p>No hay evaluaciones anteriores</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <Grid @ref="gridHistorial"
+                              TItem="EvaluacionDTO"
+                              Class="table table-hover table-bordered table-striped"
+                              DataProvider="GetHistorialEvaluaciones"
+                              AllowPaging="true"
+                              PageSize="5"
+                              AllowSorting="true"
+                              Responsive="true">
+                            <GridColumns>
+                                <GridColumn TItem="EvaluacionDTO" HeaderText="ID" PropertyName="IdEvaluacion" SortKeySelector="item => item.IdEvaluacion">
+                                    @context.IdEvaluacion
+                                </GridColumn>
+                                <GridColumn TItem="EvaluacionDTO" HeaderText="Descripción" PropertyName="Descripcion" SortKeySelector="item => item.Descripcion">
+                                    @context.Descripcion
+                                </GridColumn>
+                                <GridColumn TItem="EvaluacionDTO" HeaderText="Inicio" PropertyName="FechaInicio" SortKeySelector="item => item.FechaInicio">
+                                    @context.FechaInicio.ToString("dd/MM/yyyy HH:mm")
+                                </GridColumn>
+                                <GridColumn TItem="EvaluacionDTO" HeaderText="Fin" PropertyName="FechaFin" SortKeySelector="item => item.FechaFin">
+                                    @context.FechaFin.ToString("dd/MM/yyyy HH:mm")
+                                </GridColumn>
+                                <GridColumn TItem="EvaluacionDTO" HeaderText="Estado">
+                                    @if (context.FechaFin <= DateTime.Now)
+                                    {
+                                        <span class="badge bg-success">
+                                            <Icon Name="IconName.CheckCircle" /> Finalizada
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">
+                                            <Icon Name="IconName.PlayFill" /> Activa
+                                        </span>
+                                    }
+                                </GridColumn>
+                            </GridColumns>
+                        </Grid>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast de confirmación -->
+@if (mostrarToast)
+{
+    <div class="toast align-items-center @(tipoToast == "success" ? "text-bg-success" : "text-bg-danger") border-0 show position-fixed bottom-0 end-0 m-4" role="alert" aria-live="assertive" aria-atomic="true" style="z-index:9999;">
+        <div class="d-flex">
+            <div class="toast-body">
+                @mensajeToast
+            </div>
+            <button type="button" class="btn-close @(tipoToast == "success" ? "btn-close-white" : "btn-close-white") me-2 m-auto" @onclick="()=>mostrarToast=false" aria-label="Close"></button>
+        </div>
+    </div>
+}
+
+@code {
+    private List<RecursoDTO> recursos = new();
+    private List<GrillaDTO> grillas = new();
+    private List<EvaluacionDTO> evaluacionesHistorial = new();
+    private EvaluacionDTO? evaluacionActiva;
+    
+    private Grid<RecursoEvaluacionInfo> gridRecursos = default!;
+    private Grid<EvaluacionDTO> gridHistorial = default!;
+    
+    private string nuevaDescripcionEvaluacion = string.Empty;
+    private DateTime fechaFinEvaluacion = DateTime.Now.AddDays(30);
+    private int grillaSeleccionadaId = 0;
+    private int recursoSeleccionadoId = 0;
+    
+    private bool mostrarToast = false;
+    private string mensajeToast = string.Empty;
+    private string tipoToast = "success";
+
+    public class RecursoEvaluacionInfo
+    {
+        public int IdRecurso { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public string Apellidos { get; set; } = string.Empty;
+        public string NombreEquipo { get; set; } = string.Empty;
+        public int? IdGrilla { get; set; }
+        public string NombreGrilla { get; set; } = string.Empty;
+        public bool TieneEvaluacionActiva { get; set; }
+        public string EstadoEvaluacion { get; set; } = string.Empty;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        try
+        {
+            var tareasAsync = new List<Task>
+            {
+                CargarRecursos(),
+                CargarGrillas(),
+                CargarEvaluaciones(),
+                CargarEvaluacionActiva()
+            };
+            
+            await Task.WhenAll(tareasAsync);
+
+            await RefreshGrids();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar datos: {ex.Message}");
+        }
+    }
+
+    private async Task CargarRecursos()
+    {
+        try
+        {
+            recursos = await RecursoClient.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar recursos: {ex.Message}");
+            recursos = new List<RecursoDTO>();
+        }
+    }
+
+    private async Task CargarGrillas()
+    {
+        try
+        {
+            grillas = await GrillaClient.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar grillas: {ex.Message}");
+            grillas = new List<GrillaDTO>();
+        }
+    }
+
+    private async Task CargarEvaluaciones()
+    {
+        try
+        {
+            var todasLasEvaluaciones = await EvaluacionClient.GetAllAsync();
+            evaluacionesHistorial = todasLasEvaluaciones
+                .Where(e => e.FechaFin <= DateTime.Now)
+                .OrderByDescending(e => e.FechaInicio)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar evaluaciones: {ex.Message}");
+            evaluacionesHistorial = new List<EvaluacionDTO>();
+        }
+    }
+
+    private async Task CargarEvaluacionActiva()
+    {
+        try
+        {
+            evaluacionActiva = await EvaluacionClient.GetEvaluacionActivaAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar evaluación activa: {ex.Message}");
+            evaluacionActiva = null;
+        }
+    }
+
+    private async Task<GridDataProviderResult<RecursoEvaluacionInfo>> GetRecursosEvaluacion(GridDataProviderRequest<RecursoEvaluacionInfo> request)
+    {
+        var recursosInfo = recursos.Select(r => new RecursoEvaluacionInfo
+        {
+            IdRecurso = r.IdRecurso,
+            Nombre = r.Nombre,
+            Apellidos = r.Apellidos ?? r.Apellido,
+            NombreEquipo = r.NombreEquipo ?? "Sin equipo",
+            IdGrilla = r.IdGrilla,
+            NombreGrilla = grillas.FirstOrDefault(g => g.IdGrilla == r.IdGrilla)?.Nombre ?? "",
+            TieneEvaluacionActiva = evaluacionActiva != null && r.IdGrilla.HasValue && 
+                                  (r.IdRecurso == evaluacionActiva.IdRecurso || evaluacionActiva.IdGrilla == r.IdGrilla),
+            EstadoEvaluacion = GetEstadoEvaluacion(r)
+        }).ToList();
+
+        return await Task.FromResult(request.ApplyTo(recursosInfo));
+    }
+
+    private string GetEstadoEvaluacion(RecursoDTO recurso)
+    {
+        if (evaluacionActiva == null)
+            return "Sin evaluación activa";
+            
+        if (!recurso.IdGrilla.HasValue)
+            return "Sin grilla asignada";
+            
+        if (recurso.IdRecurso == evaluacionActiva.IdRecurso)
+            return "Recurso principal de evaluación";
+            
+        if (evaluacionActiva.IdGrilla == recurso.IdGrilla)
+            return "Disponible para evaluación";
+            
+        return "Grilla diferente a evaluación activa";
+    }
+
+    private async Task<GridDataProviderResult<EvaluacionDTO>> GetHistorialEvaluaciones(GridDataProviderRequest<EvaluacionDTO> request)
+    {
+        return await Task.FromResult(request.ApplyTo(evaluacionesHistorial));
+    }
+
+    private async Task CrearNuevaEvaluacion()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(nuevaDescripcionEvaluacion))
+            {
+                MostrarToast("La descripción es obligatoria", "error");
+                return;
+            }
+
+            if (fechaFinEvaluacion <= DateTime.Now)
+            {
+                MostrarToast("La fecha fin debe ser mayor a la fecha actual", "error");
+                return;
+            }
+
+            var nuevaEvaluacion = new EvaluacionDTO
+            {
+                Descripcion = nuevaDescripcionEvaluacion.Trim(),
+                FechaInicio = DateTime.Now,
+                FechaFin = fechaFinEvaluacion,
+                IdRecurso = recursoSeleccionadoId,
+                IdGrilla = grillaSeleccionadaId
+            };
+
+            evaluacionActiva = await EvaluacionClient.CreateAsync(nuevaEvaluacion);
+            
+            // Limpiar formulario
+            nuevaDescripcionEvaluacion = string.Empty;
+            fechaFinEvaluacion = DateTime.Now.AddDays(30);
+            grillaSeleccionadaId = 0;
+            recursoSeleccionadoId = 0;
+
+            await RefreshGrids();
+            MostrarToast("Evaluación creada correctamente", "success");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al crear evaluación: {ex.Message}");
+            MostrarToast("Error al crear la evaluación", "error");
+        }
+    }
+
+    private async Task FinalizarEvaluacionActiva()
+    {
+        try
+        {
+            if (evaluacionActiva != null)
+            {
+                evaluacionActiva.FechaFin = DateTime.Now;
+                await EvaluacionClient.UpdateAsync(evaluacionActiva.IdEvaluacion, evaluacionActiva);
+                
+                // Mover a historial
+                evaluacionesHistorial.Insert(0, evaluacionActiva);
+                evaluacionActiva = null;
+
+                await RefreshGrids();
+                MostrarToast("Evaluación finalizada correctamente", "success");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al finalizar evaluación: {ex.Message}");
+            MostrarToast("Error al finalizar la evaluación", "error");
+        }
+    }
+
+    private async Task IniciarEvaluacionRecurso(int idRecurso, int? idGrilla, string nombreRecurso)
+    {
+        try
+        {
+            if (evaluacionActiva == null || !idGrilla.HasValue)
+            {
+                MostrarToast("No se puede iniciar la evaluación", "error");
+                return;
+            }
+
+            // Navegar a la página de evaluación
+            Navigation.NavigateTo($"/evaluacion/{evaluacionActiva.IdEvaluacion}/recurso/{idRecurso}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al iniciar evaluación del recurso: {ex.Message}");
+            MostrarToast("Error al acceder a la evaluación", "error");
+        }
+    }
+
+    private void VerProgreso(int idRecurso)
+    {
+        if (evaluacionActiva != null)
+        {
+            Navigation.NavigateTo($"/evaluacion/{evaluacionActiva.IdEvaluacion}/recurso/{idRecurso}");
+        }
+    }
+
+    private void IrAEvaluacionPrincipal()
+    {
+        if (evaluacionActiva != null && evaluacionActiva.IdRecurso > 0)
+        {
+            Navigation.NavigateTo($"/evaluacion/{evaluacionActiva.IdEvaluacion}/recurso/{evaluacionActiva.IdRecurso}");
+        }
+        else
+        {
+            MostrarToast("No se puede acceder a la evaluación principal", "error");
+        }
+    }
+
+    private void VerDetalleEvaluacionActiva()
+    {
+        if (evaluacionActiva != null)
+        {
+            // Podemos navegar a una página de detalle de la evaluación si existe
+            // Por ahora, navegar a la evaluación del recurso principal
+            IrAEvaluacionPrincipal();
+        }
+    }
+
+    private async Task RefrescarDatos()
+    {
+        await CargarDatos();
+    }
+
+    private async Task RefreshGrids()
+    {
+        if (gridRecursos != null)
+        {
+            await gridRecursos.RefreshDataAsync();
+        }
+        if (gridHistorial != null)
+        {
+            await gridHistorial.RefreshDataAsync();
+        }
+    }
+
+    private void MostrarToast(string mensaje, string tipo)
+    {
+        mensajeToast = mensaje;
+        tipoToast = tipo;
+        mostrarToast = true;
+        Task.Delay(3000).ContinueWith(_ => InvokeAsync(() => { mostrarToast = false; StateHasChanged(); }));
+    }
+}

@@ -39,7 +39,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     }
     ));
 
-
 builder.Services.AddControllers();
 
 
@@ -83,6 +82,19 @@ builder.Services.AddScoped<IGrillaService, GrillaService>();
 
 builder.Services.AddScoped<IRepository<GrillaTema>, GrillaTemaRepository>();
 builder.Services.AddScoped<IGrillaTemaService, GrillaTemaService>();
+
+builder.Services.AddScoped<IRepository<GrillaSubtema>, GrillaSubtemaRepository>();
+builder.Services.AddScoped<IGrillaSubtemaRepository, GrillaSubtemaRepository>();
+builder.Services.AddScoped<IGrillaSubtemaService, GrillaSubtemaService>();
+
+// Nuevos servicios para evaluaciones y conocimientos
+builder.Services.AddScoped<IRepository<Evaluacion>, EvaluacionRepository>();
+builder.Services.AddScoped<IEvaluacionRepository, EvaluacionRepository>();
+builder.Services.AddScoped<IEvaluacionService, EvaluacionService>();
+
+builder.Services.AddScoped<IRepository<ConocimientoRecurso>, ConocimientoRecursoRepository>();
+builder.Services.AddScoped<IConocimientoRecursoRepository, ConocimientoRecursoRepository>();
+builder.Services.AddScoped<IConocimientoRecursoService, ConocimientoRecursoService>();
 
 var app = builder.Build();
 

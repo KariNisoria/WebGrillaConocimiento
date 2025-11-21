@@ -41,7 +41,7 @@
             @context.FechaVigencia.ToString("dd-MM-yyyy")
         </GridColumn>
         <GridColumn TItem="GrillaDTO" HeaderText="Estado" PropertyName="Estado" SortKeySelector="item => item.Estado">
-            @context.Estado
+            @GetEstadoGrilla(context)
         </GridColumn>
         <GridColumn TItem="GrillaDTO" HeaderText="Ver Temas">
             <a href="@($"/grillas/{@context.IdGrilla}/temas")" class="btn btn-info btn-sm">Ver temas</a>
@@ -183,5 +183,14 @@ else
         }
         
         StateHasChanged(); // Forzar actualización de la UI
+    }
+
+    private string GetEstadoGrilla(GrillaDTO grilla)
+    {
+        // Si la fecha de vigencia es mayor o igual a hoy, está vigente
+        if (grilla.FechaVigencia >= DateTime.Today)
+            return "Vigente";
+        else
+            return "No vigente";
     }
 }

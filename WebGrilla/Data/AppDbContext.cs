@@ -21,8 +21,12 @@ namespace WebGrilla.Data
         public DbSet<Grilla> Grillas { get; set; }
         public DbSet<GrillaTema> GrillaTemas { get; set; }
         public DbSet<GrillaSubtema> GrillaSubtemas { get; set; }
+        // Cuarta - Evaluaciones y Conocimientos
+        public DbSet<Evaluacion> Evaluacion { get; set; }
+        public DbSet<ConocimientoRecurso> ConocimientoRecurso { get; set; }
         // Sexta
         public DbSet<TipoDocumento> TiposDocumentos { get; set; }
+        
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             /*----------------------------------*/
@@ -147,7 +151,19 @@ namespace WebGrilla.Data
                 entity.Property("Descripcion").IsRequired().HasMaxLength(100);
                 entity.Property("FechaInicio").IsRequired();
                 entity.Property("FechaFin").IsRequired();
+                entity.Property("IdRecurso").IsRequired();
+                entity.Property("IdGrilla").IsRequired();
             });
+
+            modelBuilder.Entity<Evaluacion>()
+                .HasOne(x => x.Recurso)
+                .WithMany(x => x.Evaluaciones)
+                .HasForeignKey(x => x.IdRecurso);
+
+            modelBuilder.Entity<Evaluacion>()
+                .HasOne(x => x.Grilla)
+                .WithMany(x => x.Evaluaciones)
+                .HasForeignKey(x => x.IdGrilla);
 
             modelBuilder.Entity<ResultadoConocimiento>(entity =>
             {
@@ -182,8 +198,8 @@ namespace WebGrilla.Data
                 entity.HasKey(x=>x.IdConocimientoRecurso);
                 entity.Property("ValorFuncional").IsRequired();
                 entity.Property("ValorTecnico").IsRequired();
-                entity.Property("ValorFuncionalVerif").IsRequired();
-                entity.Property("ValorTecnicoVerif").IsRequired();
+                entity.Property("ValorFuncionalVerif");
+                entity.Property("ValorTecnicoVerif");
             });
 
             modelBuilder.Entity<ConocimientoRecurso>()

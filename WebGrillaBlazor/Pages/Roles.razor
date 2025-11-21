@@ -81,7 +81,8 @@
 
     private RolDTO CreateRol()
     {
-        var numero = roles!.Max(x => x.IdRol) + 1;
+        // Usar verificación para manejar colecciones vacías de forma segura
+        var numero = (roles?.Any() == true) ? roles.Max(x => x.IdRol) + 1 : 1;
 
         var nuevo = new RolDTO();
 

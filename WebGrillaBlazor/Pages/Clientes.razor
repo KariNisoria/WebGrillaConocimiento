@@ -81,7 +81,8 @@
 
     private ClienteDTO CreateCliente()
     {
-        var numero = clientes!.Max(x => x.IdCliente) + 1;
+        // Usar DefaultIfEmpty() para manejar colecciones vacías de forma segura
+        var numero = (clientes?.Any() == true) ? clientes.Max(x => x.IdCliente) + 1 : 1;
 
         var nuevo = new ClienteDTO();
 

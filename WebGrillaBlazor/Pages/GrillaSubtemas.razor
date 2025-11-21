@@ -1,0 +1,607 @@
+@page "/grillas/{IdGrilla:int}/temas/{IdGrillaTema:int}/subtemas"
+@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.ApiClient
+@inject ApiClientGeneric<GrillaSubtemaDTO> GrillaSubtemaClient
+@inject ApiClientGeneric<SubtemaDTO> SubtemaClient
+@inject ApiClientGeneric<GrillaTemaDTO> GrillaTemaClient
+@inject NavigationManager Navigation
+
+<div class="container-fluid">
+    <!-- Encabezado -->
+    <div class="row mb-3">
+        <div class="col">
+            <h3>Gestión de Subtemas - Grilla @IdGrilla</h3>
+            <p class="text-muted">Tema: <strong>@temaActual?.Nombre</strong></p>
+        </div>
+        <div class="col-auto">
+            <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" @onclick="VolverATemas">
+                <Icon Name="IconName.ArrowLeft" /> Volver a Temas
+            </Button>
+        </div>
+    </div>
+
+    <!-- Indicador de ponderación total de subtemas -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="alert @GetAlertClassForPonderacion() d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>Total Ponderación Subtemas: @totalPonderacionSubtemas.ToString("F2")%</strong>
+                    <small class="ms-2">@GetMensajePonderacion()</small>
+                </div>
+                <div class="progress" style="width: 300px; height: 20px;">
+                    <div class="progress-bar @GetProgressBarClass()" 
+                         role="progressbar" 
+                         style="width: @Math.Min(totalPonderacionSubtemas, 100)%" 
+                         aria-valuenow="@totalPonderacionSubtemas" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                        @totalPonderacionSubtemas.ToString("F1")%
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Panel izquierdo: Subtemas disponibles para este tema -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Subtemas Disponibles</h5>
+                    <small class="text-muted">Subtemas correspondientes al tema "<strong>@temaActual?.Nombre</strong>"</small>
+                    
+                    <!-- Buscador de subtemas -->
+                    <div class="mt-2">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <Icon Name="IconName.Search" />
+                            </span>
+                            <input type="text" 
+                                   class="form-control" 
+                                   placeholder="Buscar subtema por nombre..." 
+                                   @bind="filtroNombre" 
+                                   @oninput="OnFiltroChanged" />
+                            @if (!string.IsNullOrEmpty(filtroNombre))
+                            {
+                                <button class="btn btn-outline-secondary" type="button" @onclick="LimpiarFiltro">
+                                    <Icon Name="IconName.X" />
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (!subtemasDisponibles.Any())
+                    {
+                        <div class="text-center text-muted py-4">
+                            <Icon Name="IconName.InfoCircle" Size="IconSize.x2" />
+                            <p class="mt-2">No hay subtemas disponibles para este tema</p>
+                            <small>Este tema no tiene subtemas asignados</small>
+                        </div>
+                    }
+                    else
+                    {
+                        <Grid @ref="gridSubtemasDisponibles"
+                              TItem="SubtemaDTO"
+                              Class="table table-hover table-bordered table-striped"
+                              DataProvider="GetSubtemasFiltrados"
+                              AllowPaging="true"
+                              PageSize="10"
+                              AllowSorting="true"
+                              Responsive="true">
+                            <GridColumns>
+                                <GridColumn TItem="SubtemaDTO" HeaderText="ID" PropertyName="IdSubtema" SortKeySelector="item => item.IdSubtema">
+                                    @context.IdSubtema
+                                </GridColumn>
+                                <GridColumn TItem="SubtemaDTO" HeaderText="Nombre" PropertyName="Nombre" SortKeySelector="item => item.Nombre">
+                                    <span class="@(SubtemasYaAsignados.Contains(context.IdSubtema) ? "text-muted" : "")">
+                                        @GetNombreConResaltado(context.Nombre)
+                                    </span>
+                                    @if (SubtemasYaAsignados.Contains(context.IdSubtema))
+                                    {
+                                        <small class="text-success ms-2">
+                                            <Icon Name="IconName.CheckCircle" /> Ya asignado
+                                        </small>
+                                    }
+                                </GridColumn>
+                                <GridColumn TItem="SubtemaDTO" HeaderText="Orden" PropertyName="Orden" SortKeySelector="item => item.Orden">
+                                    @context.Orden
+                                </GridColumn>
+                                <GridColumn TItem="SubtemaDTO" HeaderText="Acciones">
+                                    @if (SubtemasYaAsignados.Contains(context.IdSubtema))
+                                    {
+                                        <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" Disabled="true">
+                                            <Icon Name="IconName.Check" /> Asignado
+                                        </Button>
+                                    }
+                                    else
+                                    {
+                                        <Button Color="ButtonColor.Primary" Size="ButtonSize.Small" @onclick="() => AgregarSubtemaAGrilla(context.IdSubtema, context.Nombre)">
+                                            <Icon Name="IconName.Plus" /> Agregar
+                                        </Button>
+                                    }
+                                </GridColumn>
+                            </GridColumns>
+                        </Grid>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel derecho: Subtemas asignados -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">Subtemas Asignados</h5>
+                            <small class="text-muted">Subtemas en este tema: @grillaSubtemas.Count</small>
+                        </div>
+                        @if (grillaSubtemas.Any())
+                        {
+                            <div class="text-end">
+                                <small class="text-muted">Total: </small>
+                                <strong class="@(totalPonderacionSubtemas > 100 ? "text-danger" : totalPonderacionSubtemas < 100 ? "text-warning" : "text-success")">
+                                    @totalPonderacionSubtemas.ToString("F2")%
+                                </strong>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (!grillaSubtemas.Any())
+                    {
+                        <div class="text-center text-muted py-4">
+                            <Icon Name="IconName.ExclamationTriangle" Size="IconSize.x2" />
+                            <p class="mt-2">No hay subtemas asignados a este tema</p>
+                            <small>Agrega subtemas desde el panel izquierdo</small>
+                        </div>
+                    }
+                    else
+                    {
+                        <Grid @ref="gridGrillaSubtemas"
+                              TItem="GrillaSubtemaDTO"
+                              Class="table table-hover table-bordered table-striped"
+                              DataProvider="GetGrillaSubtemas"
+                              AllowPaging="true"
+                              PageSize="10"
+                              AllowSorting="true"
+                              Responsive="true">
+                            <GridColumns>
+                                <GridColumn TItem="GrillaSubtemaDTO" HeaderText="ID" PropertyName="IdGrillaSubtema" SortKeySelector="item => item.IdGrillaSubtema">
+                                    @context.IdGrillaSubtema
+                                </GridColumn>
+                                <GridColumn TItem="GrillaSubtemaDTO" HeaderText="Subtema" PropertyName="Nombre" SortKeySelector="item => item.Nombre">
+                                    @context.Nombre
+                                </GridColumn>
+                                <GridColumn TItem="GrillaSubtemaDTO" HeaderText="Ponderación" PropertyName="Ponderacion" SortKeySelector="item => item.Ponderacion">
+                                    <span class="@(context.Ponderacion > 50 ? "fw-bold" : "")">
+                                        @context.Ponderacion.ToString("F2")%
+                                    </span>
+                                </GridColumn>
+                                <GridColumn TItem="GrillaSubtemaDTO" HeaderText="Acciones">
+                                    <div class="btn-group" role="group">
+                                        <Button Color="ButtonColor.Warning" Size="ButtonSize.Small" @onclick="() => EditarPonderacion(context)">
+                                            <Icon Name="IconName.Pencil" /> Editar
+                                        </Button>
+                                        <Button Color="ButtonColor.Danger" Size="ButtonSize.Small" @onclick="() => EliminarSubtemaDeGrilla(context.IdGrillaSubtema)">
+                                            <Icon Name="IconName.Trash" /> Quitar
+                                        </Button>
+                                    </div>
+                                </GridColumn>
+                            </GridColumns>
+                        </Grid>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para editar ponderación -->
+<Modal @ref="modalEditarPonderacion" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Regular">
+    <HeaderTemplate>
+        <ModalTitle>Editar Ponderación del Subtema</ModalTitle>
+    </HeaderTemplate>
+    <BodyTemplate>
+        @if (grillaSubtemaEditar != null)
+        {
+            <div class="mb-3">
+                <label class="form-label">Subtema: <strong>@grillaSubtemaEditar.Nombre</strong></label>
+            </div>
+            <div class="mb-3">
+                <label for="ponderacion" class="form-label">
+                    Ponderación (%)
+                    <small class="text-muted ms-1">
+                        - Total actual: @totalPonderacionSubtemas.ToString("F2")%
+                    </small>
+                </label>
+                <input type="number" 
+                       class="form-control @(errorValidacionPonderacion ? "is-invalid" : "")" 
+                       id="ponderacion" 
+                       @bind="nuevaPonderacion" 
+                       @oninput="ValidarPonderacion"
+                       min="0" 
+                       max="100" 
+                       step="0.01" />
+                @if (errorValidacionPonderacion)
+                {
+                    <div class="invalid-feedback">
+                        @mensajeErrorPonderacion
+                    </div>
+                }
+                else if (nuevaPonderacion > 0)
+                {
+                    <div class="form-text">
+                        Total con este cambio: <strong class="@(totalPonderacionConCambio > 100 ? "text-danger" : "text-success")">
+                            @totalPonderacionConCambio.ToString("F2")%
+                        </strong>
+                    </div>
+                }
+            </div>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="CerrarModalPonderacion">Cancelar</Button>
+        <Button Color="ButtonColor.Primary" 
+                @onclick="GuardarPonderacion" 
+                Disabled="@(errorValidacionPonderacion || nuevaPonderacion <= 0)">
+            Guardar
+        </Button>
+    </FooterTemplate>
+</Modal>
+
+<!-- Toast de confirmación -->
+@if (mostrarToast)
+{
+    <div class="toast align-items-center text-bg-success border-0 show position-fixed bottom-0 end-0 m-4" role="alert" aria-live="assertive" aria-atomic="true" style="z-index:9999;">
+        <div class="d-flex">
+            <div class="toast-body">
+                @mensajeToast
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" @onclick="()=>mostrarToast=false" aria-label="Close"></button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int IdGrilla { get; set; }
+    [Parameter] public int IdGrillaTema { get; set; }
+    
+    private List<GrillaSubtemaDTO> grillaSubtemas = new();
+    private List<SubtemaDTO> subtemasDisponibles = new();
+    private List<SubtemaDTO> subtemasFiltrados = new();
+    private GrillaTemaDTO? temaActual;
+    private string filtroNombre = string.Empty;
+    
+    private Grid<SubtemaDTO> gridSubtemasDisponibles = default!;
+    private Grid<GrillaSubtemaDTO> gridGrillaSubtemas = default!;
+    
+    private Modal modalEditarPonderacion = default!;
+    private GrillaSubtemaDTO? grillaSubtemaEditar;
+    private decimal nuevaPonderacion = 0;
+    private bool errorValidacionPonderacion = false;
+    private string mensajeErrorPonderacion = string.Empty;
+    
+    private bool mostrarToast = false;
+    private string mensajeToast = string.Empty;
+    
+    // Propiedades calculadas
+    private decimal totalPonderacionSubtemas => grillaSubtemas.Sum(gs => gs.Ponderacion);
+    private decimal totalPonderacionConCambio => grillaSubtemas.Where(gs => gs.IdGrillaSubtema != (grillaSubtemaEditar?.IdGrillaSubtema ?? 0)).Sum(gs => gs.Ponderacion) + nuevaPonderacion;
+    private HashSet<int> SubtemasYaAsignados => grillaSubtemas.Select(gs => gs.IdSubtema).ToHashSet();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        try
+        {
+            // Cargar datos en paralelo
+            var tareasAsync = new List<Task>
+            {
+                CargarTemaActual(),
+                CargarSubtemasDisponibles(),
+                CargarGrillaSubtemas()
+            };
+            
+            await Task.WhenAll(tareasAsync);
+            
+            // Aplicar filtro inicial
+            AplicarFiltro();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar datos: {ex.Message}");
+        }
+    }
+
+    private async Task CargarTemaActual()
+    {
+        try
+        {
+            temaActual = await GrillaTemaClient.GetByIdAsync(IdGrillaTema);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar tema actual: {ex.Message}");
+        }
+    }
+
+    private async Task CargarSubtemasDisponibles()
+    {
+        try
+        {
+            var todosLosSubtemas = await SubtemaClient.GetAllAsync();
+            // Filtrar solo los subtemas que corresponden al tema actual
+            if (temaActual != null)
+            {
+                subtemasDisponibles = todosLosSubtemas.Where(s => s.IdTema == temaActual.IdTema).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar subtemas disponibles: {ex.Message}");
+            subtemasDisponibles = new List<SubtemaDTO>();
+        }
+    }
+
+    private async Task CargarGrillaSubtemas()
+    {
+        try
+        {
+            grillaSubtemas = await GrillaSubtemaClient.GetAsync($"ByGrillaTema/{IdGrillaTema}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar subtemas de grilla: {ex.Message}");
+            grillaSubtemas = new List<GrillaSubtemaDTO>();
+        }
+    }
+
+    // Filtrado de subtemas
+    private void AplicarFiltro()
+    {
+        if (string.IsNullOrWhiteSpace(filtroNombre))
+        {
+            subtemasFiltrados = new List<SubtemaDTO>(subtemasDisponibles);
+        }
+        else
+        {
+            subtemasFiltrados = subtemasDisponibles
+                .Where(s => s.Nombre.Contains(filtroNombre, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+    }
+
+    private async Task OnFiltroChanged(ChangeEventArgs e)
+    {
+        filtroNombre = e.Value?.ToString() ?? string.Empty;
+        AplicarFiltro();
+        if (gridSubtemasDisponibles != null)
+        {
+            await gridSubtemasDisponibles.RefreshDataAsync();
+        }
+    }
+
+    private async Task LimpiarFiltro()
+    {
+        filtroNombre = string.Empty;
+        AplicarFiltro();
+        await gridSubtemasDisponibles.RefreshDataAsync();
+    }
+
+    private MarkupString GetNombreConResaltado(string nombre)
+    {
+        if (string.IsNullOrWhiteSpace(filtroNombre))
+        {
+            return new MarkupString(nombre);
+        }
+
+        var index = nombre.IndexOf(filtroNombre, StringComparison.OrdinalIgnoreCase);
+        if (index >= 0)
+        {
+            var antes = nombre.Substring(0, index);
+            var coincidencia = nombre.Substring(index, filtroNombre.Length);
+            var despues = nombre.Substring(index + filtroNombre.Length);
+            
+            return new MarkupString($"{antes}<mark>{coincidencia}</mark>{despues}");
+        }
+        
+        return new MarkupString(nombre);
+    }
+
+    // Validación de ponderación
+    private void ValidarPonderacion(ChangeEventArgs e)
+    {
+        if (decimal.TryParse(e.Value?.ToString(), out var valor))
+        {
+            nuevaPonderacion = valor;
+        }
+        
+        errorValidacionPonderacion = false;
+        mensajeErrorPonderacion = string.Empty;
+
+        if (nuevaPonderacion < 0)
+        {
+            errorValidacionPonderacion = true;
+            mensajeErrorPonderacion = "La ponderación no puede ser negativa";
+        }
+        else if (nuevaPonderacion > 100)
+        {
+            errorValidacionPonderacion = true;
+            mensajeErrorPonderacion = "La ponderación no puede ser mayor a 100%";
+        }
+        else if (totalPonderacionConCambio > 100)
+        {
+            errorValidacionPonderacion = true;
+            mensajeErrorPonderacion = $"El total excedería 100% (sería {totalPonderacionConCambio:F2}%)";
+        }
+    }
+
+    // Métodos para la barra de progreso y alertas
+    private string GetAlertClassForPonderacion()
+    {
+        return totalPonderacionSubtemas switch
+        {
+            100 => "alert-success",
+            > 100 => "alert-danger",
+            > 80 => "alert-warning",
+            _ => "alert-info"
+        };
+    }
+
+    private string GetProgressBarClass()
+    {
+        return totalPonderacionSubtemas switch
+        {
+            100 => "bg-success",
+            > 100 => "bg-danger",
+            > 80 => "bg-warning",
+            _ => "bg-info"
+        };
+    }
+
+    private string GetMensajePonderacion()
+    {
+        return totalPonderacionSubtemas switch
+        {
+            100 => "? ¡Perfecto! Ponderación completa",
+            > 100 => $"?? Excede en {totalPonderacionSubtemas - 100:F2}%",
+            > 80 => $"?? Faltan {100 - totalPonderacionSubtemas:F2}% para completar",
+            _ => $"?? Faltan {100 - totalPonderacionSubtemas:F2}% para completar"
+        };
+    }
+
+    // Métodos de datos para los grids
+    private async Task<GridDataProviderResult<SubtemaDTO>> GetSubtemasFiltrados(GridDataProviderRequest<SubtemaDTO> request)
+    {
+        return await Task.FromResult(request.ApplyTo(subtemasFiltrados));
+    }
+
+    private async Task<GridDataProviderResult<GrillaSubtemaDTO>> GetGrillaSubtemas(GridDataProviderRequest<GrillaSubtemaDTO> request)
+    {
+        return await Task.FromResult(request.ApplyTo(grillaSubtemas));
+    }
+
+    private async Task AgregarSubtemaAGrilla(int idSubtema, string nombreSubtema)
+    {
+        try
+        {
+            // Verificar si ya existe el subtema en la grilla
+            if (grillaSubtemas.Any(gs => gs.IdSubtema == idSubtema))
+            {
+                Console.WriteLine($"El subtema '{nombreSubtema}' ya está en la grilla");
+                return;
+            }
+
+            // Validar que no exceda 100% con una ponderación mínima
+            var ponderacionPorDefecto = 10.0m;
+            if (totalPonderacionSubtemas + ponderacionPorDefecto > 100)
+            {
+                ponderacionPorDefecto = Math.Max(0, 100 - totalPonderacionSubtemas);
+            }
+
+            var nuevoGrillaSubtema = new GrillaSubtemaDTO
+            {
+                IdGrillaTema = IdGrillaTema,
+                IdSubtema = idSubtema,
+                Nombre = nombreSubtema,
+                Ponderacion = ponderacionPorDefecto
+            };
+
+            await GrillaSubtemaClient.CreateAsync(nuevoGrillaSubtema);
+            
+            // Recargar datos
+            await CargarGrillaSubtemas();
+            await gridGrillaSubtemas.RefreshDataAsync();
+            await gridSubtemasDisponibles.RefreshDataAsync();
+            
+            mensajeToast = $"Subtema '{nombreSubtema}' agregado exitosamente";
+            mostrarToast = true;
+            await Task.Delay(2000);
+            mostrarToast = false;
+            
+            Console.WriteLine($"Subtema '{nombreSubtema}' agregado a la grilla exitosamente");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al agregar subtema a grilla: {ex.Message}");
+        }
+    }
+
+    private async Task EliminarSubtemaDeGrilla(int idGrillaSubtema)
+    {
+        try
+        {
+            await GrillaSubtemaClient.DeleteAsync(idGrillaSubtema);
+            
+            // Recargar datos
+            await CargarGrillaSubtemas();
+            await gridGrillaSubtemas.RefreshDataAsync();
+            await gridSubtemasDisponibles.RefreshDataAsync();
+            
+            mensajeToast = "Subtema eliminado exitosamente";
+            mostrarToast = true;
+            await Task.Delay(2000);
+            mostrarToast = false;
+            
+            Console.WriteLine("Subtema eliminado de la grilla exitosamente");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al eliminar subtema de grilla: {ex.Message}");
+        }
+    }
+
+    private async Task EditarPonderacion(GrillaSubtemaDTO grillaSubtema)
+    {
+        grillaSubtemaEditar = grillaSubtema;
+        nuevaPonderacion = grillaSubtema.Ponderacion;
+        errorValidacionPonderacion = false;
+        mensajeErrorPonderacion = string.Empty;
+        await modalEditarPonderacion.ShowAsync();
+    }
+
+    private async Task GuardarPonderacion()
+    {
+        try
+        {
+            if (grillaSubtemaEditar != null && !errorValidacionPonderacion)
+            {
+                grillaSubtemaEditar.Ponderacion = nuevaPonderacion;
+                await GrillaSubtemaClient.UpdateAsync(grillaSubtemaEditar.IdGrillaSubtema, grillaSubtemaEditar);
+                
+                // Recargar datos
+                await CargarGrillaSubtemas();
+                await gridGrillaSubtemas.RefreshDataAsync();
+                
+                await modalEditarPonderacion.HideAsync();
+                
+                mensajeToast = "Ponderación actualizada correctamente";
+                mostrarToast = true;
+                await Task.Delay(2000);
+                mostrarToast = false;
+                
+                Console.WriteLine("Ponderación actualizada exitosamente");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al actualizar ponderación: {ex.Message}");
+        }
+    }
+
+    private async Task CerrarModalPonderacion()
+    {
+        await modalEditarPonderacion.HideAsync();
+    }
+
+    private void VolverATemas()
+    {
+        Navigation.NavigateTo($"/grillas/{IdGrilla}/temas");
+    }
+}

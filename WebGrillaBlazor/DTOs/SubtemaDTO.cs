@@ -6,7 +6,7 @@ namespace WebGrillaBlazor.DTOs
     public class SubtemaDTO
     {
         public int IdSubtema { get; set; }
-        public string Nombre { get; set; }
+        public string Nombre { get; set; } = string.Empty;
         public int Orden { get; set; }
         public int IdTema { get; set; }
 

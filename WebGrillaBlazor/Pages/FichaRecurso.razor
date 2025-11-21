@@ -44,17 +44,20 @@ else
             <label class="col-md-2 col-form-label">Tipo Documento:</label>
             <div class="col-md-10">
                 <InputSelect Value="@selectedIdTipo"
-                             ValueChanged="@((int selectedIdTipo) => OnSelectionRolChanged(selectedIdTipo))"
+                             ValueChanged="@((int selectedIdTipo) => OnSelectionTipoChanged(selectedIdTipo))"
                              ValueExpression="@(()=>selectedIdTipo)">
 
-                    <option value"">--Seleccione un tipo documento...</option>
+                    <option value="">--Seleccione un tipo documento...</option>
                     @foreach (var item in _loadedTipo)
                     {
                         if (selectedIdTipo == item.IdTipoDocumento)
                         {
                             <option selected value="@item.IdTipoDocumento">@item.Nombre</option>
                         }
-                        <option value="@item.IdTipoDocumento">@item.Nombre</option>
+                        else
+                        {
+                            <option value="@item.IdTipoDocumento">@item.Nombre</option>
+                        }
                     }
                 </InputSelect>
             </div>
@@ -88,14 +91,17 @@ else
                              ValueChanged="@((int selectedIdEquipo) => OnSelectionEquipoChanged(selectedIdEquipo))"
                              ValueExpression="@(()=>selectedIdEquipo)">
 
-                    <option value"">--Seleccione un equipo...</option>
+                    <option value="">--Seleccione un equipo...</option>
                     @foreach (var item in _loadedEquipo)
                     {
-                        if (selectedIdRol == item.IdEquipoDesarrollo)
+                        if (selectedIdEquipo == item.IdEquipoDesarrollo)
                         {
                             <option selected value="@item.IdEquipoDesarrollo">@item.Nombre</option>
                         }
-                        <option value="@item.IdEquipoDesarrollo">@item.Nombre</option>
+                        else
+                        {
+                            <option value="@item.IdEquipoDesarrollo">@item.Nombre</option>
+                        }
                     }
                 </InputSelect>
             </div>
@@ -108,14 +114,17 @@ else
                              ValueChanged="@((int selectedIdRol) => OnSelectionRolChanged(selectedIdRol))"
                              ValueExpression="@(()=>selectedIdRol)">
 
-                    <option value"">--Seleccione un rol...</option>
+                    <option value="">--Seleccione un rol...</option>
                     @foreach (var item in _loadedRol)
                     {
                         if (selectedIdRol == item.IdRol)
                         {
                             <option selected value="@item.IdRol">@item.Nombre</option>
                         }
-                        <option value="@item.IdRol">@item.Nombre</option>
+                        else
+                        {
+                            <option value="@item.IdRol">@item.Nombre</option>
+                        }
                     }
                 </InputSelect>
             </div>
@@ -162,23 +171,36 @@ else
 
         editContext = new EditContext(recurso);
 
-        var existeRecurso = await ExisteRecurso();
-
-        Console.WriteLine($"OnInitializedAsync() existeRecurso: {existeRecurso}");
-
-        if (!existeRecurso)
-        {
-            Console.WriteLine("No existe Recurso");
-            await AltaRecurso();
-        }
-
+        // Cargar datos primero antes de verificar existencia
         await LoadRol();
         await LoadTipo();
         await LoadEquipo();
 
+        // Establecer valores seleccionados
         selectedIdRol = recurso.IdRol;
         selectedIdTipo = recurso.IdTipoDocumento;
         selectedIdEquipo = recurso.IdEquipoDesarrollo;
+
+        // Solo crear si el ID es 0 (nuevo registro)
+        if (recurso.IdRecurso == 0)
+        {
+            var existeRecurso = await ExisteRecurso();
+            Console.WriteLine($"OnInitializedAsync() existeRecurso: {existeRecurso}");
+
+            if (!existeRecurso)
+            {
+                Console.WriteLine("No existe Recurso - Creando nuevo");
+                try
+                {
+                    await AltaRecurso();
+                }
+                catch (Exception ex)
+                {
+                    errorMessage = $"Error al crear recurso: {ex.Message}";
+                    Console.WriteLine($"Error en AltaRecurso: {ex.Message}");
+                }
+            }
+        }
 
         base.OnInitialized();
     }
@@ -196,42 +218,82 @@ else
 
     private async Task<bool> ExisteRecurso()
     {
-        Console.WriteLine("ExisteRecurso()");
-        var encontrado = await _apiClient.GetByIdAsync(recurso.IdRecurso);
-        if (encontrado == null)
+        try
+        {
+            Console.WriteLine("ExisteRecurso()");
+            var encontrado = await _apiClient.GetByIdAsync(recurso.IdRecurso);
+            if (encontrado == null)
+            {
+                return false;
+            }
+            Console.WriteLine($"ExisteRecurso() variable idRecurso: {encontrado.IdRecurso}");
+            return (encontrado.IdRecurso > 0);
+        }
+        catch
         {
             return false;
         }
-        Console.WriteLine($"ExisteRecurso() variable idRecurso: {encontrado.IdRecurso}");
-        return (encontrado.IdRecurso!= null);
     }
 
     private async Task AltaRecurso()
     {
         Console.WriteLine("AltaRecurso()");
-        var nuevo = await _apiClient.CreateAsync(recurso);
-        recurso.IdRecurso= nuevo.IdRecurso;
+        
+        // Validar que los campos requeridos tengan valores válidos
+        if (string.IsNullOrEmpty(recurso.Nombre))
+            recurso.Nombre = "Nuevo Recurso";
+        if (string.IsNullOrEmpty(recurso.Apellido))
+            recurso.Apellido = "Apellido";
+        if (string.IsNullOrEmpty(recurso.CorreoElectronico))
+            recurso.CorreoElectronico = "nuevo@email.com";
+        if (string.IsNullOrEmpty(recurso.PerfilSeguridad))
+            recurso.PerfilSeguridad = "resource";
+        if (recurso.FechaIngreso == default(DateTime))
+            recurso.FechaIngreso = DateTime.Today;
+        if (recurso.NumeroDocumento <= 0)
+            recurso.NumeroDocumento = 12345678;
+        if (recurso.IdTipoDocumento <= 0)
+            recurso.IdTipoDocumento = 1;
+        if (recurso.IdEquipoDesarrollo <= 0)
+            recurso.IdEquipoDesarrollo = 1;
+        if (recurso.IdRol <= 0)
+            recurso.IdRol = 1;
 
+        var nuevo = await _apiClient.CreateAsync(recurso);
+        recurso.IdRecurso = nuevo.IdRecurso;
     }
 
     private async Task ModificarRecurso()
     {
-        Console.WriteLine("ModificarRecurso()");
-        await _apiClient.UpdateAsync(recurso.IdRecurso, recurso);
+        try
+        {
+            Console.WriteLine("ModificarRecurso()");
+            await _apiClient.UpdateAsync(recurso.IdRecurso, recurso);
+            errorMessage = "";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al modificar recurso: {ex.Message}";
+        }
     }
 
     private async Task EliminarRecurso()
     {
-        Console.WriteLine("EliminarRecurso()");
-        await _apiClient.DeleteAsync(recurso.IdRecurso);
+        try
         {
+            Console.WriteLine("EliminarRecurso()");
+            await _apiClient.DeleteAsync(recurso.IdRecurso);
+            
             // Notificar al componente padre para cerrar la ficha
             if (OnClickCallBack.HasDelegate)
             {
-                await OnClickCallBack.InvokeAsync(null); // Dispara el callback
+                await OnClickCallBack.InvokeAsync(null);
             }
         }
-
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al eliminar recurso: {ex.Message}";
+        }
     }
 
     private async Task LoadRol()

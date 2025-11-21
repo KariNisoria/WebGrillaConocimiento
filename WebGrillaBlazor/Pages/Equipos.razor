@@ -82,7 +82,8 @@
 
     private EquipoDesarrolloDTO CreateEquipo()
     {
-        var numero = equipos!.Max(x => x.IdEquipoDesarrollo) + 1;
+        // Usar verificación para manejar colecciones vacías de forma segura
+        var numero = (equipos?.Any() == true) ? equipos.Max(x => x.IdEquipoDesarrollo) + 1 : 1;
 
         var nuevo = new EquipoDesarrolloDTO();
 

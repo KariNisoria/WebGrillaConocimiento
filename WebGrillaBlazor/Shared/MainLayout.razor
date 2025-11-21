@@ -15,7 +15,18 @@
     </SidebarSection>
 
     <ContentSection>
-        @Body
+        <div class="top-row px-4">
+            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+        </div>
+
+        <!-- Widget de evaluación activa -->
+        <div class="px-4">
+            <EvaluacionActivaWidget />
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
     </ContentSection>
 
     <FooterSection>
@@ -39,14 +50,14 @@
         navItems = new List<NavItem>
         {
             new NavItem { Id = "1", Href = "/", IconName = IconName.HouseDoorFill, Text = "Home", Match=NavLinkMatch.All},
-            new NavItem { Id = "2", Href = "/Clientes", IconName = IconName.Table, Text = "Clientes"},
-            new NavItem { Id = "3", Href = "/Temas", IconName = IconName.Table, Text = "Temas"},
-            new NavItem { Id = "4", Href = "/Roles", IconName = IconName.Table, Text = "Roles"},
-            new NavItem { Id = "5", Href = "/Tipos", IconName = IconName.Table, Text = "Tipos de Documento"},
-            new NavItem { Id = "6", Href = "/Equipos", IconName = IconName.Table, Text = "Equipos"},
-            new NavItem { Id = "6", Href = "/Recursos", IconName = IconName.Table, Text = "Recursos"},
-            new NavItem { Id = "7", Href = "/Grillas", IconName = IconName.Table, Text = "Grillas"},
-            new NavItem { Id = "8", Href = "/Prueba01", IconName = IconName.Table, Text = "Prueba"},
+            new NavItem { Id = "2", Href = "/evaluaciones", IconName = IconName.ClipboardCheck, Text = "Evaluaciones"},
+            new NavItem { Id = "3", Href = "/Grillas", IconName = IconName.Grid, Text = "Grillas"},
+            new NavItem { Id = "4", Href = "/Clientes", IconName = IconName.Building, Text = "Clientes"},
+            new NavItem { Id = "5", Href = "/Temas", IconName = IconName.BookHalf, Text = "Temas"},
+            new NavItem { Id = "6", Href = "/Recursos", IconName = IconName.People, Text = "Recursos"},
+            new NavItem { Id = "7", Href = "/Equipos", IconName = IconName.Diagram3, Text = "Equipos"},
+            new NavItem { Id = "8", Href = "/Roles", IconName = IconName.PersonBadge, Text = "Roles"},
+            new NavItem { Id = "9", Href = "/Tipos", IconName = IconName.FileText, Text = "Tipos de Documento"},
         };
 
         return navItems;

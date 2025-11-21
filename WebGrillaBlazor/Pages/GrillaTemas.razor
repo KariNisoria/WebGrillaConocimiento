@@ -3,6 +3,7 @@
 @using WebGrillaBlazor.ApiClient
 @inject ApiClientGeneric<GrillaTemaDTO> GrillaTemaClient
 @inject ApiClientGeneric<TemaDTO> TemaClient
+@inject ApiClientConocimiento ConocimientoClient
 @inject NavigationManager Navigation
 
 <div class="container-fluid">
@@ -146,29 +147,62 @@
                     else
                     {
                         <Grid @ref="gridGrillaTemas"
-                              TItem="GrillaTemaDTO"
+                              TItem="GrillaTemaConCompletitud"
                               Class="table table-hover table-bordered table-striped"
-                              DataProvider="GetGrillaTemas"
+                              DataProvider="GetGrillaTemasConCompletitud"
                               AllowPaging="true"
                               PageSize="10"
                               AllowSorting="true"
                               Responsive="true">
                             <GridColumns>
-                                <GridColumn TItem="GrillaTemaDTO" HeaderText="ID" PropertyName="IdGrillaTema" SortKeySelector="item => item.IdGrillaTema">
+                                <GridColumn TItem="GrillaTemaConCompletitud" HeaderText="ID" PropertyName="IdGrillaTema" SortKeySelector="item => item.IdGrillaTema">
                                     @context.IdGrillaTema
                                 </GridColumn>
-                                <GridColumn TItem="GrillaTemaDTO" HeaderText="Tema" PropertyName="Nombre" SortKeySelector="item => item.Nombre">
-                                    @context.Nombre
+                                <GridColumn TItem="GrillaTemaConCompletitud" HeaderText="Tema" PropertyName="Nombre" SortKeySelector="item => item.Nombre">
+                                    <div class="d-flex align-items-center gap-2">
+                                        @context.Nombre
+                                        @if (context.PorcentajeCompletitud >= 100)
+                                        {
+                                            <span class="badge bg-success">
+                                                <Icon Name="IconName.CheckCircle" /> 100% Completo
+                                            </span>
+                                        }
+                                        else if (context.PorcentajeCompletitud > 0)
+                                        {
+                                            <span class="badge bg-warning">
+                                                @context.PorcentajeCompletitud.ToString("F1")% Completo
+                                            </span>
+                                        }
+                                    </div>
                                 </GridColumn>
-                                <GridColumn TItem="GrillaTemaDTO" HeaderText="Ponderación" PropertyName="Ponderacion" SortKeySelector="item => item.Ponderacion">
+                                <GridColumn TItem="GrillaTemaConCompletitud" HeaderText="Ponderación" PropertyName="Ponderacion" SortKeySelector="item => item.Ponderacion">
                                     <span class="@(context.Ponderacion > 50 ? "fw-bold" : "")">
                                         @context.Ponderacion.ToString("F2")%
                                     </span>
                                 </GridColumn>
-                                <GridColumn TItem="GrillaTemaDTO" HeaderText="Acciones">
+                                <GridColumn TItem="GrillaTemaConCompletitud" HeaderText="Completitud">
+                                    <div style="min-width: 120px;">
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <small class="text-muted">@context.PorcentajeCompletitud.ToString("F1")%</small>
+                                            @if (context.PorcentajeCompletitud >= 100)
+                                            {
+                                                <Icon Name="IconName.CheckCircle" class="text-success" />
+                                            }
+                                        </div>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar @(context.PorcentajeCompletitud >= 100 ? "bg-success" : context.PorcentajeCompletitud > 0 ? "bg-warning" : "bg-secondary")" 
+                                                 style="width: @context.PorcentajeCompletitud%">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </GridColumn>
+                                <GridColumn TItem="GrillaTemaConCompletitud" HeaderText="Acciones">
                                     <div class="btn-group" role="group">
                                         <Button Color="ButtonColor.Warning" Size="ButtonSize.Small" @onclick="() => EditarPonderacion(context)">
                                             <Icon Name="IconName.Pencil" /> Editar
+                                        </Button>
+                                        <Button Color="ButtonColor.Info" Size="ButtonSize.Small" @onclick="() => VerSubtemas(context.IdGrillaTema)">
+                                            <Icon Name="IconName.List" /> Subtemas
                                         </Button>
                                         <Button Color="ButtonColor.Danger" Size="ButtonSize.Small" @onclick="() => EliminarTemaDeGrilla(context.IdGrillaTema)">
                                             <Icon Name="IconName.Trash" /> Quitar
@@ -237,22 +271,45 @@
     </FooterTemplate>
 </Modal>
 
+<!-- Toast de confirmación -->
+@if (mostrarToast)
+{
+    <div class="toast align-items-center text-bg-success border-0 show position-fixed bottom-0 end-0 m-4" role="alert" aria-live="assertive" aria-atomic="true" style="z-index:9999;">
+        <div class="d-flex">
+            <div class="toast-body">
+                @mensajeToast
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" @onclick="()=>mostrarToast=false" aria-label="Close"></button>
+        </div>
+    </div>
+}
+
 @code {
     [Parameter] public int IdGrilla { get; set; }
     
     private List<GrillaTemaDTO> grillaTemas = new();
     private List<TemaDTO> temasDisponibles = new();
     private List<TemaDTO> temasFiltrados = new();
+    private Dictionary<int, decimal> completitudPorTema = new();
     private string filtroNombre = string.Empty;
     
     private Grid<TemaDTO> gridTemasDisponibles = default!;
-    private Grid<GrillaTemaDTO> gridGrillaTemas = default!;
+    private Grid<GrillaTemaConCompletitud> gridGrillaTemas = default!;
     
     private Modal modalEditarPonderacion = default!;
     private GrillaTemaDTO? grillaTemaoEditar;
     private decimal nuevaPonderacion = 0;
     private bool errorValidacionPonderacion = false;
     private string mensajeErrorPonderacion = string.Empty;
+    
+    private bool mostrarToast = false;
+    private string mensajeToast = string.Empty;
+    
+    // Clase auxiliar para mostrar temas con completitud
+    public class GrillaTemaConCompletitud : GrillaTemaDTO
+    {
+        public decimal PorcentajeCompletitud { get; set; }
+    }
     
     // Propiedades calculadas
     private decimal totalPonderacion => grillaTemas.Sum(gt => gt.Ponderacion);
@@ -262,6 +319,12 @@
     protected override async Task OnInitializedAsync()
     {
         await CargarDatos();
+        // Mostrar todos los temas disponibles al cargar la página
+        AplicarFiltro();
+        if (gridTemasDisponibles != null)
+        {
+            await gridTemasDisponibles.RefreshDataAsync();
+        }
     }
 
     private async Task CargarDatos()
@@ -272,7 +335,8 @@
             var tareasAsync = new List<Task>
             {
                 CargarTemasDisponibles(),
-                CargarGrillaTemas()
+                CargarGrillaTemas(),
+                CargarCompletitudTemas()
             };
             
             await Task.WhenAll(tareasAsync);
@@ -309,6 +373,32 @@
         {
             Console.WriteLine($"Error al cargar temas de grilla: {ex.Message}");
             grillaTemas = new List<GrillaTemaDTO>();
+        }
+    }
+
+    private async Task CargarCompletitudTemas()
+    {
+        try
+        {
+            completitudPorTema.Clear();
+            
+            foreach (var grillaTema in grillaTemas)
+            {
+                try
+                {
+                    var completitud = await ConocimientoClient.GetPorcentajeCompletitudSubtemasAsync(grillaTema.IdGrillaTema);
+                    completitudPorTema[grillaTema.IdGrillaTema] = completitud;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error al cargar completitud para tema {grillaTema.IdGrillaTema}: {ex.Message}");
+                    completitudPorTema[grillaTema.IdGrillaTema] = 0;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar completitud general: {ex.Message}");
         }
     }
 
@@ -432,9 +522,20 @@
         return await Task.FromResult(request.ApplyTo(temasFiltrados));
     }
 
-    private async Task<GridDataProviderResult<GrillaTemaDTO>> GetGrillaTemas(GridDataProviderRequest<GrillaTemaDTO> request)
+    private async Task<GridDataProviderResult<GrillaTemaConCompletitud>> GetGrillaTemasConCompletitud(GridDataProviderRequest<GrillaTemaConCompletitud> request)
     {
-        return await Task.FromResult(request.ApplyTo(grillaTemas));
+        var temasConCompletitud = grillaTemas.Select(gt => new GrillaTemaConCompletitud
+        {
+            IdGrillaTema = gt.IdGrillaTema,
+            IdGrilla = gt.IdGrilla,
+            IdTema = gt.IdTema,
+            Nombre = gt.Nombre,
+            Ponderacion = gt.Ponderacion,
+            Orden = gt.Orden,
+            PorcentajeCompletitud = completitudPorTema.GetValueOrDefault(gt.IdGrillaTema, 0)
+        }).ToList();
+
+        return await Task.FromResult(request.ApplyTo(temasConCompletitud));
     }
 
     private async Task AgregarTemaAGrilla(int idTema, string nombreTema)
@@ -467,6 +568,7 @@
             
             // Recargar datos
             await CargarGrillaTemas();
+            await CargarCompletitudTemas();
             await gridGrillaTemas.RefreshDataAsync();
             await gridTemasDisponibles.RefreshDataAsync(); // Para actualizar el estado de los botones
             
@@ -486,6 +588,7 @@
             
             // Recargar datos
             await CargarGrillaTemas();
+            await CargarCompletitudTemas();
             await gridGrillaTemas.RefreshDataAsync();
             await gridTemasDisponibles.RefreshDataAsync(); // Para actualizar el estado de los botones
             
@@ -497,7 +600,7 @@
         }
     }
 
-    private async Task EditarPonderacion(GrillaTemaDTO grillaTema)
+    private async Task EditarPonderacion(GrillaTemaConCompletitud grillaTema)
     {
         grillaTemaoEditar = grillaTema;
         nuevaPonderacion = grillaTema.Ponderacion;
@@ -521,6 +624,10 @@
                 
                 await modalEditarPonderacion.HideAsync();
                 
+                mensajeToast = "Ponderación grabada correctamente";
+                mostrarToast = true;
+                await Task.Delay(2000);
+                mostrarToast = false;
                 Console.WriteLine("Ponderación actualizada exitosamente");
             }
         }
@@ -538,5 +645,10 @@
     private void VolverAGrillas()
     {
         Navigation.NavigateTo("/grillas");
+    }
+
+    private void VerSubtemas(int idGrillaTema)
+    {
+        Navigation.NavigateTo($"/grillas/{IdGrilla}/temas/{idGrillaTema}/subtemas");
     }
 }

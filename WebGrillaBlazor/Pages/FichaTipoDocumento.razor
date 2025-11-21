@@ -8,13 +8,20 @@
 
     <div class="form-group row mb-3">
         <label class="col-md-2 col-form-label">Id:</label>
-        <label class="col-md-10">@tipodocumento.IdTipoDocumento</label>
+        <label class="col-md-10">@tipoDocumento.IdTipoDocumento</label>
     </div>
 
     <div class="form-group row mb-3">
         <label class="col-md-2 col-form-label">Nombre:</label>
         <div class="col-md-10">
-            <TextInput @bind-Value="@tipodocumento.Nombre" Placeholder="Ingrese el nombre"></TextInput>
+            <TextInput @bind-Value="@tipoDocumento.Nombre" Placeholder="Ingrese el nombre del tipo de documento"></TextInput>
+        </div>
+    </div>
+
+    <div class="form-group row mb-3">
+        <label class="col-md-2 col-form-label">Abreviación:</label>
+        <div class="col-md-10">
+            <TextInput @bind-Value="@tipoDocumento.Abreviacion" Placeholder="Ingrese la abreviación"></TextInput>
         </div>
     </div>
 
@@ -37,7 +44,7 @@
 
 @code {
     [Parameter] public EventCallback<MouseEventArgs> OnClickCallBack { get; set; }
-    [Parameter] public TipoDocumentoDTO tipodocumento { get; set; }
+    [Parameter] public TipoDocumentoDTO tipoDocumento { get; set; }
     private EditContext editContext;
 
     private string errorMessage = "";
@@ -45,18 +52,29 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine($"OnInitializedAsync() idTipoDocmento: {tipodocumento.IdTipoDocumento}");
+        Console.WriteLine($"OnInitializedAsync() idTipoDocumento: {tipoDocumento.IdTipoDocumento}");
 
-        editContext = new EditContext(tipodocumento);
+        editContext = new EditContext(tipoDocumento);
 
-        var existeTipoDocumento = await ExisteTipoDocumento();
-
-        Console.WriteLine($"OnInitializedAsync() existTipoDocumento: {existeTipoDocumento}");
-
-        if (!existeTipoDocumento)
+        // Solo crear si el ID es 0 (nuevo registro)
+        if (tipoDocumento.IdTipoDocumento == 0)
         {
-            Console.WriteLine("No existe TipoDocumento");
-            await AltaTipoDocumento();
+            var existeTipoDocumento = await ExisteTipoDocumento();
+            Console.WriteLine($"OnInitializedAsync() existeTipoDocumento: {existeTipoDocumento}");
+
+            if (!existeTipoDocumento)
+            {
+                Console.WriteLine("No existe TipoDocumento - Creando nuevo");
+                try
+                {
+                    await AltaTipoDocumento();
+                }
+                catch (Exception ex)
+                {
+                    errorMessage = $"Error al crear tipo de documento: {ex.Message}";
+                    Console.WriteLine($"Error en AltaTipoDocumento: {ex.Message}");
+                }
+            }
         }
 
         base.OnInitialized();
@@ -67,66 +85,74 @@
         // additional check
         if (editContext.Validate())
         {
-            // do something
-            // submit the form
             Console.WriteLine("Form submitted successfully");
         }
     }
 
     private async Task<bool> ExisteTipoDocumento()
     {
-        Console.WriteLine("ExisteTipoDocumento()");
-        var encontrado = await _apiClient.GetByIdAsync(tipodocumento.IdTipoDocumento);
-        if (encontrado == null)
+        try
         {
-            Console.WriteLine("Retorna false");
+            Console.WriteLine("ExisteTipoDocumento()");
+            var encontrado = await _apiClient.GetByIdAsync(tipoDocumento.IdTipoDocumento);
+            if (encontrado == null)
+            {
+                Console.WriteLine("Retorna false");
+                return false;
+            }
+            Console.WriteLine($"ExisteTipoDocumento() variable idTipoDocumento: {encontrado.IdTipoDocumento}");
+            return (encontrado.IdTipoDocumento > 0);
+        }
+        catch
+        {
             return false;
         }
-        Console.WriteLine($"ExisteTipoDocumento() variable idTipoDocumento: {encontrado.IdTipoDocumento}");
-        return (encontrado.IdTipoDocumento != null);
     }
 
     private async Task AltaTipoDocumento()
     {
         Console.WriteLine("AltaTipoDocumento()");
-        var nuevo = await _apiClient.CreateAsync(tipodocumento);
-        tipodocumento.IdTipoDocumento = nuevo.IdTipoDocumento;
+        
+        // Validar que los campos requeridos tengan valores válidos
+        if (string.IsNullOrEmpty(tipoDocumento.Nombre))
+            tipoDocumento.Nombre = "Nuevo Tipo Documento";
+        if (string.IsNullOrEmpty(tipoDocumento.Abreviacion))
+            tipoDocumento.Abreviacion = "NTD";
+        
+        var nuevo = await _apiClient.CreateAsync(tipoDocumento);
+        tipoDocumento.IdTipoDocumento = nuevo.IdTipoDocumento;
     }
 
     private async Task ModificarTipoDocumento()
     {
-        Console.WriteLine("ModificarTipoDocumento()");
-        await _apiClient.UpdateAsync(tipodocumento.IdTipoDocumento, tipodocumento);
+        try
+        {
+            Console.WriteLine("ModificarTipoDocumento()");
+            await _apiClient.UpdateAsync(tipoDocumento.IdTipoDocumento, tipoDocumento);
+            errorMessage = "";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al modificar tipo de documento: {ex.Message}";
+        }
     }
 
     private async Task EliminarTipoDocumento()
     {
-        Console.WriteLine("EliminarTipoDocumento()");
-        //var resultado = await _apiClient.DeleteAsync(tipodocumento.IdTipoDocumento);
-        await _apiClient.DeleteAsync(tipodocumento.IdTipoDocumento);
-
-        /*if (!resultado.IsSuccess)
+        try
         {
-            Console.WriteLine("Error en el borrado");
-            errorMessage = resultado.Error; //muestra el mensaje de la api
-
-            // Inicia Temporizador
-            _timer = new System.Timers.Timer(3000); // 3000ms = 3 segundos
-            _timer.Elapsed += async (sender, e) =>
-            {
-                errorMessage = ""; // retorna a vacio
-                StateHasChanged();
-            };
-            _timer.Start();
-        }
-        else*/
-        {
+            Console.WriteLine("EliminarTipoDocumento()");
+            await _apiClient.DeleteAsync(tipoDocumento.IdTipoDocumento);
+            
             // Notificar al componente padre para cerrar la ficha
             if (OnClickCallBack.HasDelegate)
             {
-                await OnClickCallBack.InvokeAsync(null); // Dispara el callback
+                await OnClickCallBack.InvokeAsync(null);
             }
         }
-
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al eliminar tipo de documento: {ex.Message}";
+        }
     }
 }

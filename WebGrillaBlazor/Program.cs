@@ -21,6 +21,8 @@ builder.Services.AddScoped(sp =>
 builder.Services.AddScoped<ApiClientTema>();
 builder.Services.AddScoped<ApiClientSubtema>();
 builder.Services.AddScoped<ApiClientRecurso>();
+builder.Services.AddScoped<ApiClientEvaluacion>();
+builder.Services.AddScoped<ApiClientConocimiento>();
 builder.Services.AddScoped(typeof(ApiClientGeneric<>));
 
 builder.Services.AddBlazorBootstrap();

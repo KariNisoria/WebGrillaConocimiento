@@ -98,7 +98,8 @@
 
     private RecursoDTO CreateRecurso()
     {
-        var numero = recursos!.Max(x => x.IdRecurso) + 1;
+        // Usar verificación para manejar colecciones vacías de forma segura
+        var numero = (recursos?.Any() == true) ? recursos.Max(x => x.IdRecurso) + 1 : 1;
 
         var nuevo = new RecursoDTO();
 

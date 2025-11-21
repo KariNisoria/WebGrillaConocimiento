@@ -1,8 +1,104 @@
 ﻿@page "/"
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Grilla de Conocimiento</PageTitle>
 
-<h1>Grilla Blazor!</h1>
-<p> Aplicacion de gestion de grilla de conocimiento.</p>
-<p>v1.0.0. Version Original</p>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="jumbotron bg-primary text-white p-5 rounded mb-4">
+                <h1 class="display-4">🎯 Sistema de Gestión de Grillas de Conocimiento</h1>
+                <p class="lead">Aplicación completa para gestionar evaluaciones de conocimientos por competencias.</p>
+                <hr class="my-4 bg-light">
+                <p>Versión 1.0.0 - Sistema de evaluación por grillas de conocimiento</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <Icon Name="IconName.ClipboardCheck" Size="IconSize.x3" class="text-success mb-3" />
+                    <h5 class="card-title">Evaluaciones</h5>
+                    <p class="card-text">Crear y gestionar evaluaciones de conocimiento para recursos específicos usando grillas personalizadas.</p>
+                    <a href="/evaluaciones" class="btn btn-success">Ir a Evaluaciones</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <Icon Name="IconName.Grid" Size="IconSize.x3" class="text-primary mb-3" />
+                    <h5 class="card-title">Grillas de Conocimiento</h5>
+                    <p class="card-text">Configurar y administrar grillas con temas y subtemas para estructurar las evaluaciones.</p>
+                    <a href="/grillas" class="btn btn-primary">Gestionar Grillas</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <Icon Name="IconName.People" Size="IconSize.x3" class="text-info mb-3" />
+                    <h5 class="card-title">Recursos</h5>
+                    <p class="card-text">Administrar personas, equipos de desarrollo y sus roles dentro de la organización.</p>
+                    <a href="/recursos" class="btn btn-info">Ver Recursos</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <Icon Name="IconName.BookHalf" class="me-2" />
+                        Gestión de Contenido
+                    </h5>
+                    <p class="card-text">Administre temas, subtemas y estructure el conocimiento de manera organizada.</p>
+                    <div class="d-flex gap-2">
+                        <a href="/temas" class="btn btn-outline-primary btn-sm">Temas</a>
+                        <a href="/clientes" class="btn btn-outline-primary btn-sm">Clientes</a>
+                        <a href="/tipos" class="btn btn-outline-primary btn-sm">Tipos Documento</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <Icon Name="IconName.Diagram3" class="me-2" />
+                        Organización
+                    </h5>
+                    <p class="card-text">Configure equipos de desarrollo, roles y la estructura organizacional.</p>
+                    <div class="d-flex gap-2">
+                        <a href="/equipos" class="btn btn-outline-secondary btn-sm">Equipos</a>
+                        <a href="/roles" class="btn btn-outline-secondary btn-sm">Roles</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h6 class="alert-heading">
+                    <Icon Name="IconName.InfoCircle" class="me-2" />
+                    ¿Cómo funciona el sistema?
+                </h6>
+                <ol class="mb-0">
+                    <li><strong>Configurar:</strong> Crear grillas con temas y subtemas de conocimiento</li>
+                    <li><strong>Asignar:</strong> Asignar recursos (personas) a equipos y roles</li>
+                    <li><strong>Evaluar:</strong> Crear evaluaciones específicas para un recurso usando una grilla</li>
+                    <li><strong>Monitorear:</strong> Seguir el progreso y completitud de las evaluaciones</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
 
