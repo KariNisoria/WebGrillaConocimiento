@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Jik9p6oOQJ4=",
+  "dgSpecHash": "pgIq5mAsNfc=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Karina\\source\\repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
+  "projectFilePath": "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Karina\\.nuget\\packages\\blazor.bootstrap\\3.4.0\\blazor.bootstrap.3.4.0.nupkg.sha512",
     "C:\\Users\\Karina\\.nuget\\packages\\blazorise\\1.8.5\\blazorise.1.8.5.nupkg.sha512",

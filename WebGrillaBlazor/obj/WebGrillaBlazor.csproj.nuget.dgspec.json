@@ -1,15 +1,15 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Karina\\source\\repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj": {}
+    "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Karina\\source\\repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj": {
+    "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Karina\\source\\repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
+        "projectUniqueName": "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
         "projectName": "WebGrillaBlazor",
-        "projectPath": "C:\\Users\\Karina\\source\\repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
+        "projectPath": "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
         "packagesPath": "C:\\Users\\Karina\\.nuget\\packages\\",
         "outputPath": "C:\\Users\\Karina\\source\\repos\\WebGrillaConocimiento\\WebGrillaBlazor\\obj\\",
         "projectStyle": "PackageReference",
