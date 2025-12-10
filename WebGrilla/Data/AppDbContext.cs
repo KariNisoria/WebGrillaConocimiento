@@ -198,8 +198,8 @@ namespace WebGrilla.Data
                 entity.HasKey(x=>x.IdConocimientoRecurso);
                 entity.Property("ValorFuncional").IsRequired();
                 entity.Property("ValorTecnico").IsRequired();
-                entity.Property("ValorFuncionalVerif");
-                entity.Property("ValorTecnicoVerif");
+                entity.Property("ValorFuncionalVerif").IsRequired(false);
+                entity.Property("ValorTecnicoVerif").IsRequired(false);
             });
 
             modelBuilder.Entity<ConocimientoRecurso>()
@@ -216,6 +216,11 @@ namespace WebGrilla.Data
                 .HasOne(x => x.Grilla)
                 .WithMany(x => x.Conocimientos)
                 .HasForeignKey(x => x.IdGrilla);
+
+            modelBuilder.Entity<ConocimientoRecurso>()
+                .HasOne(x => x.Subtema)
+                .WithMany()
+                .HasForeignKey(x => x.IdSubtema);
 
             /*Quinta - Cambio de tipo de dato de Nombre.Rol a string*/
 

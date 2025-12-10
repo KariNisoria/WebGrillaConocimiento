@@ -40,19 +40,43 @@ namespace WebGrillaBlazor.ApiClient
             }
         }
 
+        public async Task<ConocimientoRecursoDTO?> GetByIdAsync(int id)
+        {
+            try
+            {
+                Console.WriteLine($"GET by Id: {_endpoint}/{id}");
+                var response = await _httpClient.GetAsync($"{_baseUrl}{_endpoint}/{id}");
+                response.EnsureSuccessStatusCode();
+                
+                var jsonString = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<ConocimientoRecursoDTO>(jsonString, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en GetByIdAsync: {ex.Message}");
+                return null;
+            }
+        }
+
         public async Task<List<ConocimientoRecursoDTO>> GetConocimientosPorEvaluacionYRecursoAsync(int idEvaluacion, int idRecurso)
         {
             try
             {
-                Console.WriteLine($"GET conocimientos evaluacion/recurso: {_endpoint}/evaluacion/{idEvaluacion}/recurso/{idRecurso}");
+                Console.WriteLine($"GET conocimientos: {_endpoint}/evaluacion/{idEvaluacion}/recurso/{idRecurso}");
                 var response = await _httpClient.GetAsync($"{_baseUrl}{_endpoint}/evaluacion/{idEvaluacion}/recurso/{idRecurso}");
                 response.EnsureSuccessStatusCode();
                 
                 var jsonString = await response.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<List<ConocimientoRecursoDTO>>(jsonString, new JsonSerializerOptions
+                var conocimientos = JsonSerializer.Deserialize<List<ConocimientoRecursoDTO>>(jsonString, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 }) ?? new List<ConocimientoRecursoDTO>();
+
+                Console.WriteLine($"Conocimientos cargados: {conocimientos.Count}");
+                return conocimientos;
             }
             catch (Exception ex)
             {
@@ -61,11 +85,122 @@ namespace WebGrillaBlazor.ApiClient
             }
         }
 
+        public async Task<ConocimientoRecursoDTO> CreateAsync(ConocimientoRecursoDTO conocimiento)
+        {
+            try
+            {
+                Console.WriteLine($"POST create: {_endpoint}");
+                var jsonContent = JsonSerializer.Serialize(conocimiento);
+                var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+                
+                var response = await _httpClient.PostAsync($"{_baseUrl}{_endpoint}", content);
+                response.EnsureSuccessStatusCode();
+                
+                var jsonString = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<ConocimientoRecursoDTO>(jsonString, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? conocimiento;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en CreateAsync: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<ConocimientoRecursoDTO> UpdateAsync(int id, ConocimientoRecursoDTO conocimiento)
+        {
+            try
+            {
+                Console.WriteLine($"PUT update: {_endpoint}/{id}");
+                var jsonContent = JsonSerializer.Serialize(conocimiento);
+                var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+                
+                var response = await _httpClient.PutAsync($"{_baseUrl}{_endpoint}/{id}", content);
+                response.EnsureSuccessStatusCode();
+                
+                var jsonString = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<ConocimientoRecursoDTO>(jsonString, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? conocimiento;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en UpdateAsync: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<ConocimientoRecursoDTO> CrearOActualizarAsync(ConocimientoRecursoDTO conocimiento)
+        {
+            try
+            {
+                Console.WriteLine($"POST crear-o-actualizar: {_endpoint}/crear-o-actualizar");
+                var jsonContent = JsonSerializer.Serialize(conocimiento);
+                var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+                
+                var response = await _httpClient.PostAsync($"{_baseUrl}{_endpoint}/crear-o-actualizar", content);
+                response.EnsureSuccessStatusCode();
+                
+                var jsonString = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<ConocimientoRecursoDTO>(jsonString, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? conocimiento;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en CrearOActualizarAsync: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<List<ConocimientoRecursoDTO>> GuardarMultiplesAsync(List<ConocimientoRecursoDTO> conocimientos)
+        {
+            try
+            {
+                Console.WriteLine($"POST guardar-multiples: {_endpoint}/guardar-multiples - {conocimientos.Count} items");
+                var jsonContent = JsonSerializer.Serialize(conocimientos);
+                var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+                
+                var response = await _httpClient.PostAsync($"{_baseUrl}{_endpoint}/guardar-multiples", content);
+                response.EnsureSuccessStatusCode();
+                
+                var jsonString = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<List<ConocimientoRecursoDTO>>(jsonString, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? conocimientos;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en GuardarMultiplesAsync: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            try
+            {
+                Console.WriteLine($"DELETE: {_endpoint}/{id}");
+                var response = await _httpClient.DeleteAsync($"{_baseUrl}{_endpoint}/{id}");
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en DeleteAsync: {ex.Message}");
+                return false;
+            }
+        }
+
         public async Task<decimal> GetPorcentajeCompletitudSubtemasAsync(int idGrillaTema)
         {
             try
             {
-                Console.WriteLine($"GET completitud subtemas: {_endpoint}/completitud-subtemas/{idGrillaTema}");
+                Console.WriteLine($"GET completitud-subtemas: {_endpoint}/completitud-subtemas/{idGrillaTema}");
                 var response = await _httpClient.GetAsync($"{_baseUrl}{_endpoint}/completitud-subtemas/{idGrillaTema}");
                 response.EnsureSuccessStatusCode();
                 
@@ -82,27 +217,24 @@ namespace WebGrillaBlazor.ApiClient
             }
         }
 
-        public async Task<ConocimientoRecursoDTO> UpdateAsync(int id, ConocimientoRecursoDTO conocimiento)
+        public async Task<Dictionary<int, decimal>> GetCompletitudSubtemasPorGrillaAsync(int idGrilla)
         {
             try
             {
-                Console.WriteLine($"PUT: {_endpoint}/{id}");
-                var jsonContent = JsonSerializer.Serialize(conocimiento);
-                var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
-                
-                var response = await _httpClient.PutAsync($"{_baseUrl}{_endpoint}/{id}", content);
+                Console.WriteLine($"GET completitud-grilla: {_endpoint}/completitud-grilla/{idGrilla}");
+                var response = await _httpClient.GetAsync($"{_baseUrl}{_endpoint}/completitud-grilla/{idGrilla}");
                 response.EnsureSuccessStatusCode();
                 
                 var jsonString = await response.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<ConocimientoRecursoDTO>(jsonString, new JsonSerializerOptions
+                return JsonSerializer.Deserialize<Dictionary<int, decimal>>(jsonString, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
-                }) ?? new ConocimientoRecursoDTO();
+                }) ?? new Dictionary<int, decimal>();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error en UpdateAsync: {ex.Message}");
-                throw;
+                Console.WriteLine($"Error en GetCompletitudSubtemasPorGrillaAsync: {ex.Message}");
+                return new Dictionary<int, decimal>();
             }
         }
     }

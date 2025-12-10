@@ -9,6 +9,8 @@ namespace WebGrilla.Repository
         Task<List<ConocimientoRecurso>> GetConocimientosPorEvaluacionYRecursoAsync(int idEvaluacion, int idRecurso);
         Task<List<ConocimientoRecurso>> GetConocimientosPorGrillaYRecursoAsync(int idGrilla, int idRecurso);
         Task<decimal> GetPorcentajeCompletitudSubtemasAsync(int idGrillaTema);
+        Task<ConocimientoRecurso> BuscarConocimientoAsync(int idEvaluacion, int idRecurso, int idSubtema);
+        Task<Dictionary<int, decimal>> GetCompletitudSubtemasPorGrillaAsync(int idGrilla);
     }
 
     public class ConocimientoRecursoRepository : IConocimientoRecursoRepository
@@ -26,6 +28,8 @@ namespace WebGrilla.Repository
                 .Include(c => c.Subtema)
                     .ThenInclude(s => s.Tema)
                 .Include(c => c.Recurso)
+                .Include(c => c.Grilla)
+                .Include(c => c.Evaluacion)
                 .ToListAsync();
         }
 
@@ -35,6 +39,8 @@ namespace WebGrilla.Repository
                 .Include(c => c.Subtema)
                     .ThenInclude(s => s.Tema)
                 .Include(c => c.Recurso)
+                .Include(c => c.Grilla)
+                .Include(c => c.Evaluacion)
                 .FirstOrDefaultAsync(c => c.IdConocimientoRecurso == id);
         }
 
@@ -66,12 +72,28 @@ namespace WebGrilla.Repository
 
         public async Task<List<ConocimientoRecurso>> GetConocimientosPorEvaluacionYRecursoAsync(int idEvaluacion, int idRecurso)
         {
-            return await _context.ConocimientoRecurso
-                .Include(c => c.Subtema)
-                    .ThenInclude(s => s.Tema)
-                .Include(c => c.Recurso)
-                .Where(c => c.IdEvaluacion == idEvaluacion && c.IdRecurso == idRecurso)
-                .ToListAsync();
+            try
+            {
+                Console.WriteLine($"Repository: Buscando conocimientos para evaluación {idEvaluacion} y recurso {idRecurso}");
+                
+                var result = await _context.ConocimientoRecurso
+                    .Include(c => c.Subtema)
+                        .ThenInclude(s => s.Tema)
+                    .Include(c => c.Recurso)
+                    .Include(c => c.Grilla)
+                    .Include(c => c.Evaluacion)
+                    .Where(c => c.IdEvaluacion == idEvaluacion && c.IdRecurso == idRecurso)
+                    .ToListAsync();
+                    
+                Console.WriteLine($"Repository: Encontrados {result.Count} conocimientos");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in Repository GetConocimientosPorEvaluacionYRecursoAsync: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                throw;
+            }
         }
 
         public async Task<List<ConocimientoRecurso>> GetConocimientosPorGrillaYRecursoAsync(int idGrilla, int idRecurso)
@@ -80,25 +102,67 @@ namespace WebGrilla.Repository
                 .Include(c => c.Subtema)
                     .ThenInclude(s => s.Tema)
                 .Include(c => c.Recurso)
+                .Include(c => c.Grilla)
+                .Include(c => c.Evaluacion)
                 .Where(c => c.IdGrilla == idGrilla && c.IdRecurso == idRecurso)
                 .ToListAsync();
         }
 
         public async Task<decimal> GetPorcentajeCompletitudSubtemasAsync(int idGrillaTema)
         {
-            // Obtener todos los subtemas del tema en la grilla
-            var totalSubtemas = await _context.GrillaSubtemas
-                .Where(gs => gs.IdGrillaTema == idGrillaTema)
-                .CountAsync();
+            try
+            {
+                // Obtener la suma total de ponderaciones de los subtemas de este tema
+                var totalPonderacion = await _context.GrillaSubtemas
+                    .Where(gs => gs.IdGrillaTema == idGrillaTema)
+                    .SumAsync(gs => gs.Ponderacion);
 
-            if (totalSubtemas == 0) return 0;
+                // La completitud es 100% solo si la suma de ponderaciones es exactamente 100%
+                return totalPonderacion == 100 ? 100 : totalPonderacion;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al calcular completitud de subtemas: {ex.Message}");
+                return 0;
+            }
+        }
 
-            // Obtener subtemas que tienen ponderación = 100%
-            var subtemasCompletos = await _context.GrillaSubtemas
-                .Where(gs => gs.IdGrillaTema == idGrillaTema && gs.Ponderacion == 100)
-                .CountAsync();
+        public async Task<ConocimientoRecurso> BuscarConocimientoAsync(int idEvaluacion, int idRecurso, int idSubtema)
+        {
+            return await _context.ConocimientoRecurso
+                .FirstOrDefaultAsync(cr => 
+                    cr.IdEvaluacion == idEvaluacion && 
+                    cr.IdRecurso == idRecurso && 
+                    cr.IdSubtema == idSubtema);
+        }
 
-            return (decimal)subtemasCompletos / totalSubtemas * 100;
+        public async Task<Dictionary<int, decimal>> GetCompletitudSubtemasPorGrillaAsync(int idGrilla)
+        {
+            try
+            {
+                // Obtener todos los temas de la grilla con sus subtemas agrupados
+                var completitudPorTema = await _context.GrillaTemas
+                    .Where(gt => gt.IdGrilla == idGrilla)
+                    .Select(gt => new
+                    {
+                        IdGrillaTema = gt.IdGrillaTema,
+                        TotalPonderacion = _context.GrillaSubtemas
+                            .Where(gs => gs.IdGrillaTema == gt.IdGrillaTema)
+                            .Sum(gs => gs.Ponderacion)
+                    })
+                    .ToListAsync();
+
+                // Convertir a diccionario con la lógica de completitud
+                return completitudPorTema.ToDictionary(
+                    item => item.IdGrillaTema,
+                    item => item.TotalPonderacion == 100 ? 100m : item.TotalPonderacion
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al obtener completitud por grilla: {ex.Message}");
+                return new Dictionary<int, decimal>();
+            }
         }
     }
 }

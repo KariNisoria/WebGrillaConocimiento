@@ -11,9 +11,7 @@ namespace WebGrilla.Models
         public int ValorFuncional { get; set; }
         [Required]
         public int ValorTecnico { get; set; }
-        [Required]
         public int? ValorFuncionalVerif { get; set; }
-        [Required]
         public int? ValorTecnicoVerif { get; set; }
         
         //Fk

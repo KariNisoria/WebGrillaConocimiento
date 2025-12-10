@@ -142,7 +142,7 @@
                                                                @onchange="@(e => ActualizarValorTecnico(subtema.IdSubtema, e))" />
                                                     </td>
                                                     <td class="text-center">
-                                                        @if (conocimiento != null && (conocimiento.ValorFuncional > 0 || conocimiento.ValorTecnico > 0))
+                                                        @if (conocimiento != null)
                                                         {
                                                             <span class="badge bg-success">
                                                                 <Icon Name="IconName.Check" /> Evaluado
@@ -242,7 +242,7 @@
                                     Guardar Todo el Progreso
                                 </Button>
                                 <Button Color="ButtonColor.Warning" @onclick="AutoEvaluarPendientes">
-                                    <Icon Name="IconName.Magic" /> Auto-evaluar Pendientes (0,0)
+                                    <Icon Name="IconName.Magic" /> Crear Registros Pendientes (0,0)
                                 </Button>
                             </div>
                         </div>
@@ -300,7 +300,7 @@
         ? temasBinarizados.Average(t => t.ProgresoCompletitud) 
         : 0;
 
-    private int subtemasCargados => conocimientos.Count(c => c.ValorFuncional > 0 || c.ValorTecnico > 0);
+    private int subtemasCargados => conocimientos.Count; // Total de registros en BD, independiente de valores
     private int totalSubtemas => grillaSubtemas.Count;
 
     protected override async Task OnInitializedAsync()
@@ -408,7 +408,15 @@
     {
         try
         {
+            Console.WriteLine($"Cargando conocimientos para evaluación {IdEvaluacion} y recurso {IdRecurso}");
             conocimientos = await ConocimientoClient.GetConocimientosPorEvaluacionYRecursoAsync(IdEvaluacion, IdRecurso);
+            Console.WriteLine($"Conocimientos cargados: {conocimientos.Count}");
+            
+            // Debug: Mostrar información de conocimientos cargados
+            foreach (var conocimiento in conocimientos)
+            {
+                Console.WriteLine($"Conocimiento ID: {conocimiento.IdConocimientoRecurso}, Subtema: {conocimiento.IdSubtema}, Func: {conocimiento.ValorFuncional}, Tec: {conocimiento.ValorTecnico}");
+            }
         }
         catch (Exception ex)
         {
@@ -445,7 +453,7 @@
             var subtemasEvaluados = tema.Subtemas.Count(subtema =>
             {
                 var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == subtema.IdSubtema);
-                return conocimiento != null && (conocimiento.ValorFuncional > 0 || conocimiento.ValorTecnico > 0);
+                return conocimiento != null; // Solo verificar que exista el registro, no importan los valores
             });
 
             tema.ProgresoCompletitud = (decimal)subtemasEvaluados / tema.Subtemas.Count * 100;
@@ -465,7 +473,7 @@
 
     private void ActualizarValorFuncional(int idSubtema, ChangeEventArgs e)
     {
-        if (int.TryParse(e.Value?.ToString(), out var valor))
+        if (int.TryParse(e.Value?.ToString(), out var valor) && valor >= 0 && valor <= 5)
         {
             var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == idSubtema);
             if (conocimiento != null)
@@ -474,24 +482,31 @@
             }
             else
             {
-                // Crear nuevo conocimiento
-                conocimientos.Add(new ConocimientoRecursoDTO
+                // Crear nuevo conocimiento con todos los campos requeridos
+                var nuevoConocimiento = new ConocimientoRecursoDTO
                 {
+                    IdConocimientoRecurso = 0, // Nuevo registro
                     IdSubtema = idSubtema,
                     IdRecurso = IdRecurso,
                     IdEvaluacion = IdEvaluacion,
                     IdGrilla = evaluacion?.IdGrilla ?? 0,
                     ValorFuncional = valor,
-                    ValorTecnico = 0
-                });
+                    ValorTecnico = 0,
+                    ValorFuncionalVerif = null,
+                    ValorTecnicoVerif = null
+                };
+                conocimientos.Add(nuevoConocimiento);
+                
+                Console.WriteLine($"Nuevo conocimiento creado para subtema {idSubtema} con valor funcional {valor}");
             }
             CalcularProgreso();
+            StateHasChanged();
         }
     }
 
     private void ActualizarValorTecnico(int idSubtema, ChangeEventArgs e)
     {
-        if (int.TryParse(e.Value?.ToString(), out var valor))
+        if (int.TryParse(e.Value?.ToString(), out var valor) && valor >= 0 && valor <= 5)
         {
             var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == idSubtema);
             if (conocimiento != null)
@@ -500,18 +515,25 @@
             }
             else
             {
-                // Crear nuevo conocimiento
-                conocimientos.Add(new ConocimientoRecursoDTO
+                // Crear nuevo conocimiento with all required fields
+                var nuevoConocimiento = new ConocimientoRecursoDTO
                 {
+                    IdConocimientoRecurso = 0, // New record
                     IdSubtema = idSubtema,
                     IdRecurso = IdRecurso,
                     IdEvaluacion = IdEvaluacion,
                     IdGrilla = evaluacion?.IdGrilla ?? 0,
                     ValorFuncional = 0,
-                    ValorTecnico = valor
-                });
+                    ValorTecnico = valor,
+                    ValorFuncionalVerif = null,
+                    ValorTecnicoVerif = null
+                };
+                conocimientos.Add(nuevoConocimiento);
+                
+                Console.WriteLine($"Nuevo conocimiento creado para subtema {idSubtema} con valor técnico {valor}");
             }
             CalcularProgreso();
+            StateHasChanged();
         }
     }
 
@@ -523,19 +545,18 @@
             var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == idSubtema);
             if (conocimiento != null)
             {
-                if (conocimiento.IdConocimientoRecurso > 0)
+                // Usar el método crear o actualizar
+                var conocimientoGuardado = await ConocimientoClient.CrearOActualizarAsync(conocimiento);
+                
+                // Actualizar el conocimiento en la lista local con el ID devuelto
+                var index = conocimientos.FindIndex(c => c.IdSubtema == idSubtema);
+                if (index >= 0)
                 {
-                    await ConocimientoClient.UpdateAsync(conocimiento.IdConocimientoRecurso, conocimiento);
-                }
-                else
-                {
-                    // Para crear nuevos registros, usaríamos un método Create si estuviera disponible
-                    // Por ahora, solo mostrar mensaje de que se necesita implementar
-                    MostrarToast("Función de creación no implementada aún", "warning");
-                    return;
+                    conocimientos[index] = conocimientoGuardado;
                 }
 
                 MostrarToast("Conocimiento guardado correctamente", "success");
+                StateHasChanged(); // Forzar actualización de la UI
             }
         }
         catch (Exception ex)
@@ -554,22 +575,39 @@
         guardandoTodo = true;
         try
         {
-            var tareas = new List<Task>();
-            
-            foreach (var conocimiento in conocimientos.Where(c => (c.ValorFuncional > 0 || c.ValorTecnico > 0) && c.IdConocimientoRecurso > 0))
-            {
-                tareas.Add(ConocimientoClient.UpdateAsync(conocimiento.IdConocimientoRecurso, conocimiento));
-            }
+            // Obtener todos los conocimientos que han sido creados o modificados (incluye 0,0)
+            var conocimientosParaGuardar = conocimientos
+                .Where(c => c.IdConocimientoRecurso == 0 || // Nuevos registros
+                           c.ValorFuncional >= 0 || c.ValorTecnico >= 0) // Registros modificados (incluye 0,0)
+                .ToList();
 
-            if (tareas.Any())
+            if (conocimientosParaGuardar.Any())
             {
-                await Task.WhenAll(tareas);
-                MostrarToast("Todo el progreso ha sido guardado correctamente", "success");
+                // Usar el método de guardar múltiples
+                var conocimientosGuardados = await ConocimientoClient.GuardarMultiplesAsync(conocimientosParaGuardar);
+                
+                // Actualizar la lista local con los IDs devueltos
+                foreach (var conocimientoGuardado in conocimientosGuardados)
+                {
+                    var index = conocimientos.FindIndex(c => 
+                        c.IdSubtema == conocimientoGuardado.IdSubtema && 
+                        c.IdRecurso == conocimientoGuardado.IdRecurso &&
+                        c.IdEvaluacion == conocimientoGuardado.IdEvaluacion);
+                    
+                    if (index >= 0)
+                    {
+                        conocimientos[index] = conocimientoGuardado;
+                    }
+                }
+
+                MostrarToast($"Todo el progreso ha sido guardado correctamente ({conocimientosGuardados.Count} conocimientos)", "success");
             }
             else
             {
                 MostrarToast("No hay cambios para guardar", "warning");
             }
+
+            StateHasChanged(); // Forzar actualización de la UI
         }
         catch (Exception ex)
         {
@@ -582,33 +620,45 @@
         }
     }
 
-    private void AutoEvaluarPendientes()
+    private async Task AutoEvaluarPendientes()
     {
         try
         {
+            int nuevosConocimientos = 0;
+            
             foreach (var subtema in grillaSubtemas)
             {
                 var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == subtema.IdSubtema);
                 if (conocimiento == null)
                 {
+                    // Solo crear registros para subtemas que no tienen ningún registro en BD
                     conocimientos.Add(new ConocimientoRecursoDTO
                     {
+                        IdConocimientoRecurso = 0, // Nuevo registro
                         IdSubtema = subtema.IdSubtema,
                         IdRecurso = IdRecurso,
                         IdEvaluacion = IdEvaluacion,
                         IdGrilla = evaluacion?.IdGrilla ?? 0,
                         ValorFuncional = 0,
-                        ValorTecnico = 0
+                        ValorTecnico = 0,
+                        ValorFuncionalVerif = null,
+                        ValorTecnicoVerif = null
                     });
-                }
-                else if (conocimiento.ValorFuncional == 0 && conocimiento.ValorTecnico == 0)
-                {
-                    // Mantener en 0,0 como indica el botón
+                    nuevosConocimientos++;
                 }
             }
 
             CalcularProgreso();
-            MostrarToast("Se han establecido valores por defecto (0,0) para subtemas pendientes", "warning");
+            
+            if (nuevosConocimientos > 0)
+            {
+                MostrarToast($"Se crearon {nuevosConocimientos} registros con valores (0,0) para subtemas pendientes", "warning");
+                StateHasChanged();
+            }
+            else
+            {
+                MostrarToast("Todos los subtemas ya tienen registros de evaluación", "info");
+            }
         }
         catch (Exception ex)
         {

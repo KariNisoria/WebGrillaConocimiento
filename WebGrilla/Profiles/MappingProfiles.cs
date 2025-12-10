@@ -22,9 +22,12 @@ namespace WebGrilla.Profiles
             // Mapeos para evaluaciones y conocimientos
             CreateMap<Evaluacion, EvaluacionDTO>().ReverseMap();
             CreateMap<ConocimientoRecurso, ConocimientoRecursoDTO>()
-                .ForMember(dest => dest.NombreRecurso, opt => opt.MapFrom(src => src.Recurso.Nombre + " " + src.Recurso.Apellido))
-                .ForMember(dest => dest.NombreSubtema, opt => opt.MapFrom(src => src.Subtema.Nombre))
-                .ForMember(dest => dest.NombreTema, opt => opt.MapFrom(src => src.Subtema.Tema.Nombre))
+                .ForMember(dest => dest.NombreRecurso, opt => opt.MapFrom(src => 
+                    src.Recurso != null ? $"{src.Recurso.Nombre} {src.Recurso.Apellido}" : null))
+                .ForMember(dest => dest.NombreSubtema, opt => opt.MapFrom(src => 
+                    src.Subtema != null ? src.Subtema.Nombre : null))
+                .ForMember(dest => dest.NombreTema, opt => opt.MapFrom(src => 
+                    src.Subtema != null && src.Subtema.Tema != null ? src.Subtema.Tema.Nombre : null))
                 .ReverseMap();
         }
     }

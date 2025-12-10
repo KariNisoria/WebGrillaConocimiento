@@ -40,6 +40,54 @@
         </div>
     </div>
 
+    <!-- Indicador de completitud de subtemas -->
+    @if (grillaTemas.Any())
+    {
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Estado de Subtemas:</strong>
+                                <span class="ms-2">
+                                    @{
+                                        var temasCompletos = completitudPorTema.Count(c => c.Value == 100);
+                                        var temasExcedidos = completitudPorTema.Count(c => c.Value > 100);
+                                        var temasParciales = completitudPorTema.Count(c => c.Value > 0 && c.Value < 100);
+                                        var temasSinSubtemas = completitudPorTema.Count(c => c.Value == 0);
+                                    }
+                                    @if (temasCompletos > 0)
+                                    {
+                                        <span class="badge bg-success me-1">@temasCompletos Completos</span>
+                                    }
+                                    @if (temasExcedidos > 0)
+                                    {
+                                        <span class="badge bg-danger me-1">@temasExcedidos Excedidos</span>
+                                    }
+                                    @if (temasParciales > 0)
+                                    {
+                                        <span class="badge bg-warning me-1">@temasParciales Parciales</span>
+                                    }
+                                    @if (temasSinSubtemas > 0)
+                                    {
+                                        <span class="badge bg-secondary me-1">@temasSinSubtemas Sin configurar</span>
+                                    }
+                                </span>
+                            </div>
+                            @if (temasCompletos == grillaTemas.Count && temasCompletos > 0)
+                            {
+                                <div class="text-success">
+                                    <Icon Name="IconName.CheckCircle" /> Todos los temas están completos
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
     <div class="row">
         <!-- Panel izquierdo: Temas disponibles -->
         <div class="col-md-6">
@@ -159,20 +207,26 @@
                                     @context.IdGrillaTema
                                 </GridColumn>
                                 <GridColumn TItem="GrillaTemaConCompletitud" HeaderText="Tema" PropertyName="Nombre" SortKeySelector="item => item.Nombre">
-                                    <div class="d-flex align-items-center gap-2">
-                                        @context.Nombre
-                                        @if (context.PorcentajeCompletitud >= 100)
-                                        {
-                                            <span class="badge bg-success">
-                                                <Icon Name="IconName.CheckCircle" /> 100% Completo
-                                            </span>
-                                        }
-                                        else if (context.PorcentajeCompletitud > 0)
-                                        {
-                                            <span class="badge bg-warning">
-                                                @context.PorcentajeCompletitud.ToString("F1")% Completo
-                                            </span>
-                                        }
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <span>@context.Nombre</span>
+                                        <div class="d-flex align-items-center gap-1">
+                                            @if (context.PorcentajeCompletitud == 100)
+                                            {
+                                                <Icon Name="IconName.CheckCircle" class="text-success" Title="Subtemas completos (100%)" />
+                                            }
+                                            else if (context.PorcentajeCompletitud > 100)
+                                            {
+                                                <Icon Name="IconName.ExclamationTriangle" class="text-danger" Title="Ponderación excede 100%" />
+                                            }
+                                            else if (context.PorcentajeCompletitud > 0)
+                                            {
+                                                <Icon Name="IconName.Clock" class="text-warning" Title="Configuración parcial" />
+                                            }
+                                            else
+                                            {
+                                                <Icon Name="IconName.Dash" class="text-muted" Title="Sin subtemas configurados" />
+                                            }
+                                        </div>
                                     </div>
                                 </GridColumn>
                                 <GridColumn TItem="GrillaTemaConCompletitud" HeaderText="Ponderación" PropertyName="Ponderacion" SortKeySelector="item => item.Ponderacion">
@@ -181,19 +235,54 @@
                                     </span>
                                 </GridColumn>
                                 <GridColumn TItem="GrillaTemaConCompletitud" HeaderText="Completitud">
-                                    <div style="min-width: 120px;">
-                                        <div class="d-flex align-items-center gap-2 mb-1">
-                                            <small class="text-muted">@context.PorcentajeCompletitud.ToString("F1")%</small>
-                                            @if (context.PorcentajeCompletitud >= 100)
+                                    <div style="min-width: 150px;">
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <small class="text-muted">
+                                                @context.PorcentajeCompletitud.ToString("F1")%
+                                            </small>
+                                            @if (context.PorcentajeCompletitud == 100)
                                             {
-                                                <Icon Name="IconName.CheckCircle" class="text-success" />
+                                                <span class="badge bg-success">
+                                                    <Icon Name="IconName.CheckCircle" /> Completo
+                                                </span>
+                                            }
+                                            else if (context.PorcentajeCompletitud > 100)
+                                            {
+                                                <span class="badge bg-danger">
+                                                    <Icon Name="IconName.ExclamationTriangle" /> Excede
+                                                </span>
+                                            }
+                                            else if (context.PorcentajeCompletitud > 0)
+                                            {
+                                                <span class="badge bg-warning">
+                                                    <Icon Name="IconName.Clock" /> Parcial
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">
+                                                    <Icon Name="IconName.Dash" /> Sin subtemas
+                                                </span>
                                             }
                                         </div>
                                         <div class="progress" style="height: 8px;">
-                                            <div class="progress-bar @(context.PorcentajeCompletitud >= 100 ? "bg-success" : context.PorcentajeCompletitud > 0 ? "bg-warning" : "bg-secondary")" 
-                                                 style="width: @context.PorcentajeCompletitud%">
+                                            <div class="progress-bar @GetProgressBarClassForCompletitud(context.PorcentajeCompletitud)" 
+                                                 style="width: @Math.Min(context.PorcentajeCompletitud, 100)%">
                                             </div>
                                         </div>
+                                        @if (context.PorcentajeCompletitud != 100 && context.PorcentajeCompletitud > 0)
+                                        {
+                                            <small class="text-muted">
+                                                @if (context.PorcentajeCompletitud < 100)
+                                                {
+                                                    <span class="text-warning">Faltan @((100 - context.PorcentajeCompletitud).ToString("F1"))% para completar</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-danger">Excede en @((context.PorcentajeCompletitud - 100).ToString("F1"))%</span>
+                                                }
+                                            </small>
+                                        }
                                     </div>
                                 </GridColumn>
                                 <GridColumn TItem="GrillaTemaConCompletitud" HeaderText="Acciones">
@@ -380,25 +469,15 @@
     {
         try
         {
-            completitudPorTema.Clear();
+            // Usar el nuevo método optimizado que obtiene toda la completitud de una vez
+            completitudPorTema = await ConocimientoClient.GetCompletitudSubtemasPorGrillaAsync(IdGrilla);
             
-            foreach (var grillaTema in grillaTemas)
-            {
-                try
-                {
-                    var completitud = await ConocimientoClient.GetPorcentajeCompletitudSubtemasAsync(grillaTema.IdGrillaTema);
-                    completitudPorTema[grillaTema.IdGrillaTema] = completitud;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error al cargar completitud para tema {grillaTema.IdGrillaTema}: {ex.Message}");
-                    completitudPorTema[grillaTema.IdGrillaTema] = 0;
-                }
-            }
+            Console.WriteLine($"Completitud cargada para {completitudPorTema.Count} temas de la grilla {IdGrilla}");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error al cargar completitud general: {ex.Message}");
+            completitudPorTema = new Dictionary<int, decimal>();
         }
     }
 
@@ -513,6 +592,17 @@
             > 100 => $"?? Excede en {totalPonderacion - 100:F2}%",
             > 80 => $"?? Faltan {100 - totalPonderacion:F2}% para completar",
             _ => $"?? Faltan {100 - totalPonderacion:F2}% para completar"
+        };
+    }
+
+    private string GetProgressBarClassForCompletitud(decimal completitud)
+    {
+        return completitud switch
+        {
+            100 => "bg-success",
+            > 100 => "bg-danger",
+            > 0 => "bg-warning",
+            _ => "bg-secondary"
         };
     }
 

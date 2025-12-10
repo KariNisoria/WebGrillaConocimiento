@@ -3363,6 +3363,6 @@ C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net
 C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\WebGrillaBlazor.pdb
 C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\ref\WebGrillaBlazor.dll
 C:\Users\Karina\source\repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\staticwebassets.upToDateCheck.txt
-C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\tavjk12k2h-7dyvy9pyjn.gz
-C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\y2k2hq3qtk-2xdngtrvj2.gz
-C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\dyjae803e8-pf7gf0605a.gz
+C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\tavjk12k2h-gz2rq4c3ru.gz
+C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\y2k2hq3qtk-n8w9za15q6.gz
+C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\dyjae803e8-9f806ismrz.gz
