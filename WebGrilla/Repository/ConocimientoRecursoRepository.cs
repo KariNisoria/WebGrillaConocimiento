@@ -11,6 +11,7 @@ namespace WebGrilla.Repository
         Task<decimal> GetPorcentajeCompletitudSubtemasAsync(int idGrillaTema);
         Task<ConocimientoRecurso> BuscarConocimientoAsync(int idEvaluacion, int idRecurso, int idSubtema);
         Task<Dictionary<int, decimal>> GetCompletitudSubtemasPorGrillaAsync(int idGrilla);
+        Task<List<ConocimientoRecurso>> GetByEvaluacionAndRecursoAsync(int idEvaluacion, int idRecurso);
     }
 
     public class ConocimientoRecursoRepository : IConocimientoRecursoRepository
@@ -163,6 +164,11 @@ namespace WebGrilla.Repository
                 Console.WriteLine($"Error al obtener completitud por grilla: {ex.Message}");
                 return new Dictionary<int, decimal>();
             }
+        }
+
+        public async Task<List<ConocimientoRecurso>> GetByEvaluacionAndRecursoAsync(int idEvaluacion, int idRecurso)
+        {
+            return await GetConocimientosPorEvaluacionYRecursoAsync(idEvaluacion, idRecurso);
         }
     }
 }

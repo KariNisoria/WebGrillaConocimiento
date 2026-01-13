@@ -3,8 +3,14 @@ using WebGrilla.Data;
 using WebGrilla.Models;
 using WebGrilla.Repository;
 using WebGrilla.Services;
+using System.Text;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configurar encoding UTF-8
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+Console.OutputEncoding = Encoding.UTF8;
 
 //----------------
 // CONF. CORS
@@ -19,7 +25,6 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
-
 
 //--------------------
 // GESTION DE CONEXION
@@ -39,8 +44,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     }
     ));
 
-builder.Services.AddControllers();
-
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Configuración para manejar caracteres UTF-8 correctamente
+        options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -95,6 +105,9 @@ builder.Services.AddScoped<IEvaluacionService, EvaluacionService>();
 builder.Services.AddScoped<IRepository<ConocimientoRecurso>, ConocimientoRecursoRepository>();
 builder.Services.AddScoped<IConocimientoRecursoRepository, ConocimientoRecursoRepository>();
 builder.Services.AddScoped<IConocimientoRecursoService, ConocimientoRecursoService>();
+
+// NUEVO: Registrar servicio de autenticación
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 var app = builder.Build();
 

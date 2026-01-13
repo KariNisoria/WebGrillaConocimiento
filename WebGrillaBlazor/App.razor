@@ -1,12 +1,27 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-    <NotFound>
-        <PageTitle>Not found</PageTitle>
-        <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
-        </LayoutView>
-    </NotFound>
-</Router>
+﻿<WebGrillaBlazor.Components.AppStateInitializer>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Página no encontrada</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <div class="container mt-5">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6 text-center">
+                            <Icon Name="IconName.ExclamationTriangle" Size="IconSize.x5" class="text-warning mb-3" />
+                            <h1 class="display-4">404</h1>
+                            <h2>Página no encontrada</h2>
+                            <p class="lead">Lo sentimos, no hay contenido en esta dirección.</p>
+                            <a href="/" class="btn btn-primary">
+                                <Icon Name="IconName.House" class="me-2" />
+                                Volver al inicio
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</WebGrillaBlazor.Components.AppStateInitializer>

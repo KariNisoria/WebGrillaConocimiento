@@ -14,6 +14,7 @@ namespace WebGrilla.Data
         public DbSet<Recurso> Recursos { get; set; }
         // Primera
         public DbSet<Rol> Roles { get; set; }
+        public DbSet<RolPermiso> RolPermisos { get; set; }
         // Segunda
         public DbSet<Tema> Temas { get; set; }
         public DbSet<Subtema>  Subtemas { get; set; } 
@@ -82,6 +83,21 @@ namespace WebGrilla.Data
             modelBuilder.Entity<Recurso>()
                 .HasOne(x => x.Rol)
                 .WithMany(x => x.Recursos)
+                .HasForeignKey(x => x.IdRol);
+
+            // Configuración RolPermiso
+            modelBuilder.Entity<RolPermiso>(entity =>
+            {
+                entity.HasKey(x => x.IdRolPermiso);
+                entity.Property(x => x.CodigoPermiso).IsRequired().HasMaxLength(100);
+                entity.Property(x => x.Descripcion).HasMaxLength(200);
+                entity.Property(x => x.Activo).IsRequired().HasDefaultValue(true);
+                entity.Property(x => x.FechaCreacion).IsRequired().HasDefaultValueSql("GETUTCDATE()");
+            });
+
+            modelBuilder.Entity<RolPermiso>()
+                .HasOne(x => x.Rol)
+                .WithMany()
                 .HasForeignKey(x => x.IdRol);
 
             /*------------------------*/

@@ -28,6 +28,14 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Components/AppStateInitializer.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBcHBTdGF0ZUluaXRpYWxpemVyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Components/AuthorizeView.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBdXRob3JpemVWaWV3LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Pages/Clientes.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpZW50ZXMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
@@ -38,6 +46,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Pages/Evaluaciones.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRXZhbHVhY2lvbmVzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Pages/EvaluacionesGlobales.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRXZhbHVhY2lvbmVzR2xvYmFsZXMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Pages/FichaCliente.razor]
@@ -90,6 +102,14 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Pages/Index.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Pages/Login.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9naW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Pages/Permisos.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGVybWlzb3MucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Pages/Recursos.razor]

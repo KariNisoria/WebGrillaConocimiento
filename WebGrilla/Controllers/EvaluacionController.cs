@@ -94,6 +94,68 @@ namespace WebGrilla.Controllers
             }
         }
 
+        [HttpGet("{idEvaluacion}/conocimientos-temporales/{idRecurso}/{idGrilla}")]
+        public async Task<ActionResult<IEnumerable<ConocimientoRecursoDTO>>> GenerarConocimientosTemporales(int idEvaluacion, int idRecurso, int idGrilla)
+        {
+            try
+            {
+                var conocimientos = await _service.GenerarConocimientosTemporalesAsync(idEvaluacion, idRecurso, idGrilla);
+                return Ok(conocimientos);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno del servidor: {ex.Message}");
+            }
+        }
+
+        [HttpGet("globales")]
+        public async Task<ActionResult<IEnumerable<EvaluacionDTO>>> GetEvaluacionesGlobales()
+        {
+            try
+            {
+                var evaluaciones = await _service.GetEvaluacionesGlobalesAsync();
+                return Ok(evaluaciones);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno del servidor: {ex.Message}");
+            }
+        }
+
+        [HttpGet("por-grilla/{idGrilla}")]
+        public async Task<ActionResult<IEnumerable<EvaluacionDTO>>> GetEvaluacionesPorGrilla(int idGrilla, [FromQuery] DateTime? fechaInicio, [FromQuery] DateTime? fechaFin)
+        {
+            try
+            {
+                var fechaIni = fechaInicio ?? DateTime.Now.AddDays(-30);
+                var fechaFinal = fechaFin ?? DateTime.Now;
+                
+                var evaluaciones = await _service.GetEvaluacionesPorGrillaYPeriodoAsync(idGrilla, fechaIni, fechaFinal);
+                return Ok(evaluaciones);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno del servidor: {ex.Message}");
+            }
+        }
+
+        [HttpGet("resumen-global/{idGrilla}")]
+        public async Task<ActionResult<EvaluacionGlobalResumenDTO>> GetResumenEvaluacionGlobal(int idGrilla, [FromQuery] DateTime? fechaInicio, [FromQuery] DateTime? fechaFin)
+        {
+            try
+            {
+                var fechaIni = fechaInicio ?? DateTime.Now.AddDays(-30);
+                var fechaFinal = fechaFin ?? DateTime.Now;
+                
+                var resumen = await _service.GetResumenEvaluacionGlobalAsync(idGrilla, fechaIni, fechaFinal);
+                return Ok(resumen);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno del servidor: {ex.Message}");
+            }
+        }
+
         [HttpPost]
         public async Task<ActionResult<EvaluacionDTO>> Create(EvaluacionDTO evaluacionDto)
         {
@@ -119,6 +181,24 @@ namespace WebGrilla.Controllers
                     request.Descripcion);
                 
                 return CreatedAtAction(nameof(GetById), new { id = evaluacion.IdEvaluacion }, evaluacion);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno del servidor: {ex.Message}");
+            }
+        }
+
+        [HttpPost("global")]
+        public async Task<ActionResult<IEnumerable<EvaluacionDTO>>> CrearEvaluacionGlobal([FromBody] CrearEvaluacionGlobalRequest request)
+        {
+            try
+            {
+                var evaluaciones = await _service.CrearEvaluacionGlobalAsync(
+                    request.IdGrilla,
+                    request.Descripcion,
+                    request.FechaFin);
+                
+                return Ok(evaluaciones);
             }
             catch (Exception ex)
             {
@@ -163,5 +243,12 @@ namespace WebGrilla.Controllers
         public int IdRecurso { get; set; }
         public int IdGrilla { get; set; }
         public string Descripcion { get; set; } = string.Empty;
+    }
+
+    public class CrearEvaluacionGlobalRequest
+    {
+        public int IdGrilla { get; set; }
+        public string Descripcion { get; set; } = string.Empty;
+        public DateTime FechaFin { get; set; }
     }
 }

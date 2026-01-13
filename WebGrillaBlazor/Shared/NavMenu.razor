@@ -1,6 +1,42 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@using WebGrillaBlazor.Services
+@using WebGrillaBlazor.DTOs
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">WebGrillaBlazor</a>
+        
+        @if (AuthState.IsAuthenticated)
+        {
+            <div class="d-flex align-items-center gap-3">
+                <!-- Información del usuario -->
+                <div class="d-flex align-items-center text-white">
+                    <Icon Name="IconName.PersonCircle" class="me-2" />
+                    <div class="d-none d-md-block">
+                        <div class="fw-semibold">@AuthState.GetUserDisplayName()</div>
+                        <small class="text-white-50">@AuthState.CurrentUser?.NombreRol</small>
+                    </div>
+                </div>
+                
+                <!-- Botón de logout -->
+                <Button Color="ButtonColor.Secondary" 
+                        Size="ButtonSize.Small" 
+                        Class="text-white border-light"
+                        @onclick="HandleLogout">
+                    <Icon Name="IconName.BoxArrowRight" class="me-1" />
+                    Salir
+                </Button>
+            </div>
+        }
+        else
+        {
+            <Button Color="ButtonColor.Primary" Size="ButtonSize.Small" @onclick="GoToLogin">
+                <Icon Name="IconName.BoxArrowInRight" class="me-1" />
+                Iniciar Sesión
+            </Button>
+        }
+        
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -9,97 +45,246 @@
 
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="flex-column">
+        <!-- Inicio - Siempre visible -->
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        
-        
-        <!-- Gestión de Grillas -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="grillas">
-                <span class="oi oi-grid-four-up" aria-hidden="true"></span> Grillas
-            </NavLink>
-        </div>
-        
-        <!-- Gestión de Temas -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="temas">
-                <span class="oi oi-layers" aria-hidden="true"></span> Temas
-            </NavLink>
-        </div>
-        
-        <!-- Gestión de Subtemas -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="subtemas">
-                <span class="oi oi-list" aria-hidden="true"></span> Subtemas
-            </NavLink>
-        </div>
-        
-        <!-- Gestión de Recursos -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="recursos">
-                <span class="oi oi-people" aria-hidden="true"></span> Recursos
-            </NavLink>
-        </div>
-        
-        <!-- Gestión de Clientes -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="clientes">
-                <span class="oi oi-briefcase" aria-hidden="true"></span> Clientes
-            </NavLink>
-        </div>
-        
-        <!-- Gestión de Equipos -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="equipos">
-                <span class="oi oi-wrench" aria-hidden="true"></span> Equipos
-            </NavLink>
-        </div>
-        
-        <!-- Gestión de Roles -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="roles">
-                <span class="oi oi-badge" aria-hidden="true"></span> Roles
-            </NavLink>
-        </div>
-        
-        <!-- Gestión de Tipos de Documento -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="tipos">
-                <span class="oi oi-document" aria-hidden="true"></span> Tipos Documento
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
 
-        <!-- Gestión de Evaluaciones -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="evaluaciones">
-                <span class="oi oi-clipboard" aria-hidden="true"></span> Evaluaciones
-            </NavLink>
-        </div>
-        <hr />
-        
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="oi oi-plus" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="fetchdata">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
-            </NavLink>
-        </div>
+        @if (AuthState.IsAuthenticated)
+        {
+            <!-- Separador -->
+            <div class="nav-section-header px-3 mt-3 mb-2">
+                <small class="text-muted fw-semibold">GESTIÓN DE DATOS</small>
+            </div>
+
+            <!-- Recursos - Solo lectura para todos, escritura para admin/manager -->
+            @if (AuthState.UserCanAccess("RECURSOS"))
+            {
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="recursos">
+                        <span class="bi bi-people-fill" aria-hidden="true"></span> Recursos
+                    </NavLink>
+                </div>
+            }
+
+            <!-- Roles - Solo admin y manager -->
+            @if (AuthState.UserCanAccess("ROLES"))
+            {
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="roles">
+                        <span class="bi bi-person-badge-fill" aria-hidden="true"></span> Roles
+                    </NavLink>
+                </div>
+            }
+
+            <!-- Equipos -->
+            @if (AuthState.UserCanAccess("EQUIPOS"))
+            {
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="equipos">
+                        <span class="bi bi-people-fill" aria-hidden="true"></span> Equipos
+                    </NavLink>
+                </div>
+            }
+
+            <!-- Clientes -->
+            @if (AuthState.UserCanAccess("CLIENTES"))
+            {
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="clientes">
+                        <span class="bi bi-building-fill" aria-hidden="true"></span> Clientes
+                    </NavLink>
+                </div>
+            }
+
+            <!-- Tipos de Documento -->
+            @if (AuthState.UserCanAccess("TIPOS_DOCUMENTO"))
+            {
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="tipos">
+                        <span class="bi bi-card-text" aria-hidden="true"></span> Tipos Documento
+                    </NavLink>
+                </div>
+            }
+
+            <!-- Separador -->
+            <div class="nav-section-header px-3 mt-3 mb-2">
+                <small class="text-muted fw-semibold">CONOCIMIENTOS</small>
+            </div>
+
+            <!-- Temas -->
+            @if (AuthState.UserCanAccess("TEMAS"))
+            {
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="temas">
+                        <span class="bi bi-journal-bookmark-fill" aria-hidden="true"></span> Temas
+                    </NavLink>
+                </div>
+            }
+
+            <!-- Subtemas -->
+            @if (AuthState.UserCanAccess("SUBTEMAS"))
+            {
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="subtemas">
+                        <span class="bi bi-journal-text" aria-hidden="true"></span> Subtemas
+                    </NavLink>
+                </div>
+            }
+
+            <!-- Grillas -->
+            @if (AuthState.UserCanAccess("GRILLAS"))
+            {
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="grillas">
+                        <span class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></span> Grillas
+                    </NavLink>
+                </div>
+            }
+
+            <!-- Separador -->
+            <div class="nav-section-header px-3 mt-3 mb-2">
+                <small class="text-muted fw-semibold">EVALUACIONES</small>
+            </div>
+
+            <!-- Evaluaciones -->
+            @if (AuthState.UserCanAccess("EVALUACIONES"))
+            {
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="evaluaciones">
+                        <span class="bi bi-clipboard-check-fill" aria-hidden="true"></span> Evaluaciones
+                    </NavLink>
+                </div>
+            }
+
+            <!-- Evaluaciones Globales -->
+            @if (AuthState.UserCanAccess("EVALUACIONES_GLOBALES"))
+            {
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="evaluaciones-globales">
+                        <span class="bi bi-bar-chart-fill" aria-hidden="true"></span> Evaluaciones Globales
+                    </NavLink>
+                </div>
+            }
+
+            <!-- Separador - Solo para administradores -->
+            @if (AuthState.UserHasPermission("PERMISOS_ADMIN") || AuthState.UserHasPermission("CONFIGURACION_SISTEMA"))
+            {
+                <div class="nav-section-header px-3 mt-3 mb-2">
+                    <small class="text-muted fw-semibold">ADMINISTRACIÓN</small>
+                </div>
+
+                <!-- Gestión de Permisos -->
+                @if (AuthState.UserHasPermission("PERMISOS_ADMIN"))
+                {
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="permisos">
+                            <span class="bi bi-shield-check" aria-hidden="true"></span> Permisos
+                        </NavLink>
+                    </div>
+                }
+            }
+
+            <!-- Separador para información del usuario en móvil -->
+            <div class="nav-section-header px-3 mt-4 mb-2 d-md-none">
+                <small class="text-muted fw-semibold">USUARIO ACTUAL</small>
+            </div>
+            
+            <div class="nav-item px-3 d-md-none">
+                <div class="nav-link-static">
+                    <Icon Name="IconName.PersonCircle" class="me-2" />
+                    <div>
+                        <div class="fw-semibold">@AuthState.GetUserDisplayName()</div>
+                        <small class="text-muted">@AuthState.CurrentUser?.NombreRol</small>
+                        <div class="mt-2">
+                            <Button Color="ButtonColor.Secondary" Size="ButtonSize.ExtraSmall" @onclick="HandleLogout">
+                                <Icon Name="IconName.BoxArrowRight" class="me-1" />
+                                Cerrar Sesión
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- Si no está autenticado, mostrar solo el botón de login -->
+            <div class="nav-item px-3 mt-3">
+                <Button Color="ButtonColor.Primary" @onclick="GoToLogin">
+                    <Icon Name="IconName.BoxArrowInRight" class="me-2" />
+                    Iniciar Sesión
+                </Button>
+            </div>
+        }
     </nav>
 </div>
+
+<style>
+    .nav-section-header {
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 0.5rem;
+    }
+    
+    .nav-link-static {
+        display: block;
+        padding: 0.5rem 1rem;
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+        border-radius: 0.375rem;
+        background: rgba(255,255,255,0.05);
+    }
+    
+    .top-row {
+        background: linear-gradient(45deg, #1b6ec2, #0d6efd) !important;
+    }
+</style>
 
 @code {
     private bool collapseNavMenu = true;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
+    protected override async Task OnInitializedAsync()
+    {
+        // Suscribirse a cambios de estado
+        AuthState.OnUserChanged += OnAuthStateChanged;
+        AuthState.OnLogout += OnLogoutStateChanged;
+
+        // Inicializar estado de autenticación
+        await AuthState.InitializeAsync();
+    }
+
+    private void OnAuthStateChanged(RecursoSessionDTO? user)
+    {
+        InvokeAsync(() => StateHasChanged());
+    }
+
+    private void OnLogoutStateChanged()
+    {
+        InvokeAsync(() => StateHasChanged());
+    }
+
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private void GoToLogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthState.LogoutAsync();
+        Navigation.NavigateTo("/login");
+    }
+
+    public void Dispose()
+    {
+        AuthState.OnUserChanged -= OnAuthStateChanged;
+        AuthState.OnLogout -= OnLogoutStateChanged;
     }
 }

@@ -33,10 +33,10 @@
         </div>
     </div>
 
-    <!-- Barra de progreso general -->
+    <!-- Barra de progreso general - FIJA -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card">
+            <div class="card progress-general-fixed">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="mb-0">Progreso General</h6>
@@ -57,128 +57,220 @@
         </div>
     </div>
 
-    <!-- Grilla de evaluación por temas -->
+    <!-- Sistema de TABS para Temas -->
     @if (temasBinarizados.Any())
     {
         <div class="row">
             <div class="col-12">
-                @foreach (var tema in temasBinarizados.OrderBy(t => t.Orden))
-                {
-                    <div class="card mb-3">
-                        <div class="card-header">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center gap-2">
-                                    <h5 class="mb-0">@tema.Nombre</h5>
-                                    <span class="badge bg-secondary">@tema.Ponderacion.ToString("F1")%</span>
-                                    @if (tema.ProgresoCompletitud >= 100)
-                                    {
-                                        <span class="badge bg-success">
-                                            <Icon Name="IconName.CheckCircle" /> Completo
-                                        </span>
-                                    }
-                                </div>
-                                <div class="text-end">
-                                    <small class="text-muted">
-                                        Progreso: <strong>@tema.ProgresoCompletitud.ToString("F1")%</strong>
-                                    </small>
-                                    <div class="progress mt-1" style="width: 200px; height: 6px;">
-                                        <div class="progress-bar @(tema.ProgresoCompletitud >= 100 ? "bg-success" : "bg-warning")" 
-                                             style="width: @tema.ProgresoCompletitud%">
+                <div class="evaluation-tabs">
+                    <!-- Navigation Tabs -->
+                    <ul class="nav nav-tabs" role="tablist">
+                        @for (int i = 0; i < temasBinarizados.Count; i++)
+                        {
+                            var tema = temasBinarizados.OrderBy(t => t.Orden).ElementAt(i);
+                            var tabId = $"tema-tab-{tema.IdGrillaTema}";
+                            var isActive = i == temaActivo;
+                            
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link @(isActive ? "active" : "")" 
+                                        id="@($"{tabId}-tab")" 
+                                        data-bs-toggle="tab" 
+                                        data-bs-target="@($"#{tabId}")" 
+                                        type="button" 
+                                        role="tab" 
+                                        aria-controls="@tabId" 
+                                        aria-selected="@(isActive ? "true" : "false")"
+                                        @onclick="@(() => CambiarTemaActivo(i))">
+                                    <span>@tema.Nombre</span>
+                                    <span class="tab-ponderacion-badge">@tema.Ponderacion.ToString("F1")%</span>
+                                    <span class="tab-progress-indicator @GetProgressIndicatorClass(tema.ProgresoCompletitud)"
+                                          title="Progreso: @tema.ProgresoCompletitud.ToString("F1")%"></span>
+                                </button>
+                            </li>
+                        }
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content">
+                        @for (int i = 0; i < temasBinarizados.Count; i++)
+                        {
+                            var tema = temasBinarizados.OrderBy(t => t.Orden).ElementAt(i);
+                            var tabId = $"tema-tab-{tema.IdGrillaTema}";
+                            var isActive = i == temaActivo;
+                            
+                            <div class="tab-pane fade @(isActive ? "show active" : "")" 
+                                 id="@tabId" 
+                                 role="tabpanel" 
+                                 aria-labelledby="@($"{tabId}-tab")" 
+                                 tabindex="0">
+                                
+                                <!-- Header del tema en el tab -->
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <h4 class="mb-0">@tema.Nombre</h4>
+                                        <span class="badge bg-secondary fs-6">@tema.Ponderacion.ToString("F1")%</span>
+                                        @if (tema.ProgresoCompletitud >= 100)
+                                        {
+                                            <span class="badge bg-success">
+                                                <Icon Name="IconName.CheckCircle" /> Completo
+                                            </span>
+                                        }
+                                        else if (tema.ProgresoCompletitud > 0)
+                                        {
+                                            <span class="badge bg-warning">
+                                                <Icon Name="IconName.Clock" /> En Progreso
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">
+                                                <Icon Name="IconName.Dash" /> Pendiente
+                                            </span>
+                                        }
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <small class="text-muted">
+                                            Progreso: <strong>@tema.ProgresoCompletitud.ToString("F1")%</strong>
+                                        </small>
+                                        <div class="progress progress-completitud" style="width: 150px;">
+                                            <div class="progress-bar @(tema.ProgresoCompletitud >= 100 ? "bg-success" : "bg-warning")" 
+                                                 style="width: @Math.Min(tema.ProgresoCompletitud, 100)%">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            @if (!tema.Subtemas.Any())
-                            {
-                                <div class="text-center text-muted py-3">
-                                    <p>No hay subtemas para evaluar en este tema</p>
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th style="width: 40%;">Subtema</th>
-                                                <th style="width: 20%;" class="text-center">Valor Funcional (0-5)</th>
-                                                <th style="width: 20%;" class="text-center">Valor Técnico (0-5)</th>
-                                                <th style="width: 15%;" class="text-center">Estado</th>
-                                                <th style="width: 5%;" class="text-center">Acciones</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var subtema in tema.Subtemas.OrderBy(s => s.Orden))
-                                            {
-                                                var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == subtema.IdSubtema);
-                                                <tr class="@(conocimiento != null ? "table-light" : "")">
-                                                    <td>
-                                                        <div>
-                                                            <strong>@subtema.Nombre</strong>
-                                                            @if (!string.IsNullOrEmpty(subtema.Descripcion))
+
+                                <!-- Contenido del tema -->
+                                @if (!tema.Subtemas.Any())
+                                {
+                                    <div class="no-subtemas">
+                                        <Icon Name="IconName.InfoCircle" Size="IconSize.x3" />
+                                        <h5>No hay subtemas para evaluar</h5>
+                                        <p class="text-muted">Este tema no tiene subtemas configurados para la evaluación.</p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 40%;">Subtema</th>
+                                                    <th style="width: 20%;" class="text-center">Valor Funcional (0-5)</th>
+                                                    <th style="width: 20%;" class="text-center">Valor Técnico (0-5)</th>
+                                                    <th style="width: 15%;" class="text-center">Estado</th>
+                                                    <th style="width: 5%;" class="text-center">Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var subtema in tema.Subtemas.OrderBy(s => s.Orden))
+                                                {
+                                                    var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == subtema.IdSubtema);
+                                                    <tr class="@(conocimiento != null ? "table-light" : "")">
+                                                        <td>
+                                                            <div>
+                                                                <strong>@subtema.Nombre</strong>
+                                                                @if (!string.IsNullOrEmpty(subtema.Descripcion))
+                                                                {
+                                                                    <small class="text-muted d-block">@subtema.Descripcion</small>
+                                                                }
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <input type="number" 
+                                                                   class="form-control form-control-sm text-center" 
+                                                                   min="0" 
+                                                                   max="5" 
+                                                                   step="1"
+                                                                   value="@(conocimiento?.ValorFuncional ?? 0)"
+                                                                   @onchange="@(e => ActualizarValorFuncional(subtema.IdSubtema, e))" />
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <input type="number" 
+                                                                   class="form-control form-control-sm text-center" 
+                                                                   min="0" 
+                                                                   max="5" 
+                                                                   step="1"
+                                                                   value="@(conocimiento?.ValorTecnico ?? 0)"
+                                                                   @onchange="@(e => ActualizarValorTecnico(subtema.IdSubtema, e))" />
+                                                        </td>
+                                                        <td class="text-center">
+                                                            @if (conocimiento != null)
                                                             {
-                                                                <small class="text-muted d-block">@subtema.Descripcion</small>
-                                                            }
-                                                        </div>
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <input type="number" 
-                                                               class="form-control form-control-sm text-center" 
-                                                               min="0" 
-                                                               max="5" 
-                                                               step="1"
-                                                               value="@(conocimiento?.ValorFuncional ?? 0)"
-                                                               @onchange="@(e => ActualizarValorFuncional(subtema.IdSubtema, e))" />
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <input type="number" 
-                                                               class="form-control form-control-sm text-center" 
-                                                               min="0" 
-                                                               max="5" 
-                                                               step="1"
-                                                               value="@(conocimiento?.ValorTecnico ?? 0)"
-                                                               @onchange="@(e => ActualizarValorTecnico(subtema.IdSubtema, e))" />
-                                                    </td>
-                                                    <td class="text-center">
-                                                        @if (conocimiento != null)
-                                                        {
-                                                            <span class="badge bg-success">
-                                                                <Icon Name="IconName.Check" /> Evaluado
-                                                            </span>
-                                                        }
-                                                        else
-                                                        {
-                                                            <span class="badge bg-secondary">
-                                                                <Icon Name="IconName.Dash" /> Pendiente
-                                                            </span>
-                                                        }
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <Button Color="ButtonColor.Primary" 
-                                                                Size="ButtonSize.ExtraSmall" 
-                                                                @onclick="@(() => GuardarConocimiento(subtema.IdSubtema))"
-                                                                Disabled="@guardandoConocimiento">
-                                                            @if (guardandoConocimiento)
-                                                            {
-                                                                <Icon Name="IconName.HourglassSplit" />
+                                                                <span class="badge bg-success">
+                                                                    <Icon Name="IconName.Check" /> Evaluado
+                                                                </span>
                                                             }
                                                             else
                                                             {
-                                                                <Icon Name="IconName.FloppyFill" />
+                                                                <span class="badge bg-secondary">
+                                                                    <Icon Name="IconName.Dash" /> Pendiente
+                                                                </span>
                                                             }
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-                                            }
-                                        </tbody>
-                                    </table>
-                                </div>
-                            }
-                        </div>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <Button Color="ButtonColor.Primary" 
+                                                                    Size="ButtonSize.ExtraSmall" 
+                                                                    Class="btn-save-row"
+                                                                    @onclick="@(() => GuardarConocimiento(subtema.IdSubtema))"
+                                                                    Disabled="@guardandoConocimiento">
+                                                                @if (guardandoConocimiento)
+                                                                {
+                                                                    <Icon Name="IconName.HourglassSplit" />
+                                                                }
+                                                                else
+                                                                {
+                                                                    <Icon Name="IconName.FloppyFill" />
+                                                                }
+                                                            </Button>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+
+                                <!-- Botones de acción específicos del tema actual -->
+                                @if (tema.Subtemas.Any())
+                                {
+                                    <div class="mt-4 p-3 bg-light rounded">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>Tema: @tema.Nombre</strong>
+                                                <small class="text-muted d-block">
+                                                    @tema.Subtemas.Count subtemas • 
+                                                    @tema.Subtemas.Count(s => conocimientos.Any(c => c.IdSubtema == s.IdSubtema)) evaluados
+                                                </small>
+                                            </div>
+                                            <div class="btn-group" role="group">
+                                                <Button Color="ButtonColor.Success" 
+                                                        Size="ButtonSize.Small" 
+                                                        @onclick="@(() => GuardarTodoElTema(tema.IdGrillaTema))" 
+                                                        Disabled="@guardandoTema">
+                                                    @if (guardandoTema)
+                                                    {
+                                                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <Icon Name="IconName.CloudCheck" />
+                                                    }
+                                                    Guardar Tema
+                                                </Button>
+                                                <Button Color="ButtonColor.Warning" 
+                                                        Size="ButtonSize.Small"
+                                                        @onclick="@(() => AutoEvaluarTemaPendientes(tema.IdGrillaTema))">
+                                                    <Icon Name="IconName.Magic" /> Auto-completar (0,0)
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
                     </div>
-                }
+                </div>
             </div>
         </div>
     }
@@ -215,7 +307,7 @@
         </div>
     }
 
-    <!-- Botones de acción -->
+    <!-- Botones de acción globales -->
     @if (temasBinarizados.Any())
     {
         <div class="row mt-4">
@@ -224,9 +316,10 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6 class="mb-1">Acciones de Evaluación</h6>
+                                <h6 class="mb-1">Acciones Globales de Evaluación</h6>
                                 <small class="text-muted">
-                                    Progreso actual: @progresoTotal.ToString("F1")% completado
+                                    Progreso actual: @progresoTotal.ToString("F1")% completado • 
+                                    @temasBinarizados.Count temas • @totalSubtemas subtemas totales
                                 </small>
                             </div>
                             <div class="btn-group" role="group">
@@ -280,9 +373,13 @@
     private bool cargandoDatos = true;
     private bool guardandoConocimiento = false;
     private bool guardandoTodo = false;
+    private bool guardandoTema = false;
     private bool mostrarToast = false;
     private string mensajeToast = string.Empty;
     private string tipoToast = "success";
+
+    // Control de tabs
+    private int temaActivo = 0; // Índice del tema activo
 
     // Clase auxiliar para organizar temas con sus subtemas
     public class TemaConSubtemasEvaluacion
@@ -306,6 +403,24 @@
     protected override async Task OnInitializedAsync()
     {
         await CargarDatos();
+    }
+
+    private void CambiarTemaActivo(int indice)
+    {
+        temaActivo = indice;
+        StateHasChanged();
+    }
+
+    private string GetProgressIndicatorClass(decimal progreso)
+    {
+        if (progreso >= 100)
+            return "complete";
+        else if (progreso > 100)
+            return "exceed"; 
+        else if (progreso > 0)
+            return "partial";
+        else
+            return "empty";
     }
 
     private async Task CargarDatos()
@@ -410,7 +525,16 @@
         {
             Console.WriteLine($"Cargando conocimientos para evaluación {IdEvaluacion} y recurso {IdRecurso}");
             conocimientos = await ConocimientoClient.GetConocimientosPorEvaluacionYRecursoAsync(IdEvaluacion, IdRecurso);
-            Console.WriteLine($"Conocimientos cargados: {conocimientos.Count}");
+            Console.WriteLine($"Conocimientos cargados desde BD: {conocimientos.Count}");
+            
+            // Si no hay conocimientos guardados en BD, generar conocimientos temporales
+            if (!conocimientos.Any() && evaluacion?.IdGrilla != null)
+            {
+                Console.WriteLine($"No hay conocimientos en BD, generando temporales para grilla {evaluacion.IdGrilla}");
+                var conocimientosTemporales = await EvaluacionClient.GenerarConocimientosTemporalesAsync(IdEvaluacion, IdRecurso, evaluacion.IdGrilla);
+                conocimientos.AddRange(conocimientosTemporales);
+                Console.WriteLine($"Conocimientos temporales generados: {conocimientosTemporales.Count}");
+            }
             
             // Debug: Mostrar información de conocimientos cargados
             foreach (var conocimiento in conocimientos)
@@ -567,6 +691,108 @@
         finally
         {
             guardandoConocimiento = false;
+        }
+    }
+
+    private async Task GuardarTodoElTema(int idGrillaTema)
+    {
+        guardandoTema = true;
+        try
+        {
+            var tema = temasBinarizados.FirstOrDefault(t => t.IdGrillaTema == idGrillaTema);
+            if (tema == null) return;
+
+            // Obtener conocimientos de este tema para guardar
+            var subtemasDelTema = tema.Subtemas.Select(s => s.IdSubtema).ToList();
+            var conocimientosParaGuardar = conocimientos
+                .Where(c => subtemasDelTema.Contains(c.IdSubtema) && 
+                           (c.IdConocimientoRecurso == 0 || c.ValorFuncional >= 0 || c.ValorTecnico >= 0))
+                .ToList();
+
+            if (conocimientosParaGuardar.Any())
+            {
+                var conocimientosGuardados = await ConocimientoClient.GuardarMultiplesAsync(conocimientosParaGuardar);
+                
+                // Actualizar la lista local con los IDs devueltos
+                foreach (var conocimientoGuardado in conocimientosGuardados)
+                {
+                    var index = conocimientos.FindIndex(c => 
+                        c.IdSubtema == conocimientoGuardado.IdSubtema && 
+                        c.IdRecurso == conocimientoGuardado.IdRecurso &&
+                        c.IdEvaluacion == conocimientoGuardado.IdEvaluacion);
+                    
+                    if (index >= 0)
+                    {
+                        conocimientos[index] = conocimientoGuardado;
+                    }
+                }
+
+                MostrarToast($"Tema '{tema.Nombre}' guardado correctamente ({conocimientosGuardados.Count} subtemas)", "success");
+            }
+            else
+            {
+                MostrarToast($"No hay cambios para guardar en el tema '{tema.Nombre}'", "warning");
+            }
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al guardar tema: {ex.Message}");
+            MostrarToast("Error al guardar el tema", "error");
+        }
+        finally
+        {
+            guardandoTema = false;
+        }
+    }
+
+    private async Task AutoEvaluarTemaPendientes(int idGrillaTema)
+    {
+        try
+        {
+            var tema = temasBinarizados.FirstOrDefault(t => t.IdGrillaTema == idGrillaTema);
+            if (tema == null) return;
+
+            int nuevosConocimientos = 0;
+            
+            foreach (var subtema in tema.Subtemas)
+            {
+                var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == subtema.IdSubtema);
+                if (conocimiento == null)
+                {
+                    conocimientos.Add(new ConocimientoRecursoDTO
+                    {
+                        IdConocimientoRecurso = 0, // Nuevo registro
+                        IdSubtema = subtema.IdSubtema,
+                        IdRecurso = IdRecurso,
+                        IdEvaluacion = IdEvaluacion,
+                        IdGrilla = evaluacion?.IdGrilla ?? 0,
+                        ValorFuncional = 0,
+                        ValorTecnico = 0,
+                        ValorFuncionalVerif = null,
+                        ValorTecnicoVerif = null
+                    });
+                    nuevosConocimientos++;
+                }
+            }
+
+            CalcularProgreso();
+            
+            if (nuevosConocimientos > 0)
+            {
+                MostrarToast($"Se crearon {nuevosConocimientos} registros (0,0) en el tema '{tema.Nombre}'", "warning");
+                StateHasChanged();
+            }
+            else
+            {
+                MostrarToast($"Todos los subtemas del tema '{tema.Nombre}' ya tienen registros", "info");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error en auto-evaluación del tema: {ex.Message}");
+            MostrarToast("Error al auto-evaluar tema", "error");
         }
     }
 

@@ -1,0 +1,142 @@
+@using WebGrillaBlazor.Services
+@using WebGrillaBlazor.DTOs
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+
+@if (isInitializing)
+{
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Verificando permisos...</span>
+            </div>
+            <div class="mt-2">
+                <small class="text-muted">Verificando permisos...</small>
+            </div>
+        </div>
+    </div>
+}
+else if (AuthState.IsAuthenticated)
+{
+    @if (string.IsNullOrEmpty(RequiredPermission) || AuthState.UserHasPermission(RequiredPermission))
+    {
+        @ChildContent
+    }
+    else
+    {
+        <div class="alert alert-warning d-flex align-items-center" role="alert">
+            <Icon Name="IconName.ExclamationTriangleFill" class="me-2" />
+            <div>
+                <strong>Acceso denegado</strong><br/>
+                No tienes permisos para acceder a esta sección.
+                @if (!string.IsNullOrEmpty(RequiredPermission))
+                {
+                    <small class="text-muted d-block">Permiso requerido: @RequiredPermission</small>
+                }
+            </div>
+        </div>
+    }
+}
+else
+{
+    @if (RedirectToLogin)
+    {
+        <!-- Redirigir automáticamente -->
+    }
+    else
+    {
+        <div class="alert alert-info d-flex align-items-center" role="alert">
+            <Icon Name="IconName.InfoCircle" class="me-2" />
+            <div>
+                <strong>Autenticación requerida</strong><br/>
+                Debes iniciar sesión para acceder a esta sección.
+                <div class="mt-2">
+                    <Button Color="ButtonColor.Primary" Size="ButtonSize.Small" @onclick="GoToLogin">
+                        <Icon Name="IconName.BoxArrowInRight" class="me-1" />
+                        Iniciar Sesión
+                    </Button>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    /// <summary>
+    /// Contenido a mostrar si el usuario está autorizado
+    /// </summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Permiso específico requerido para acceder al contenido
+    /// </summary>
+    [Parameter] public string? RequiredPermission { get; set; }
+
+    /// <summary>
+    /// Si debe redirigir automáticamente al login cuando no está autenticado
+    /// </summary>
+    [Parameter] public bool RedirectToLogin { get; set; } = false;
+
+    /// <summary>
+    /// Mensaje personalizado para mostrar cuando no tiene permisos
+    /// </summary>
+    [Parameter] public string? UnauthorizedMessage { get; set; }
+
+    private bool isInitializing = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Suscribirse a cambios de estado de autenticación
+        AuthState.OnUserChanged += OnUserStateChanged;
+        AuthState.OnLogout += OnLogoutStateChanged;
+        
+        // Esperar a que se inicialice el estado
+        await Task.Delay(100); // Pequeña pausa para asegurar inicialización
+        
+        // Verificar si necesitamos redirigir
+        if (RedirectToLogin && !AuthState.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login", forceLoad: false);
+            return;
+        }
+        
+        isInitializing = false;
+        StateHasChanged();
+    }
+
+    private void OnUserStateChanged(RecursoSessionDTO? user)
+    {
+        InvokeAsync(() => 
+        {
+            isInitializing = false;
+            StateHasChanged();
+        });
+    }
+
+    private void OnLogoutStateChanged()
+    {
+        InvokeAsync(() => 
+        {
+            if (RedirectToLogin)
+            {
+                Navigation.NavigateTo("/login", forceLoad: false);
+            }
+            else
+            {
+                isInitializing = false;
+                StateHasChanged();
+            }
+        });
+    }
+
+    private void GoToLogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+
+    public void Dispose()
+    {
+        AuthState.OnUserChanged -= OnUserStateChanged;
+        AuthState.OnLogout -= OnLogoutStateChanged;
+    }
+}

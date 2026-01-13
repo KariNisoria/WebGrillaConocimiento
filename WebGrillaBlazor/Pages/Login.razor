@@ -1,0 +1,245 @@
+@page "/login"
+@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.ApiClient
+@using WebGrillaBlazor.Services
+@inject ApiClientAuthentication AuthClient
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7 col-sm-9">
+            <div class="card shadow-lg border-0 rounded-lg mt-5">
+                <div class="card-header">
+                    <div class="text-center">
+                        <h3 class="font-weight-light my-4">
+                            <Icon Name="IconName.PersonCircle" Size="IconSize.x2" class="text-primary me-2" />
+                            Iniciar Sesión
+                        </h3>
+                        <p class="text-muted">Sistema de Gestión de Conocimientos</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@loginRequest" OnValidSubmit="@HandleLogin">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="form-floating mb-3">
+                            <InputText @bind-Value="loginRequest.Email" 
+                                       class="@GetInputCssClass("Email")"
+                                       id="inputEmail" 
+                                       placeholder="nombre@empresa.com"
+                                       disabled="@isLoading" />
+                            <label for="inputEmail">
+                                <Icon Name="IconName.Envelope" class="me-1" />
+                                Correo Electrónico
+                            </label>
+                            <ValidationMessage For="@(() => loginRequest.Email)" class="invalid-feedback" />
+                        </div>
+                        
+                        <div class="form-floating mb-3">
+                            <InputNumber @bind-Value="loginRequest.NumeroDocumento" 
+                                         class="@GetInputCssClass("NumeroDocumento")"
+                                         id="inputDocument" 
+                                         placeholder="12345678"
+                                         disabled="@isLoading" />
+                            <label for="inputDocument">
+                                <Icon Name="IconName.CardText" class="me-1" />
+                                Número de Documento
+                            </label>
+                            <ValidationMessage For="@(() => loginRequest.NumeroDocumento)" class="invalid-feedback" />
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                                <Icon Name="IconName.ExclamationTriangleFill" class="me-2" />
+                                <div>@errorMessage</div>
+                            </div>
+                        }
+
+                        <div class="d-grid">
+                            <Button Type="ButtonType.Submit" 
+                                    Color="ButtonColor.Primary" 
+                                    Size="ButtonSize.Large"
+                                    Disabled="@isLoading"
+                                    class="btn-login">
+                                @if (isLoading)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    <span>Verificando...</span>
+                                }
+                                else
+                                {
+                                    <Icon Name="IconName.BoxArrowInRight" class="me-2" />
+                                    <span>Ingresar</span>
+                                }
+                            </Button>
+                        </div>
+                    </EditForm>
+                </div>
+                <div class="card-footer text-center py-3">
+                    <div class="small text-muted">
+                        <Icon Name="IconName.InfoCircle" class="me-1" />
+                        Utiliza las credenciales registradas en el sistema
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast de notificaciones -->
+@if (showToast)
+{
+    <div class="toast align-items-center @GetToastClass() border-0 show position-fixed bottom-0 end-0 m-4" 
+         role="alert" aria-live="assertive" aria-atomic="true" style="z-index:9999;">
+        <div class="d-flex">
+            <div class="toast-body">
+                @toastMessage
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                    @onclick="() => showToast = false" aria-label="Close"></button>
+        </div>
+    </div>
+}
+
+<style>
+    .card {
+        transition: transform 0.2s ease-in-out;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .btn-login {
+        background: linear-gradient(45deg, #0d6efd, #0b5ed7);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-login:hover:not(:disabled) {
+        background: linear-gradient(45deg, #0b5ed7, #0a58ca);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+    }
+    
+    .form-floating > label {
+        color: #6c757d;
+    }
+    
+    .form-floating > .form-control:focus ~ label {
+        color: #0d6efd;
+    }
+    
+    body {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        min-height: 100vh;
+    }
+</style>
+
+@code {
+    private LoginRequestDTO loginRequest = new();
+    private string errorMessage = string.Empty;
+    private bool isLoading = false;
+    private bool showToast = false;
+    private string toastMessage = string.Empty;
+    private string toastType = "success";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Si el usuario ya está autenticado, redirigir al inicio
+        if (AuthState.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        // Valores por defecto para testing (eliminar en producción)
+        if (Navigation.Uri.Contains("localhost"))
+        {
+            // loginRequest.Email = "admin@censys.com";
+            // loginRequest.NumeroDocumento = 12345678;
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            var response = await AuthClient.LoginAsync(loginRequest);
+
+            if (response.IsSuccess && response.Usuario != null)
+            {
+                // Guardar estado de autenticación
+                await AuthState.SetCurrentUserAsync(response.Usuario);
+                
+                // Mostrar toast de éxito
+                ShowToast($"¡Bienvenido/a, {response.Usuario.NombreCompleto}!", "success");
+                
+                // Esperar un poco para que se vea el toast
+                await Task.Delay(1000);
+                
+                // Redirigir al inicio
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = response.Message;
+                ShowToast(response.Message, "error");
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error de conexión. Por favor, inténtalo de nuevo.";
+            ShowToast("Error de conexión", "error");
+            Console.WriteLine($"Error en login: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private bool HasValidationError(string fieldName)
+    {
+        // Lógica para verificar errores de validación específicos
+        return false; // Simplificado para el ejemplo
+    }
+
+    private string GetInputCssClass(string fieldName)
+    {
+        return HasValidationError(fieldName) ? "form-control is-invalid" : "form-control";
+    }
+
+    private void ShowToast(string message, string type)
+    {
+        toastMessage = message;
+        toastType = type;
+        showToast = true;
+        StateHasChanged();
+
+        // Auto-ocultar toast después de 3 segundos
+        Task.Delay(3000).ContinueWith(_ => InvokeAsync(() =>
+        {
+            showToast = false;
+            StateHasChanged();
+        }));
+    }
+
+    private string GetToastClass()
+    {
+        return toastType switch
+        {
+            "success" => "text-bg-success",
+            "error" => "text-bg-danger",
+            "warning" => "text-bg-warning",
+            _ => "text-bg-info"
+        };
+    }
+}

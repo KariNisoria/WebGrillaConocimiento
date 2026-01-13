@@ -27,16 +27,30 @@
                 <div>
                     <strong>Total Ponderación Subtemas: @totalPonderacionSubtemas.ToString("F2")%</strong>
                     <small class="ms-2">@GetMensajePonderacion()</small>
+                    @if (totalPonderacionSubtemas > 100)
+                    {
+                        <br>
+                        <small class="text-danger fw-bold">
+                            <Icon Name="IconName.ExclamationTriangleFill" class="me-1" />
+                            ¡ERROR! Se ha superado el 100%. Debe corregir las ponderaciones.
+                        </small>
+                    }
                 </div>
-                <div class="progress" style="width: 300px; height: 20px;">
+                <div class="progress" style="width: 300px; height: 25px;">
                     <div class="progress-bar @GetProgressBarClass()" 
                          role="progressbar" 
-                         style="width: @Math.Min(totalPonderacionSubtemas, 100)%" 
+                         style="width: @GetProgressBarWidth()%" 
                          aria-valuenow="@totalPonderacionSubtemas" 
                          aria-valuemin="0" 
                          aria-valuemax="100">
-                        @totalPonderacionSubtemas.ToString("F1")%
+                        <span class="fw-bold">@totalPonderacionSubtemas.ToString("F1")%</span>
                     </div>
+                    @if (totalPonderacionSubtemas > 100)
+                    {
+                        <div class="progress-bar bg-danger progress-bar-striped progress-bar-animated" 
+                             style="width: @Math.Min(totalPonderacionSubtemas - 100, 50)%">
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -201,7 +215,7 @@
 <!-- Modal para editar ponderación -->
 <Modal @ref="modalEditarPonderacion" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Regular">
     <HeaderTemplate>
-        <ModalTitle>Editar Ponderación del Subtema</ModalTitle>
+        <h4 class="modal-title">Editar Ponderación del Subtema</h4>
     </HeaderTemplate>
     <BodyTemplate>
         @if (grillaSubtemaEditar != null)
@@ -223,20 +237,38 @@
                        @oninput="ValidarPonderacion"
                        min="0" 
                        max="100" 
-                       step="0.01" />
+                       step="0.01"
+                       inputmode="decimal"
+                       pattern="[0-9]+([,\.][0-9]+)?" />
                 @if (errorValidacionPonderacion)
                 {
                     <div class="invalid-feedback">
                         @mensajeErrorPonderacion
                     </div>
                 }
-                else if (nuevaPonderacion > 0)
+                @if (nuevaPonderacion > 0 && !errorValidacionPonderacion)
                 {
                     <div class="form-text">
-                        Total con este cambio: <strong class="@(totalPonderacionConCambio > 100 ? "text-danger" : "text-success")">
+                        Total con este cambio: <strong class="@(totalPonderacionConCambio > 100 ? "text-danger" : totalPonderacionConCambio == 100 ? "text-success" : "text-info")">
                             @totalPonderacionConCambio.ToString("F2")%
                         </strong>
+                        @if (totalPonderacionConCambio == 100)
+                        {
+                            <span class="text-success ms-2">? Perfecto!</span>
+                        }
+                        else if (totalPonderacionConCambio < 100)
+                        {
+                            <span class="text-info ms-2">Disponible: @((100 - totalPonderacionConCambio).ToString("F2"))%</span>
+                        }
                     </div>
+                }
+                @if (!errorValidacionPonderacion && nuevaPonderacion > 0)
+                {
+                    <small class="text-muted">
+                        Máximo permitido para este subtema: @{
+                            var maximoSubtema = 100 - totalPonderacionSubtemas + (grillaSubtemaEditar?.Ponderacion ?? 0);
+                        } @maximoSubtema.ToString("F2")%
+                    </small>
                 }
             </div>
         }
@@ -251,15 +283,15 @@
     </FooterTemplate>
 </Modal>
 
-<!-- Toast de confirmación -->
+<!-- Toast de confirmación mejorado -->
 @if (mostrarToast)
 {
-    <div class="toast align-items-center text-bg-success border-0 show position-fixed bottom-0 end-0 m-4" role="alert" aria-live="assertive" aria-atomic="true" style="z-index:9999;">
+    <div class="toast align-items-center @GetToastClass() border-0 show position-fixed bottom-0 end-0 m-4" role="alert" aria-live="assertive" aria-atomic="true" style="z-index:9999;">
         <div class="d-flex">
             <div class="toast-body">
-                @mensajeToast
+                @((MarkupString)mensajeToast)
             </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" @onclick="()=>mostrarToast=false" aria-label="Close"></button>
+            <button type="button" class="btn-close @(mensajeToast.Contains("??") ? "btn-close-white" : "btn-close-white") me-2 m-auto" @onclick="()=>mostrarToast=false" aria-label="Close"></button>
         </div>
     </div>
 }
@@ -414,7 +446,7 @@
         return new MarkupString(nombre);
     }
 
-    // Validación de ponderación
+    // Validación de ponderación RESTRICTIVA - NO PERMITE superar 100%
     private void ValidarPonderacion(ChangeEventArgs e)
     {
         if (decimal.TryParse(e.Value?.ToString(), out var valor))
@@ -438,19 +470,21 @@
         else if (totalPonderacionConCambio > 100)
         {
             errorValidacionPonderacion = true;
-            mensajeErrorPonderacion = $"El total excedería 100% (sería {totalPonderacionConCambio:F2}%)";
+            var maximoPermitido = 100 - totalPonderacionSubtemas + (grillaSubtemaEditar?.Ponderacion ?? 0);
+            mensajeErrorPonderacion = $"? NO PERMITIDO: El total excedería 100% (sería {totalPonderacionConCambio:F2}%). Máximo permitido: {maximoPermitido:F2}%";
         }
     }
 
-    // Métodos para la barra de progreso y alertas
+    // Métodos mejorados para la barra de progreso y alertas
     private string GetAlertClassForPonderacion()
     {
         return totalPonderacionSubtemas switch
         {
             100 => "alert-success",
             > 100 => "alert-danger",
-            > 80 => "alert-warning",
-            _ => "alert-info"
+            > 90 => "alert-warning",
+            > 70 => "alert-info",
+            _ => "alert-secondary"
         };
     }
 
@@ -460,19 +494,27 @@
         {
             100 => "bg-success",
             > 100 => "bg-danger",
-            > 80 => "bg-warning",
-            _ => "bg-info"
+            > 90 => "bg-warning",
+            > 70 => "bg-info",
+            _ => "bg-secondary"
         };
+    }
+
+    private string GetProgressBarWidth()
+    {
+        // Mostrar siempre el valor real, incluso si supera 100%
+        return Math.Min(totalPonderacionSubtemas, 100).ToString("F1");
     }
 
     private string GetMensajePonderacion()
     {
         return totalPonderacionSubtemas switch
         {
-            100 => "? ¡Perfecto! Ponderación completa",
-            > 100 => $"?? Excede en {totalPonderacionSubtemas - 100:F2}%",
-            > 80 => $"?? Faltan {100 - totalPonderacionSubtemas:F2}% para completar",
-            _ => $"?? Faltan {100 - totalPonderacionSubtemas:F2}% para completar"
+            100 => "? ¡Perfecto! Ponderación completa al 100%",
+            > 100 => $"? ERROR: Excede en {totalPonderacionSubtemas - 100:F2}% - Total: {totalPonderacionSubtemas:F2}%",
+            > 90 => $"?? Muy cerca del 100%. Faltan {100 - totalPonderacionSubtemas:F2}%",
+            > 70 => $"?? En progreso. Faltan {100 - totalPonderacionSubtemas:F2}% para completar",
+            _ => $"?? Inicio de asignación. Faltan {100 - totalPonderacionSubtemas:F2}% para completar"
         };
     }
 
@@ -498,11 +540,26 @@
                 return;
             }
 
-            // Validar que no exceda 100% con una ponderación mínima
+            // VALIDACIÓN RESTRICTIVA: NO permitir agregar si excedería 100%
             var ponderacionPorDefecto = 10.0m;
-            if (totalPonderacionSubtemas + ponderacionPorDefecto > 100)
+            var espacioDisponible = Math.Max(0, 100 - totalPonderacionSubtemas);
+            
+            if (espacioDisponible < ponderacionPorDefecto)
             {
-                ponderacionPorDefecto = Math.Max(0, 100 - totalPonderacionSubtemas);
+                if (espacioDisponible > 0)
+                {
+                    // Solo si hay espacio disponible, asignar lo que queda
+                    ponderacionPorDefecto = espacioDisponible;
+                }
+                else
+                {
+                    // NO HAY ESPACIO - BLOQUEAR OPERACIÓN
+                    mensajeToast = $"? NO se puede agregar '{nombreSubtema}'. No hay espacio disponible (Total actual: {totalPonderacionSubtemas:F2}%)";
+                    mostrarToast = true;
+                    await Task.Delay(3000);
+                    mostrarToast = false;
+                    return;
+                }
             }
 
             var nuevoGrillaSubtema = new GrillaSubtemaDTO
@@ -520,9 +577,19 @@
             await gridGrillaSubtemas.RefreshDataAsync();
             await gridSubtemasDisponibles.RefreshDataAsync();
             
-            mensajeToast = $"Subtema '{nombreSubtema}' agregado exitosamente";
+            // Mostrar mensaje apropiado según el resultado
+            var totalDespues = grillaSubtemas.Sum(gs => gs.Ponderacion);
+            if (ponderacionPorDefecto < 10.0m)
+            {
+                mensajeToast = $"?? Subtema '{nombreSubtema}' agregado con {ponderacionPorDefecto:F2}% (espacio disponible limitado). Total: {totalDespues:F2}%";
+            }
+            else
+            {
+                mensajeToast = $"? Subtema '{nombreSubtema}' agregado exitosamente with {ponderacionPorDefecto:F2}%";
+            }
+            
             mostrarToast = true;
-            await Task.Delay(2000);
+            await Task.Delay(3000);
             mostrarToast = false;
             
             Console.WriteLine($"Subtema '{nombreSubtema}' agregado a la grilla exitosamente");
@@ -530,6 +597,10 @@
         catch (Exception ex)
         {
             Console.WriteLine($"Error al agregar subtema a grilla: {ex.Message}");
+            mensajeToast = $"? Error al agregar subtema: {ex.Message}";
+            mostrarToast = true;
+            await Task.Delay(3000);
+            mostrarToast = false;
         }
     }
 
@@ -603,5 +674,26 @@
     private void VolverATemas()
     {
         Navigation.NavigateTo($"/grillas/{IdGrilla}/temas");
+    }
+
+    // Método para obtener la clase CSS del toast según el tipo de mensaje
+    private string GetToastClass()
+    {
+        if (mensajeToast.Contains("??"))
+        {
+            return "text-bg-warning";
+        }
+        else if (mensajeToast.Contains("?"))
+        {
+            return "text-bg-danger";
+        }
+        else if (mensajeToast.Contains("?"))
+        {
+            return "text-bg-success";
+        }
+        else
+        {
+            return "text-bg-info";
+        }
     }
 }
