@@ -1,21 +1,40 @@
 @using WebGrillaBlazor.Services
 @inject AuthStateService AuthState
 @inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
 
 @if (isInitialized)
 {
     @ChildContent
+    
+    <!-- Panel de diagnóstico temporal (remover en producción) -->
+    @if (showDiagnostics)
+    {
+        <WebGrillaBlazor.Components.DiagnosticPanel />
+    }
 }
 else
 {
-    <div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
-        <div class="text-center">
-            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                <span class="visually-hidden">Cargando...</span>
+    <div class="d-flex justify-content-center align-items-center" style="height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="text-center text-white">
+            <div class="mb-4">
+                <div class="spinner-border text-light" role="status" style="width: 4rem; height: 4rem;">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
             </div>
-            <div class="mt-3">
-                <h5>Inicializando aplicación...</h5>
-                <p class="text-muted">Verificando estado de autenticación</p>
+            <div>
+                <h3 class="fw-light">?? Sistema de Grillas de Conocimiento</h3>
+                <p class="mb-0 opacity-75">@loadingMessage</p>
+                @if (hasError)
+                {
+                    <div class="alert alert-warning mt-3 d-inline-block">
+                        <small>@errorMessage</small>
+                        <br>
+                        <button class="btn btn-sm btn-outline-warning mt-2" @onclick="RetryInitialization">
+                            ?? Reintentar
+                        </button>
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -25,35 +44,154 @@ else
     [Parameter] public RenderFragment? ChildContent { get; set; }
     
     private bool isInitialized = false;
+    private string loadingMessage = "Inicializando aplicación...";
+    private bool hasError = false;
+    private string errorMessage = "";
+    private bool showDiagnostics = true; // Cambiar a false en producción
 
     protected override async Task OnInitializedAsync()
     {
+        await InitializeApp();
+    }
+
+    private async Task InitializeApp()
+    {
         try
         {
-            // Inicializar estado de autenticación
+            hasError = false;
+            errorMessage = "";
+            
+            Console.WriteLine("?? === INICIANDO APLICACIÓN ===");
+            
+            // Obtener ruta actual ANTES de hacer cualquier operación
+            var currentUri = new Uri(Navigation.Uri);
+            var currentPath = currentUri.AbsolutePath.ToLower();
+            
+            Console.WriteLine($"?? AppStateInitializer - Ruta actual: {currentPath}");
+            
+            loadingMessage = "Verificando JavaScript Runtime...";
+            StateHasChanged();
+            
+            // Esperar que JSRuntime esté completamente disponible
+            await Task.Delay(300);
+            
+            // PASO 1: Inicializar AuthState SIEMPRE (esto cargará datos de localStorage si existen)
+            loadingMessage = "Inicializando sistema de autenticación...";
+            StateHasChanged();
             await AuthState.InitializeAsync();
             
-            // Verificar si estamos en la ruta raíz y no hay autenticación
-            var currentUri = new Uri(Navigation.Uri);
-            var isRootPath = currentUri.AbsolutePath == "/";
+            // Verificar el estado actual después de la inicialización
+            Console.WriteLine($"?? Estado después de InitializeAsync:");
+            Console.WriteLine($"   - IsAuthenticated: {AuthState.IsAuthenticated}");
+            Console.WriteLine($"   - CurrentUser: {AuthState.CurrentUser?.NombreCompleto ?? "null"}");
+            Console.WriteLine($"   - Ruta: {currentPath}");
             
-            if (isRootPath && !AuthState.IsAuthenticated)
+            // PASO 2: SOLO limpiar sesión si estamos en la página de login Y queremos limpiar explícitamente
+            if (currentPath == "/" && !AuthState.IsAuthenticated)
             {
-                // Redirigir al login si estamos en la página principal y no hay autenticación
-                Navigation.NavigateTo("/login", forceLoad: false);
-                return;
+                loadingMessage = "Preparando página de login...";
+                StateHasChanged();
+                
+                Console.WriteLine("?? En página de login sin usuario - preparando formulario");
+                // NO limpiar localStorage aquí, ya que InitializeAsync maneja la carga
+            }
+            else if (currentPath == "/" && AuthState.IsAuthenticated)
+            {
+                Console.WriteLine("? Usuario ya autenticado en página de login - proceder a redirección");
+            }
+            else if (currentPath != "/" && AuthState.IsAuthenticated)
+            {
+                Console.WriteLine($"? Usuario autenticado en ruta protegida '{currentPath}' - todo OK");
+            }
+            else if (currentPath != "/" && !AuthState.IsAuthenticated)
+            {
+                Console.WriteLine($"?? Acceso a ruta protegida '{currentPath}' sin autenticación - requerirá redirección");
             }
             
-            // Marcar como inicializado
-            isInitialized = true;
+            loadingMessage = "Configurando navegación...";
             StateHasChanged();
+            
+            // PASO 3: Manejar navegación según el estado actual
+            await HandleNavigationLogic();
+            
+            Console.WriteLine($"? Estado final AppStateInitializer:");
+            Console.WriteLine($"   - Autenticado: {AuthState.IsAuthenticated}");
+            Console.WriteLine($"   - Ruta: {currentPath}");
+            Console.WriteLine($"   - Usuario: {AuthState.CurrentUser?.NombreCompleto ?? "null"}");
+            
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error inicializando aplicación: {ex.Message}");
-            // En caso de error, permitir continuar pero probablemente sin autenticación
-            isInitialized = true;
+            Console.WriteLine($"? Error inicializando aplicación: {ex.Message}");
+            Console.WriteLine($"? Stack trace: {ex.StackTrace}");
+            hasError = true;
+            errorMessage = $"Error al inicializar: {ex.Message}";
             StateHasChanged();
+            return;
         }
+        
+        // Marcar como inicializado solo si no hay errores
+        loadingMessage = "¡Aplicación lista!";
+        isInitialized = true;
+        StateHasChanged();
+    }
+
+    private async Task RetryInitialization()
+    {
+        isInitialized = false;
+        await InitializeApp();
+    }
+
+    private async Task HandleNavigationLogic()
+    {
+        var currentUri = new Uri(Navigation.Uri);
+        var currentPath = currentUri.AbsolutePath.ToLower();
+        
+        Console.WriteLine($"?? === EVALUANDO NAVEGACIÓN ===");
+        Console.WriteLine($"?? Ruta actual: '{currentPath}'");
+        Console.WriteLine($"?? Está autenticado: {AuthState.IsAuthenticated}");
+        Console.WriteLine($"?? Usuario actual: {AuthState.CurrentUser?.NombreCompleto ?? "null"}");
+        
+        // REGLA 1: Si está en una ruta protegida Y NO está autenticado ? ir al login
+        if (currentPath != "/" && !AuthState.IsAuthenticated)
+        {
+            Console.WriteLine("?? REGLA 1: Ruta protegida sin autenticación ? Redirigir a login");
+            loadingMessage = "Acceso denegado - Redirigiendo al login...";
+            StateHasChanged();
+            await Task.Delay(1000); // Pausa para debug
+            Navigation.NavigateTo("/", forceLoad: false);
+            return;
+        }
+        
+        // REGLA 2: Si está en login Y YA está autenticado ? ir al dashboard  
+        if (currentPath == "/" && AuthState.IsAuthenticated)
+        {
+            Console.WriteLine("?? REGLA 2: En login pero ya autenticado ? Redirigir a dashboard");
+            loadingMessage = "Ya autenticado - Redirigiendo al dashboard...";
+            StateHasChanged();
+            await Task.Delay(1000); // Pausa para debug
+            Navigation.NavigateTo("/index", forceLoad: false);
+            return;
+        }
+        
+        // REGLA 3: Si está en ruta válida Y autenticado ? todo OK
+        if (currentPath != "/" && AuthState.IsAuthenticated)
+        {
+            Console.WriteLine("? REGLA 3: En ruta protegida y autenticado ? Todo OK");
+            return;
+        }
+        
+        // REGLA 4: Si está en login Y NO autenticado ? todo OK (mostrar login)
+        if (currentPath == "/" && !AuthState.IsAuthenticated)
+        {
+            Console.WriteLine("? REGLA 4: En login y no autenticado ? Mostrar formulario de login");
+            return;
+        }
+        
+        // Si llegamos aquí, hay un estado no contemplado
+        Console.WriteLine($"?? ESTADO NO CONTEMPLADO:");
+        Console.WriteLine($"   - Ruta: '{currentPath}'");
+        Console.WriteLine($"   - Autenticado: {AuthState.IsAuthenticated}");
+        Console.WriteLine($"   - Acción: Ninguna (mantener estado actual)");
     }
 }

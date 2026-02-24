@@ -1,77 +1,152 @@
 ﻿@page "/clientes"
 @using WebGrillaBlazor.DTOs
 @using WebGrillaBlazor.ApiClient
+@using WebGrillaBlazor.Services
 @inject ApiClientGeneric<ClienteDTO> ClienteClient
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
 
-<h3>Gestion de Clientes</h3>
+<PageTitle>Gestión de Clientes</PageTitle>
 
-<div class="row mb-3">
-    <div class="col-2">
-        <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddCliente">+Cliente</Button>
+<WebGrillaBlazor.Components.AuthorizeView RedirectToLogin="true">
+    @if (!AuthState.UserCanAccess("CLIENTES"))
+    {
+        <div class="alert alert-danger">
+            <h4 class="alert-heading">Acceso Denegado</h4>
+            <p>No tienes permisos para acceder a la gestión de clientes.</p>
+            <hr>
+            <p class="mb-0">
+                <strong>Permisos requeridos:</strong> CLIENTES_READ<br>
+                <strong>Tu rol actual:</strong> @AuthState.CurrentUser?.NombreRol<br>
+                Contacta con un administrador si necesitas acceso a esta funcionalidad.
+            </p>
+            <div class="mt-3">
+                <button class="btn btn-primary" @onclick="NavigateToIndex">
+                    <Icon Name="IconName.ArrowLeft" class="me-1" />
+                    Volver al Dashboard
+                </button>
+            </div>
+        </div>
+        return;
+    }
+
+    <div class="container-fluid">
+        <div class="row mb-3">
+            <div class="col">
+                <h3>
+                    <Icon Name="IconName.Building" class="me-2 text-primary" />
+                    Gestión de Clientes
+                </h3>
+                <p class="text-muted">Administrar clientes y organizaciones del sistema</p>
+            </div>
+            <div class="col-auto">
+                @if (AuthState.UserHasPermission("CLIENTES_WRITE"))
+                {
+                    <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddCliente">
+                        <Icon Name="IconName.Plus" class="me-1" />
+                        Agregar Cliente
+                    </Button>
+                }
+                else
+                {
+                    <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" disabled title="Sin permisos de escritura">
+                        <Icon Name="IconName.Lock" class="me-1" />
+                        Sin permisos
+                    </Button>
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <Grid @ref="gridCliente"
+                      TItem="ClienteDTO"
+                      Class="table table-hover table-bordered table-striped"
+                      DataProvider="GetAllClientes"
+                      AllowPaging="true"
+                      PageSize="10"
+                      AllowSorting="true"
+                      AllowRowClick="true"
+                      OnRowDoubleClick="OnClienteDobleClick"
+                      SelectionMode="GridSelectionMode.Single"
+                      Responsive="true">
+
+                    <GridColumns>
+                        <GridColumn TItem="ClienteDTO" HeaderText="ID" PropertyName="IdCliente" SortKeySelector="item => item.IdCliente">
+                            @context.IdCliente
+                        </GridColumn>
+
+                        <GridColumn TItem="ClienteDTO" HeaderText="Nombre del Cliente" PropertyName="Descripcion" SortKeySelector="item => item.Nombre">
+                            <strong>@context.Nombre</strong>
+                        </GridColumn>
+                        
+                        @if (AuthState.UserHasPermission("CLIENTES_WRITE"))
+                        {
+                            <GridColumn TItem="ClienteDTO" HeaderText="Acciones">
+                                <Button Color="ButtonColor.Primary" Size="ButtonSize.ExtraSmall" @onclick="() => EditarCliente(context)">
+                                    <Icon Name="IconName.Pencil" />
+                                </Button>
+                            </GridColumn>
+                        }
+                    </GridColumns>
+                </Grid>
+            </div>
+        </div>
+
+        <!-- Ficha Edicion Cliente -->
+        <Modal @ref="_EdicionCliente" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
+        
+        <!-- Información adicional para usuarios sin permisos de escritura -->
+        @if (!AuthState.UserHasPermission("CLIENTES_WRITE"))
+        {
+            <div class="alert alert-info mt-3">
+                <Icon Name="IconName.InfoCircle" class="me-2" />
+                <strong>Modo solo lectura:</strong> Puedes consultar los clientes pero no realizar modificaciones.
+            </div>
+        }
     </div>
-</div>
-
-<Grid @ref="gridCliente"
-      TItem="ClienteDTO"
-      Class="table table-hover table-bordered table-striped"
-      DataProvider="GetAllClientes"
-      AllowPaging="true"
-      PageSize="5"
-      AllowSorting="true"
-      AllowRowClick="true"
-      OnRowDoubleClick="OnClienteDobleClick"
-      SelectionMode="GridSelectionMode.Single"
-      Responsive="true">
-
-    <GridColumns>
-        <GridColumn TItem="ClienteDTO" HeaderText="IdCliente" PropertyName="IdCliente" SortKeySelector="item => item.IdCliente">
-            @context.IdCliente
-        </GridColumn>
-
-        <GridColumn TItem="ClienteDTO" HeaderText="Nombre" PropertyName="Descripcion" SortKeySelector="item => item.Nombre">
-            @context.Nombre
-        </GridColumn>
-
-    </GridColumns>
-
-      
-</Grid>
-
-<!-- Ficha Edicion Cliente -->
-<Modal @ref="_EdicionCliente" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
-
+</WebGrillaBlazor.Components.AuthorizeView>
 
 @code {
     private List<ClienteDTO> clientes;
     private int currentIdCliente = 0;
-
     private Modal _EdicionCliente = default!;
-
     private Grid<ClienteDTO> gridCliente = default!;
 
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("OnInitializedAsync");
+        Console.WriteLine("Clientes: Inicializando página...");
+        Console.WriteLine($"   - Usuario: {AuthState.CurrentUser?.NombreCompleto}");
+        Console.WriteLine($"   - Puede acceder: {AuthState.UserCanAccess("CLIENTES")}");
+        Console.WriteLine($"   - Permisos escritura: {AuthState.UserHasPermission("CLIENTES_WRITE")}");
+        
         clientes = await ClienteClient.GetAllAsync();
         await base.OnInitializedAsync();
+    }
+
+    private void NavigateToIndex()
+    {
+        Navigation.NavigateTo("/index");
     }
 
     private async Task<GridDataProviderResult<ClienteDTO>> GetAllClientes(GridDataProviderRequest<ClienteDTO> request)
     {
         Console.WriteLine("GetAllClientes");
 
-        if (clientes is null) // pull employees only one time for client-side filtering, sorting, and paging
-            clientes = await ClienteClient.GetAllAsync(); // call a service or an API to pull the employees
+        if (clientes is null) // pull clientes only one time for client-side filtering, sorting, and paging
+            clientes = await ClienteClient.GetAllAsync(); // call a service or an API to pull the clientes
 
         return await Task.FromResult(request.ApplyTo(clientes));
     }
 
-    //-----------------------------
-    // Para la creacion de un cliente
-    //-----------------------------
-
     private async Task AddCliente()
     {
+        if (!AuthState.UserHasPermission("CLIENTES_WRITE"))
+        {
+            Console.WriteLine("Sin permisos para crear cliente");
+            return;
+        }
+
         var lista = clientes.ToList();
         var nuevo = CreateCliente();
         lista.Add(nuevo);
@@ -92,18 +167,33 @@
         return nuevo;
     }
 
-    //------------------------------
-    // Para la edicion de un cliente
-    //------------------------------
+    private async Task EditarCliente(ClienteDTO cliente)
+    {
+        if (!AuthState.UserHasPermission("CLIENTES_WRITE"))
+        {
+            Console.WriteLine("Sin permisos para editar cliente");
+            return;
+        }
+        
+        var param = new Dictionary<string, object>();
+        param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionCliente));
+        param.Add("cliente", cliente);
+        await _EdicionCliente.ShowAsync<FichaCliente>(title: "Edición Cliente", parameters: param);
+    }
 
     private async Task OnClienteDobleClick(GridRowEventArgs<ClienteDTO> args)
     {
-        Console.WriteLine("Evento OnClienteClick");
+        if (!AuthState.UserHasPermission("CLIENTES_WRITE"))
+        {
+            Console.WriteLine("Sin permisos para editar cliente - doble click ignorado");
+            return;
+        }
+        
+        Console.WriteLine("Evento OnClienteDobleClick");
         var param = new Dictionary<string, object>();
         param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionCliente));
         param.Add("cliente", args.Item);
-        await _EdicionCliente.ShowAsync<FichaCliente>(title: "Edicion Cliente", parameters: param);
-
+        await _EdicionCliente.ShowAsync<FichaCliente>(title: "Edición Cliente", parameters: param);
     }
 
     private async Task OnCloseModalEdicionCliente()
@@ -111,7 +201,6 @@
         Console.WriteLine("OnCloseModalEdicionCliente()");
         await _EdicionCliente.HideAsync(); // Ocultar el formulario de Edicion
         await RefreshGrid(); // Refrescar la grilla
-
     }
 
     private async Task RefreshGrid()
@@ -121,15 +210,9 @@
         StateHasChanged(); // Forzar la actualización de la grilla
     }
 
-    //-------------------
-    // Prueba de Onclick
-    //-------------------
-
     private async Task OnRowClick(GridRowEventArgs<ClienteDTO> args)
     {
         Console.WriteLine($"OnRowClick Cliente current: {currentIdCliente} nuevo: {args.Item.IdCliente} ");
         currentIdCliente = args.Item.IdCliente;
     }
-
-
 }

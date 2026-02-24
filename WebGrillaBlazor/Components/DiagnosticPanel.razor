@@ -1,0 +1,207 @@
+@using WebGrillaBlazor.Services
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<div class="position-fixed bottom-0 start-0 bg-dark text-white p-2 small" style="z-index: 9999; max-width: 350px;">
+    <div class="d-flex justify-content-between align-items-center mb-1">
+        <strong>?? Diagnóstico de Sesión</strong>
+        <button class="btn btn-sm btn-outline-light" @onclick="ToggleExpanded">
+            @(isExpanded ? "?" : "?")
+        </button>
+    </div>
+    
+    @if (isExpanded)
+    {
+        <hr class="my-2" style="border-color: rgba(255,255,255,0.3);">
+        
+        <div class="row g-1">
+            <div class="col-6"><span>Estado App:</span></div>
+            <div class="col-6"><span class="@GetStatusClass(isInitialized)">@(isInitialized ? "? Listo" : "? Iniciando")</span></div>
+            
+            <div class="col-6"><span>Autenticación:</span></div>
+            <div class="col-6"><span class="@GetStatusClass(AuthState?.IsAuthenticated == true)">@(AuthState?.IsAuthenticated == true ? "? Sí" : "? No")</span></div>
+            
+            <div class="col-6"><span>Usuario:</span></div>
+            <div class="col-6"><span class="text-info">@(AuthState?.CurrentUser?.Nombre ?? "N/A")</span></div>
+            
+            <div class="col-6"><span>Rol:</span></div>
+            <div class="col-6"><span class="text-warning">@(AuthState?.CurrentUser?.NombreRol ?? "N/A")</span></div>
+            
+            <div class="col-6"><span>Ruta:</span></div>
+            <div class="col-6"><span class="text-success">@currentPath</span></div>
+            
+            <div class="col-6"><span>localStorage:</span></div>
+            <div class="col-6"><span class="@GetStatusClass(!string.IsNullOrEmpty(localStorageInfo) && localStorageInfo != "null")">@GetStorageStatusText()</span></div>
+        </div>
+        
+        @if (errorCount > 0 || !string.IsNullOrEmpty(lastError))
+        {
+            <hr class="my-2" style="border-color: rgba(255,255,255,0.3);">
+            <div class="text-warning">
+                <strong>?? Errores: @errorCount</strong><br>
+                @if (!string.IsNullOrEmpty(lastError))
+                {
+                    <span class="text-danger">@lastError</span>
+                }
+            </div>
+        }
+        
+        <hr class="my-2" style="border-color: rgba(255,255,255,0.3);">
+        <div class="d-flex gap-1">
+            <button class="btn btn-sm btn-outline-info flex-fill" @onclick="RefreshState" title="Actualizar estado">
+                ??
+            </button>
+            <button class="btn btn-sm btn-outline-warning flex-fill" @onclick="CheckStorage" title="Verificar localStorage">
+                ??
+            </button>
+            <button class="btn btn-sm btn-outline-danger flex-fill" @onclick="ClearSession" title="Limpiar sesión">
+                ???
+            </button>
+            <button class="btn btn-sm btn-outline-success flex-fill" @onclick="GoToLogin" title="Ir a Login">
+                ??
+            </button>
+        </div>
+    }
+    else
+    {
+        <!-- Vista compacta -->
+        <div class="d-flex justify-content-between">
+            <span>Auth: @(AuthState?.IsAuthenticated == true ? "?" : "?") | Errores: @errorCount</span>
+            <small class="text-muted">@currentPath.Replace("/", "")</small>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isInitialized = false;
+    private bool isExpanded = true;
+    private string currentPath = "";
+    private int errorCount = 0;
+    private string lastError = "";
+    private string localStorageInfo = "checking...";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            currentPath = new Uri(Navigation.Uri).AbsolutePath;
+            
+            // Suscribirse a cambios
+            AuthState.OnUserChanged += OnUserChanged;
+            Navigation.LocationChanged += OnLocationChanged;
+            
+            // Verificar localStorage inicialmente
+            await CheckStorageState();
+            
+            // Simular inicialización
+            await Task.Delay(1000);
+            isInitialized = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorCount++;
+            lastError = ex.Message;
+            StateHasChanged();
+        }
+    }
+
+    private void OnUserChanged(WebGrillaBlazor.DTOs.RecursoSessionDTO? user)
+    {
+        InvokeAsync(() => {
+            Console.WriteLine($"?? DiagnosticPanel: Usuario cambió a {user?.NombreCompleto ?? "null"}");
+            StateHasChanged();
+        });
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        currentPath = new Uri(e.Location).AbsolutePath;
+        InvokeAsync(() => StateHasChanged());
+    }
+
+    private async Task RefreshState()
+    {
+        try
+        {
+            Console.WriteLine("?? Refrescando estado desde DiagnosticPanel...");
+            await AuthState.InitializeAsync();
+            await CheckStorageState();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorCount++;
+            lastError = ex.Message;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CheckStorage()
+    {
+        await CheckStorageState();
+    }
+
+    private async Task CheckStorageState()
+    {
+        try
+        {
+            localStorageInfo = await AuthState.GetLocalStorageContentAsync();
+            Console.WriteLine($"?? localStorage actual: {localStorageInfo}");
+        }
+        catch (Exception ex)
+        {
+            localStorageInfo = $"Error: {ex.Message}";
+        }
+        StateHasChanged();
+    }
+
+    private async Task ClearSession()
+    {
+        try
+        {
+            Console.WriteLine("??? Limpiando sesión desde DiagnosticPanel...");
+            await AuthState.ForceLogoutAsync();
+            await JSRuntime.InvokeVoidAsync("localStorage.clear");
+            await Task.Delay(500);
+            Navigation.NavigateTo("/", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            errorCount++;
+            lastError = $"Error limpiando: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private void GoToLogin()
+    {
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+
+    private void ToggleExpanded()
+    {
+        isExpanded = !isExpanded;
+    }
+
+    private string GetStatusClass(bool isPositive)
+    {
+        return isPositive ? "text-success" : "text-danger";
+    }
+
+    private string GetStorageStatusText()
+    {
+        if (string.IsNullOrEmpty(localStorageInfo) || localStorageInfo == "null")
+            return "? Limpio";
+        if (localStorageInfo.StartsWith("Error"))
+            return "? Error";
+        return "?? Con datos";
+    }
+
+    public void Dispose()
+    {
+        AuthState.OnUserChanged -= OnUserChanged;
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+}

@@ -1,77 +1,154 @@
 ﻿@page "/roles"
 @using WebGrillaBlazor.DTOs
 @using WebGrillaBlazor.ApiClient
+@using WebGrillaBlazor.Services
 @inject ApiClientGeneric<RolDTO> ApiClient
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
 
-<h3>Gestion de Roles</h3>
+<PageTitle>Gestión de Roles</PageTitle>
 
-<div class="row mb-3">
-    <div class="col-2">
-        <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddRol">+Rol</Button>
+<WebGrillaBlazor.Components.AuthorizeView RedirectToLogin="true">
+    @if (!AuthState.UserCanAccess("ROLES"))
+    {
+        <div class="alert alert-danger">
+            <h4 class="alert-heading">Acceso Denegado</h4>
+            <p>No tienes permisos para acceder a la gestión de roles.</p>
+            <hr>
+            <p class="mb-0">
+                <strong>Permisos requeridos:</strong> ROLES_READ<br>
+                <strong>Tu rol actual:</strong> @AuthState.CurrentUser?.NombreRol<br>
+                Contacta con un administrador si necesitas acceso a esta funcionalidad.
+            </p>
+            <div class="mt-3">
+                <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/index"))">
+                    <Icon Name="IconName.ArrowLeft" class="me-1" />
+                    Volver al Dashboard
+                </button>
+            </div>
+        </div>
+        return;
+    }
+
+    <div class="container-fluid">
+        <div class="row mb-3">
+            <div class="col">
+                <h3>
+                    <Icon Name="IconName.PersonBadge" class="me-2 text-primary" />
+                    Gestión de Roles
+                </h3>
+                <p class="text-muted">Administrar roles y perfiles de usuario del sistema</p>
+            </div>
+            <div class="col-auto">
+                @if (AuthState.UserHasPermission("ROLES_WRITE"))
+                {
+                    <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddRol">
+                        <Icon Name="IconName.Plus" class="me-1" />
+                        Agregar Rol
+                    </Button>
+                }
+                else
+                {
+                    <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" disabled title="Sin permisos de escritura">
+                        <Icon Name="IconName.Lock" class="me-1" />
+                        Sin permisos
+                    </Button>
+                }
+            </div>
+        </div>
+
+        <!-- Grilla de roles -->
+        <div class="card">
+            <div class="card-body">
+                <Grid @ref="gridRol"
+                      TItem="RolDTO"
+                      Class="table table-hover table-bordered table-striped"
+                      DataProvider="GetAllRoles"
+                      AllowPaging="true"
+                      PageSize="5"
+                      AllowSorting="true"
+                      AllowRowClick="true"
+                      OnRowDoubleClick="OnRolDobleClick"
+                      SelectionMode="GridSelectionMode.Single"
+                      Responsive="true">
+
+                    <GridColumns>
+                        <GridColumn TItem="RolDTO" HeaderText="ID" PropertyName="IdRol" SortKeySelector="item => item.IdRol">
+                            @context.IdRol
+                        </GridColumn>
+
+                        <GridColumn TItem="RolDTO" HeaderText="Nombre del Rol" PropertyName="Descripcion" SortKeySelector="item => item.Nombre">
+                            <strong>@context.Nombre</strong>
+                        </GridColumn>
+                        
+                        @if (AuthState.UserHasPermission("ROLES_WRITE"))
+                        {
+                            <GridColumn TItem="RolDTO" HeaderText="Acciones">
+                                <Button Color="ButtonColor.Primary" Size="ButtonSize.ExtraSmall" @onclick="() => EditarRol(context)">
+                                    <Icon Name="IconName.Pencil" />
+                                </Button>
+                            </GridColumn>
+                        }
+                    </GridColumns>
+                </Grid>
+            </div>
+        </div>
+
+        <!-- Ficha Edicion Rol -->
+        <Modal @ref="_EdicionRol" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
+        
+        <!-- Información adicional para usuarios sin permisos de escritura -->
+        @if (!AuthState.UserHasPermission("ROLES_WRITE"))
+        {
+            <div class="alert alert-info mt-3">
+                <Icon Name="IconName.InfoCircle" class="me-2" />
+                <strong>Modo solo lectura:</strong> Puedes consultar los roles pero no realizar modificaciones.
+            </div>
+        }
+        
+        <!-- Información de seguridad -->
+        <div class="alert alert-warning mt-3">
+            <Icon Name="IconName.ExclamationTriangle" class="me-2" />
+            <strong>Importante:</strong> Los roles determinan los permisos de acceso de los usuarios. 
+            Modifica con precaución y solo si tienes autorización.
+        </div>
     </div>
-</div>
-
-<!-- Grilla de roles -->
-
-<Grid @ref="gridRol"
-      TItem="RolDTO"
-      Class="table table-hover table-bordered table-striped"
-      DataProvider="GetAllRoles"
-      AllowPaging="true"
-      PageSize="5"
-      AllowSorting="true"
-      AllowRowClick="true"
-      OnRowDoubleClick="OnRolDobleClick"
-      SelectionMode="GridSelectionMode.Single"
-      Responsive="true">
-
-    <GridColumns>
-        <GridColumn TItem="RolDTO" HeaderText="IdRol" PropertyName="IdRol" SortKeySelector="item => item.IdRol">
-            @context.IdRol
-        </GridColumn>
-
-        <GridColumn TItem="RolDTO" HeaderText="Nombre" PropertyName="Descripcion" SortKeySelector="item => item.Nombre">
-            @context.Nombre
-        </GridColumn>
-    </GridColumns>
-</Grid>
-
-<!-- Ficha Edicion Rol -->
-<Modal @ref="_EdicionRol" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
-
+</WebGrillaBlazor.Components.AuthorizeView>
 
 @code {
     private IEnumerable<RolDTO> roles = default!;
     private int currentIdRol = 0;    
-
     private Modal _EdicionRol = default!;
-
     private Grid<RolDTO> gridRol = default!;
 
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("OnInitializedAsync");
+        Console.WriteLine("Roles: Inicializando página...");
+        Console.WriteLine($"   - Usuario: {AuthState.CurrentUser?.NombreCompleto}");
+        Console.WriteLine($"   - Puede acceder: {AuthState.UserCanAccess("ROLES")}");
+        Console.WriteLine($"   - Permisos escritura: {AuthState.UserHasPermission("ROLES_WRITE")}");
 
         await base.OnInitializedAsync();
-
     }
 
     private async Task<GridDataProviderResult<RolDTO>> GetAllRoles(GridDataProviderRequest<RolDTO> request)
     {
         Console.WriteLine("GetAllRoles");
 
-        if (roles is null) // pull employees only one time for client-side filtering, sorting, and paging
-            roles = await ApiClient.GetAllAsync(); // call a service or an API to pull the employees
+        if (roles is null) // pull roles only one time for client-side filtering, sorting, and paging
+            roles = await ApiClient.GetAllAsync(); // call a service or an API to pull the roles
 
         return await Task.FromResult(request.ApplyTo(roles));
     }
 
-    //-----------------------------
-    // Para la creacion de un rol
-    //-----------------------------
-
     private async Task AddRol()
     {
+        if (!AuthState.UserHasPermission("ROLES_WRITE"))
+        {
+            Console.WriteLine("Sin permisos para crear rol");
+            return;
+        }
+
         var lista = roles.ToList();
         var nuevo = CreateRol();
         lista.Add(nuevo);
@@ -92,18 +169,33 @@
         return nuevo;
     }
 
-    //----------------------------
-    // Para la edicion de un rol
-    //----------------------------
+    private async Task EditarRol(RolDTO rol)
+    {
+        if (!AuthState.UserHasPermission("ROLES_WRITE"))
+        {
+            Console.WriteLine("Sin permisos para editar rol");
+            return;
+        }
+        
+        var param = new Dictionary<string, object>();
+        param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionRol));
+        param.Add("rol", rol);
+        await _EdicionRol.ShowAsync<FichaRol>(title: "Edición Rol", parameters: param);
+    }
 
     private async Task OnRolDobleClick(GridRowEventArgs<RolDTO> args)
     {
-        Console.WriteLine("Evento OnRolClick");
+        if (!AuthState.UserHasPermission("ROLES_WRITE"))
+        {
+            Console.WriteLine("Sin permisos para editar rol - doble click ignorado");
+            return;
+        }
+        
+        Console.WriteLine("Evento OnRolDobleClick");
         var param = new Dictionary<string, object>();
         param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionRol));
         param.Add("rol", args.Item);
-        await _EdicionRol.ShowAsync<FichaRol>(title: "Edicion Rol", parameters: param);
-
+        await _EdicionRol.ShowAsync<FichaRol>(title: "Edición Rol", parameters: param);
     }
 
     private async Task OnCloseModalEdicionRol()
@@ -111,7 +203,6 @@
         Console.WriteLine("OnCloseModalEdicionRol()");
         await _EdicionRol.HideAsync(); // Ocultar el formulario de Edicion
         await RefreshGrid(); // Refrescar la grilla
-
     }
 
     private async Task RefreshGrid()
@@ -121,14 +212,9 @@
         StateHasChanged(); // Forzar la actualización de la grilla
     }
 
-    //-------------------
-    // Prueba de Onclick
-    //-------------------
-
     private async Task OnRowClick(GridRowEventArgs<RolDTO> args)
     {
         Console.WriteLine($"OnRowClick Rol current: {currentIdRol} nuevo: {args.Item.IdRol} ");
         currentIdRol = args.Item.IdRol;
     }
-
 }

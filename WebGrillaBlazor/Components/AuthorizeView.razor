@@ -96,7 +96,7 @@ else
         // Verificar si necesitamos redirigir
         if (RedirectToLogin && !AuthState.IsAuthenticated)
         {
-            Navigation.NavigateTo("/login", forceLoad: false);
+            Navigation.NavigateTo("/", forceLoad: false); // Redirigir a la página principal (login)
             return;
         }
         
@@ -119,7 +119,7 @@ else
         {
             if (RedirectToLogin)
             {
-                Navigation.NavigateTo("/login", forceLoad: false);
+                Navigation.NavigateTo("/", forceLoad: false); // Redirigir a la página principal (login)
             }
             else
             {
@@ -131,7 +131,7 @@ else
 
     private void GoToLogin()
     {
-        Navigation.NavigateTo("/login");
+        Navigation.NavigateTo("/"); // Redirigir a la página principal (login)
     }
 
     public void Dispose()

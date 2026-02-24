@@ -34,8 +34,5 @@ builder.Services.AddBlazorBootstrap();
 
 var app = builder.Build();
 
-// Inicializar el servicio de autenticación al arrancar la aplicación
-var authService = app.Services.GetRequiredService<AuthStateService>();
-await authService.InitializeAsync();
-
+// Remover la inicialización aquí - se hará en AppStateInitializer
 await app.RunAsync();

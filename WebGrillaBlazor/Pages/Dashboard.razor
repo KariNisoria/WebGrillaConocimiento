@@ -1,0 +1,273 @@
+@page "/dashboard"
+@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.Services
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+
+<PageTitle>Dashboard - Grilla de Conocimiento</PageTitle>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        // Verificar autenticación
+        await AuthState.InitializeAsync();
+        
+        // Si no está autenticado, redirigir al login (página principal)
+        if (!AuthState.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/", forceLoad: false);
+            return;
+        }
+    }
+}
+
+<!-- Solo mostrar contenido si está autenticado -->
+@if (AuthState.IsAuthenticated)
+{
+    <div class="container-fluid">
+        <!-- Encabezado de bienvenida -->
+        <div class="row">
+            <div class="col-12">
+                <div class="bg-primary text-white p-4 rounded mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="display-5 fw-bold mb-2">?? Sistema de Gestión de Grillas de Conocimiento</h1>
+                            <p class="lead mb-1">Aplicación completa para gestionar evaluaciones de conocimientos por competencias</p>
+                            <div class="mt-3 p-3 bg-white bg-opacity-10 rounded">
+                                <h5 class="mb-1">?? ¡Bienvenido/a, @AuthState.GetUserDisplayName()!</h5>
+                                <p class="mb-0"><strong>Rol:</strong> @AuthState.CurrentUser?.NombreRol | <strong>Equipo:</strong> @AuthState.CurrentUser?.NombreEquipo</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="text-white-50">
+                                <small>Versión 1.0.0</small><br>
+                                <small>@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Módulos principales -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm border-success">
+                    <div class="card-body text-center">
+                        <Icon Name="IconName.ClipboardCheck" Size="IconSize.x3" class="text-success mb-3" />
+                        <h5 class="card-title">Evaluaciones</h5>
+                        <p class="card-text">Crear y gestionar evaluaciones de conocimiento para recursos específicos usando grillas personalizadas.</p>
+                        @if (AuthState.UserCanAccess("EVALUACIONES"))
+                        {
+                            <a href="/evaluaciones" class="btn btn-success">
+                                <Icon Name="IconName.Play" class="me-1" />
+                                Ir a Evaluaciones
+                            </a>
+                        }
+                        else
+                        {
+                            <button class="btn btn-outline-secondary" disabled>
+                                <Icon Name="IconName.Lock" class="me-1" />
+                                Sin permisos
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm border-primary">
+                    <div class="card-body text-center">
+                        <Icon Name="IconName.Grid" Size="IconSize.x3" class="text-primary mb-3" />
+                        <h5 class="card-title">Grillas de Conocimiento</h5>
+                        <p class="card-text">Configurar y administrar grillas con temas y subtemas para estructurar las evaluaciones.</p>
+                        @if (AuthState.UserCanAccess("GRILLAS"))
+                        {
+                            <a href="/grillas" class="btn btn-primary">
+                                <Icon Name="IconName.Gear" class="me-1" />
+                                Gestionar Grillas
+                            </a>
+                        }
+                        else
+                        {
+                            <button class="btn btn-outline-secondary" disabled>
+                                <Icon Name="IconName.Lock" class="me-1" />
+                                Sin permisos
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm border-info">
+                    <div class="card-body text-center">
+                        <Icon Name="IconName.People" Size="IconSize.x3" class="text-info mb-3" />
+                        <h5 class="card-title">Recursos</h5>
+                        <p class="card-text">Administrar personas, equipos de desarrollo y sus roles dentro de la organización.</p>
+                        @if (AuthState.UserCanAccess("RECURSOS"))
+                        {
+                            <a href="/recursos" class="btn btn-info">
+                                <Icon Name="IconName.PersonGear" class="me-1" />
+                                Ver Recursos
+                            </a>
+                        }
+                        else
+                        {
+                            <button class="btn btn-outline-secondary" disabled>
+                                <Icon Name="IconName.Lock" class="me-1" />
+                                Sin permisos
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Secciones adicionales -->
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <Icon Name="IconName.BookHalf" class="me-2" />
+                            Gestión de Contenido
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Administre temas, subtemas y estructure el conocimiento de manera organizada.</p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            @if (AuthState.UserCanAccess("TEMAS"))
+                            {
+                                <a href="/temas" class="btn btn-outline-primary btn-sm">
+                                    <Icon Name="IconName.Journal" class="me-1" />
+                                    Temas
+                                </a>
+                            }
+                            @if (AuthState.UserCanAccess("CLIENTES"))
+                            {
+                                <a href="/clientes" class="btn btn-outline-primary btn-sm">
+                                    <Icon Name="IconName.Building" class="me-1" />
+                                    Clientes
+                                </a>
+                            }
+                            @if (AuthState.UserCanAccess("TIPOS_DOCUMENTO"))
+                            {
+                                <a href="/tipos" class="btn btn-outline-primary btn-sm">
+                                    <Icon Name="IconName.FileText" class="me-1" />
+                                    Tipos Documento
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <Icon Name="IconName.Diagram3" class="me-2" />
+                            Organización
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Configure equipos de desarrollo, roles y la estructura organizacional.</p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            @if (AuthState.UserCanAccess("EQUIPOS"))
+                            {
+                                <a href="/equipos" class="btn btn-outline-secondary btn-sm">
+                                    <Icon Name="IconName.People" class="me-1" />
+                                    Equipos
+                                </a>
+                            }
+                            @if (AuthState.UserCanAccess("ROLES"))
+                            {
+                                <a href="/roles" class="btn btn-outline-secondary btn-sm">
+                                    <Icon Name="IconName.PersonBadge" class="me-1" />
+                                    Roles
+                                </a>
+                            }
+                            @if (AuthState.UserHasPermission("PERMISOS_ADMIN"))
+                            {
+                                <a href="/permisos" class="btn btn-outline-warning btn-sm">
+                                    <Icon Name="IconName.ShieldCheck" class="me-1" />
+                                    Permisos
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Información del sistema -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">
+                        <Icon Name="IconName.InfoCircle" class="me-2" />
+                        ¿Cómo funciona el sistema?
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ol class="mb-0">
+                                <li><strong>Configurar:</strong> Crear grillas con temas y subtemas de conocimiento</li>
+                                <li><strong>Asignar:</strong> Asignar recursos (personas) a equipos y roles</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-6">
+                            <ol start="3" class="mb-0">
+                                <li><strong>Evaluar:</strong> Crear evaluaciones específicas para un recurso usando una grilla</li>
+                                <li><strong>Monitorear:</strong> Seguir el progreso y completitud de las evaluaciones</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas rápidas (si tiene permisos) -->
+        @if (AuthState.UserCanAccess("EVALUACIONES_GLOBALES"))
+        {
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">
+                                <Icon Name="IconName.BarChart" class="me-2" />
+                                Accesos Rápidos
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex gap-3 flex-wrap">
+                                <a href="/evaluaciones-globales" class="btn btn-outline-primary">
+                                    <Icon Name="IconName.GraphUp" class="me-1" />
+                                    Ver Estadísticas Globales
+                                </a>
+                                @if (AuthState.UserCanAccess("EVALUACIONES", "WRITE"))
+                                {
+                                    <a href="/evaluaciones" class="btn btn-outline-success">
+                                        <Icon Name="IconName.Plus" class="me-1" />
+                                        Nueva Evaluación
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="d-flex justify-content-center align-items-center" style="height: 80vh;">
+        <div class="text-center">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="text-muted">Verificando autenticación...</p>
+        </div>
+    </div>
+}

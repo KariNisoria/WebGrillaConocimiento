@@ -1,25 +1,58 @@
-@page "/login"
+@page "/"
+@layout LoginLayout
 @using WebGrillaBlazor.DTOs
 @using WebGrillaBlazor.ApiClient
 @using WebGrillaBlazor.Services
 @inject ApiClientAuthentication AuthClient
 @inject AuthStateService AuthState
 @inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
 
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-lg-5 col-md-7 col-sm-9">
-            <div class="card shadow-lg border-0 rounded-lg mt-5">
-                <div class="card-header">
+            <!-- Logo y título principal -->
+            <div class="text-center mb-4">
+                <div class="login-logo mb-3">
+                    <Icon Name="IconName.Grid" Size="IconSize.x5" class="text-white" />
+                </div>
+                <h2 class="text-white fw-light">Sistema de Grillas de Conocimiento</h2>
+                <p class="text-white-50">Accede a tu cuenta para continuar</p>
+            </div>
+
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-header bg-white">
                     <div class="text-center">
                         <h3 class="font-weight-light my-4">
                             <Icon Name="IconName.PersonCircle" Size="IconSize.x2" class="text-primary me-2" />
                             Iniciar Sesión
                         </h3>
-                        <p class="text-muted">Sistema de Gestión de Conocimientos</p>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
+
+                    <!-- Mensaje si ya hay una sesión activa -->
+                    @if (AuthState.IsAuthenticated)
+                    {
+                        <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+                            <Icon Name="IconName.InfoCircle" class="me-2" />
+                            <div>
+                                <strong>Sesión activa detectada</strong><br>
+                                Usuario: @AuthState.GetUserDisplayName()
+                                <div class="mt-2">
+                                    <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="GoToDashboard" Class="me-2">
+                                        <Icon Name="IconName.ArrowRight" class="me-1" />
+                                        Continuar
+                                    </Button>
+                                    <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" @onclick="StartNewSession">
+                                        <Icon Name="IconName.PersonX" class="me-1" />
+                                        Nueva Sesión
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
                     <EditForm Model="@loginRequest" OnValidSubmit="@HandleLogin">
                         <DataAnnotationsValidator />
                         
@@ -36,7 +69,7 @@
                             <ValidationMessage For="@(() => loginRequest.Email)" class="invalid-feedback" />
                         </div>
                         
-                        <div class="form-floating mb-3">
+                        <div class="form-floating mb-4">
                             <InputNumber @bind-Value="loginRequest.NumeroDocumento" 
                                          class="@GetInputCssClass("NumeroDocumento")"
                                          id="inputDocument" 
@@ -51,7 +84,7 @@
 
                         @if (!string.IsNullOrEmpty(errorMessage))
                         {
-                            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                            <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
                                 <Icon Name="IconName.ExclamationTriangleFill" class="me-2" />
                                 <div>@errorMessage</div>
                             </div>
@@ -66,24 +99,60 @@
                                 @if (isLoading)
                                 {
                                     <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                    <span>Verificando...</span>
+                                    <span>Verificando credenciales...</span>
                                 }
                                 else
                                 {
                                     <Icon Name="IconName.BoxArrowInRight" class="me-2" />
-                                    <span>Ingresar</span>
+                                    <span>Ingresar al Sistema</span>
                                 }
                             </Button>
                         </div>
                     </EditForm>
                 </div>
-                <div class="card-footer text-center py-3">
+                <div class="card-footer text-center py-3 bg-light">
                     <div class="small text-muted">
                         <Icon Name="IconName.InfoCircle" class="me-1" />
                         Utiliza las credenciales registradas en el sistema
                     </div>
+                    
+                    <!-- Usuarios de prueba (solo en desarrollo) -->
+                    @if (Navigation.Uri.Contains("localhost") || Navigation.Uri.Contains("development"))
+                    {
+                        <hr class="my-3">
+                        <div class="small text-muted">
+                            <strong>Usuarios de prueba:</strong><br>
+                            <div class="d-flex gap-2 justify-content-center mt-2 flex-wrap">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" @onclick='() => SetTestUser("admin")'>
+                                    Admin
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" @onclick='() => SetTestUser("manager")'>
+                                    Manager
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" @onclick='() => SetTestUser("evaluador")'>
+                                    Evaluador
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" @onclick='() => SetTestUser("dev")'>
+                                    Developer
+                                </button>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
+
+            <!-- Debug info en desarrollo -->
+            @if (Navigation.Uri.Contains("localhost"))
+            {
+                <div class="mt-3 text-white small">
+                    <strong>Debug Info:</strong><br>
+                    Email: @loginRequest.Email<br>
+                    Documento: @loginRequest.NumeroDocumento<br>
+                    Cargando: @isLoading<br>
+                    Error: @errorMessage<br>
+                    Auth Status: @AuthState.IsAuthenticated
+                </div>
+            }
         </div>
     </div>
 </div>
@@ -104,37 +173,72 @@
 }
 
 <style>
+    .login-logo {
+        opacity: 0.9;
+        transform: scale(1.02);
+        transition: all 0.3s ease;
+    }
+    
+    .login-logo:hover {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    
     .card {
-        transition: transform 0.2s ease-in-out;
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.95) !important;
     }
     
     .card:hover {
         transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
     }
     
     .btn-login {
         background: linear-gradient(45deg, #0d6efd, #0b5ed7);
         border: none;
         transition: all 0.3s ease;
+        font-weight: 500;
     }
     
     .btn-login:hover:not(:disabled) {
         background: linear-gradient(45deg, #0b5ed7, #0a58ca);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(13, 110, 253, 0.4);
+    }
+    
+    .btn-login:disabled {
+        opacity: 0.7;
     }
     
     .form-floating > label {
         color: #6c757d;
+        font-weight: 500;
     }
     
     .form-floating > .form-control:focus ~ label {
         color: #0d6efd;
     }
     
-    body {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        min-height: 100vh;
+    .form-control {
+        border-radius: 0.5rem;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
+    }
+    
+    .alert {
+        border-radius: 0.5rem;
+        border: none;
+    }
+    
+    .btn-sm {
+        font-size: 0.75rem;
     }
 </style>
 
@@ -148,35 +252,96 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Si el usuario ya está autenticado, redirigir al inicio
-        if (AuthState.IsAuthenticated)
+        Console.WriteLine("?? Login: Inicializando página de login...");
+        
+        try
         {
-            Navigation.NavigateTo("/");
-            return;
+            // NO limpiar automáticamente - dejar que el usuario decida
+            // El AppStateInitializer ya ha cargado los datos de localStorage si existían
+            
+            Console.WriteLine($"?? Login: Estado actual - Autenticado: {AuthState.IsAuthenticated}");
+            
+            if (AuthState.IsAuthenticated)
+            {
+                Console.WriteLine($"?? Login: Usuario actual: {AuthState.GetUserDisplayName()}");
+                // Mostrar opciones al usuario: continuar con sesión actual o iniciar nueva
+            }
+            else
+            {
+                Console.WriteLine("?? Login: No hay sesión activa - mostrar formulario");
+            }
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"? Error inicializando login: {ex.Message}");
+        }
+    }
 
-        // Valores por defecto para testing (eliminar en producción)
-        if (Navigation.Uri.Contains("localhost"))
-        {
-            // loginRequest.Email = "admin@censys.com";
-            // loginRequest.NumeroDocumento = 12345678;
-        }
+    private void GoToDashboard()
+    {
+        Console.WriteLine("?? Login: Continuando con sesión actual");
+        Navigation.NavigateTo("/index", forceLoad: false);
+    }
+
+    private async Task StartNewSession()
+    {
+        Console.WriteLine("?? Login: Iniciando nueva sesión - limpiando datos anteriores");
+        
+        await AuthState.ForceLogoutAsync();
+        await Task.Delay(100);
+        await JSRuntime.InvokeVoidAsync("localStorage.clear");
+        
+        // Limpiar formulario
+        loginRequest = new LoginRequestDTO();
+        errorMessage = string.Empty;
+        
+        StateHasChanged();
+        
+        ShowToast("Sesión anterior cerrada. Ingrese nuevas credenciales.", "info");
     }
 
     private async Task HandleLogin()
     {
+        Console.WriteLine($"?? === INICIO DE LOGIN ===");
+        Console.WriteLine($"?? Email: '{loginRequest.Email}', Documento: '{loginRequest.NumeroDocumento}'");
+        
+        // Validaciones básicas
+        if (string.IsNullOrEmpty(loginRequest.Email) || loginRequest.NumeroDocumento <= 0)
+        {
+            errorMessage = "Por favor, complete todos los campos";
+            Console.WriteLine($"? Validación fallida: campos vacíos");
+            return;
+        }
+
         isLoading = true;
         errorMessage = string.Empty;
         StateHasChanged();
 
         try
         {
+            Console.WriteLine($"?? Enviando petición de login...");
             var response = await AuthClient.LoginAsync(loginRequest);
+
+            Console.WriteLine($"?? Respuesta recibida:");
+            Console.WriteLine($"   - IsSuccess: {response.IsSuccess}");
+            Console.WriteLine($"   - Message: '{response.Message}'");
+            Console.WriteLine($"   - Usuario: {(response.Usuario != null ? response.Usuario.NombreCompleto : "null")}");
 
             if (response.IsSuccess && response.Usuario != null)
             {
+                Console.WriteLine($"? Login exitoso para: {response.Usuario.NombreCompleto}");
+                Console.WriteLine($"   - Rol: {response.Usuario.NombreRol}");
+                Console.WriteLine($"   - Permisos: {response.Usuario.Permisos?.Count ?? 0} permisos");
+                
                 // Guardar estado de autenticación
                 await AuthState.SetCurrentUserAsync(response.Usuario);
+                
+                // Verificar que se guardó correctamente
+                await Task.Delay(200); // Pequeña pausa para asegurar que se guardó
+                
+                Console.WriteLine($"?? Estado después de SetCurrentUserAsync:");
+                Console.WriteLine($"   - AuthState.IsAuthenticated: {AuthState.IsAuthenticated}");
+                Console.WriteLine($"   - AuthState.CurrentUser: {AuthState.CurrentUser?.NombreCompleto ?? "null"}");
                 
                 // Mostrar toast de éxito
                 ShowToast($"¡Bienvenido/a, {response.Usuario.NombreCompleto}!", "success");
@@ -184,31 +349,70 @@
                 // Esperar un poco para que se vea el toast
                 await Task.Delay(1000);
                 
-                // Redirigir al inicio
-                Navigation.NavigateTo("/");
+                Console.WriteLine($"?? Redirigiendo a /index...");
+                
+                // Redirigir al índice
+                Navigation.NavigateTo("/index", forceLoad: false);
             }
             else
             {
-                errorMessage = response.Message;
-                ShowToast(response.Message, "error");
+                Console.WriteLine($"? Login fallido: {response.Message}");
+                errorMessage = response.Message ?? "Error desconocido en el login";
+                ShowToast(errorMessage, "error");
             }
+        }
+        catch (HttpRequestException httpEx)
+        {
+            Console.WriteLine($"? Error HTTP en login: {httpEx.Message}");
+            errorMessage = "Error de conexión con el servidor. Verifique la conexión.";
+            ShowToast("Error de conexión", "error");
         }
         catch (Exception ex)
         {
-            errorMessage = "Error de conexión. Por favor, inténtalo de nuevo.";
-            ShowToast("Error de conexión", "error");
-            Console.WriteLine($"Error en login: {ex.Message}");
+            Console.WriteLine($"? Error general en login: {ex.Message}");
+            Console.WriteLine($"   Stack: {ex.StackTrace}");
+            errorMessage = "Error inesperado. Por favor, inténtelo de nuevo.";
+            ShowToast("Error inesperado", "error");
         }
         finally
         {
             isLoading = false;
             StateHasChanged();
+            Console.WriteLine($"?? === FIN DE LOGIN ===");
         }
+    }
+
+    private void SetTestUser(string userType)
+    {
+        if (isLoading) return;
+
+        Console.WriteLine($"?? Setting test user: {userType}");
+
+        switch (userType.ToLower())
+        {
+            case "admin":
+                loginRequest.Email = "admin@censys.com";
+                loginRequest.NumeroDocumento = 12345678;
+                break;
+            case "manager":
+                loginRequest.Email = "manager@censys.com";
+                loginRequest.NumeroDocumento = 87654321;
+                break;
+            case "evaluador":
+                loginRequest.Email = "evaluador@censys.com";
+                loginRequest.NumeroDocumento = 11111111;
+                break;
+            case "dev":
+                loginRequest.Email = "dev@censys.com";
+                loginRequest.NumeroDocumento = 22222222;
+                break;
+        }
+        
+        StateHasChanged();
     }
 
     private bool HasValidationError(string fieldName)
     {
-        // Lógica para verificar errores de validación específicos
         return false; // Simplificado para el ejemplo
     }
 
@@ -239,6 +443,7 @@
             "success" => "text-bg-success",
             "error" => "text-bg-danger",
             "warning" => "text-bg-warning",
+            "info" => "text-bg-info",
             _ => "text-bg-info"
         };
     }

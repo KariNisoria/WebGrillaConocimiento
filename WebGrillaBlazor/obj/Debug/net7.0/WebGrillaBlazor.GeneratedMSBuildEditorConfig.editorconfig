@@ -36,8 +36,20 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBdXRob3JpemVWaWV3LnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Components/DiagnosticPanel.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEaWFnbm9zdGljUGFuZWwucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Pages/Clientes.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpZW50ZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Pages/ConfiguracionPermisos.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29uZmlndXJhY2lvblBlcm1pc29zLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Pages/Dashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGFzaGJvYXJkLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Pages/Equipos.razor]
@@ -138,6 +150,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Shared/EvaluacionActivaWidget.razor]
 build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXEV2YWx1YWNpb25BY3RpdmFXaWRnZXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Shared/LoginLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXExvZ2luTGF5b3V0LnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Shared/SurveyPrompt.razor]

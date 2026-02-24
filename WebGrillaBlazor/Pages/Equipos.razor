@@ -1,78 +1,152 @@
 ﻿@page "/equipos"
 @using WebGrillaBlazor.DTOs
 @using WebGrillaBlazor.ApiClient
+@using WebGrillaBlazor.Services
 @inject ApiClientGeneric<EquipoDesarrolloDTO> ApiClient
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
 
-<h3>Gestion de Equipos</h3>
+<PageTitle>Gestión de Equipos</PageTitle>
 
-<div class="row mb-3">
-    <div class="col-2">
-        <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddEquipo">+Equipo</Button>
+<WebGrillaBlazor.Components.AuthorizeView RedirectToLogin="true">
+    @if (!AuthState.UserCanAccess("EQUIPOS"))
+    {
+        <div class="alert alert-danger">
+            <h4 class="alert-heading">Acceso Denegado</h4>
+            <p>No tienes permisos para acceder a la gestión de equipos.</p>
+            <hr>
+            <p class="mb-0">
+                <strong>Permisos requeridos:</strong> EQUIPOS_READ<br>
+                <strong>Tu rol actual:</strong> @AuthState.CurrentUser?.NombreRol<br>
+                Contacta con un administrador si necesitas acceso a esta funcionalidad.
+            </p>
+            <div class="mt-3">
+                <button class="btn btn-primary" @onclick="NavigateToIndex">
+                    <Icon Name="IconName.ArrowLeft" class="me-1" />
+                    Volver al Dashboard
+                </button>
+            </div>
+        </div>
+        return;
+    }
+
+    <div class="container-fluid">
+        <div class="row mb-3">
+            <div class="col">
+                <h3>
+                    <Icon Name="IconName.People" class="me-2 text-primary" />
+                    Gestión de Equipos de Desarrollo
+                </h3>
+                <p class="text-muted">Administrar equipos de desarrollo y sus miembros</p>
+            </div>
+            <div class="col-auto">
+                @if (AuthState.UserHasPermission("EQUIPOS_WRITE"))
+                {
+                    <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddEquipo">
+                        <Icon Name="IconName.Plus" class="me-1" />
+                        Agregar Equipo
+                    </Button>
+                }
+                else
+                {
+                    <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" disabled title="Sin permisos de escritura">
+                        <Icon Name="IconName.Lock" class="me-1" />
+                        Sin permisos
+                    </Button>
+                }
+            </div>
+        </div>
+
+        <!-- Grilla de Equipos -->
+        <div class="card">
+            <div class="card-body">
+                <Grid @ref="gridEquipo"
+                      TItem="EquipoDesarrolloDTO"
+                      Class="table table-hover table-bordered table-striped"
+                      DataProvider="GetAllEquipos"
+                      AllowPaging="true"
+                      PageSize="10"
+                      AllowSorting="true"
+                      AllowRowClick="true"
+                      OnRowDoubleClick="OnEquipoDobleClick"
+                      SelectionMode="GridSelectionMode.Single"
+                      Responsive="true">
+
+                    <GridColumns>
+                        <GridColumn TItem="EquipoDesarrolloDTO" HeaderText="ID" PropertyName="IdEquipoDesarrollo" SortKeySelector="item => item.IdEquipoDesarrollo">
+                            @context.IdEquipoDesarrollo
+                        </GridColumn>
+
+                        <GridColumn TItem="EquipoDesarrolloDTO" HeaderText="Nombre del Equipo" PropertyName="Descripcion" SortKeySelector="item => item.Nombre">
+                            <strong>@context.Nombre</strong>
+                        </GridColumn>
+                        
+                        @if (AuthState.UserHasPermission("EQUIPOS_WRITE"))
+                        {
+                            <GridColumn TItem="EquipoDesarrolloDTO" HeaderText="Acciones">
+                                <Button Color="ButtonColor.Primary" Size="ButtonSize.ExtraSmall" @onclick="() => EditarEquipo(context)">
+                                    <Icon Name="IconName.Pencil" />
+                                </Button>
+                            </GridColumn>
+                        }
+                    </GridColumns>
+                </Grid>
+            </div>
+        </div>
+
+        <!-- Ficha Edicion Equipo -->
+        <Modal @ref="_EdicionEquipo" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
+        
+        <!-- Información adicional para usuarios sin permisos de escritura -->
+        @if (!AuthState.UserHasPermission("EQUIPOS_WRITE"))
+        {
+            <div class="alert alert-info mt-3">
+                <Icon Name="IconName.InfoCircle" class="me-2" />
+                <strong>Modo solo lectura:</strong> Puedes consultar los equipos pero no realizar modificaciones.
+            </div>
+        }
     </div>
-</div>
-
-<!-- Grilla de Equipos -->
-
-<Grid @ref="gridEquipo"
-      TItem="EquipoDesarrolloDTO"
-      Class="table table-hover table-bordered table-striped"
-      DataProvider="GetAllEquipos"
-      AllowPaging="true"
-      PageSize="5"
-      AllowSorting="true"
-      AllowRowClick="true"
-      OnRowDoubleClick="OnEquipoDobleClick"
-      SelectionMode="GridSelectionMode.Single"
-      Responsive="true">
-
-    <GridColumns>
-        <GridColumn TItem="EquipoDesarrolloDTO" HeaderText="IdEquipoDesarrollo" PropertyName="IdEquipoDesarrollo" SortKeySelector="item => item.IdEquipoDesarrollo">
-            @context.IdEquipoDesarrollo
-        </GridColumn>
-
-        <GridColumn TItem="EquipoDesarrolloDTO" HeaderText="Nombre" PropertyName="Descripcion" SortKeySelector="item => item.Nombre">
-            @context.Nombre
-        </GridColumn>
-
-    </GridColumns>
-</Grid>
-
-<!-- Ficha Edicion Rol -->
-<Modal @ref="_EdicionEquipo" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
-
+</WebGrillaBlazor.Components.AuthorizeView>
 
 @code {
     private IEnumerable<EquipoDesarrolloDTO> equipos = default!;
     private int currentIdEquipo = 0;
-
     private Modal _EdicionEquipo = default!;
-
     private Grid<EquipoDesarrolloDTO> gridEquipo = default!;
 
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("OnInitializedAsync");
+        Console.WriteLine("Equipos: Inicializando página...");
+        Console.WriteLine($"   - Usuario: {AuthState.CurrentUser?.NombreCompleto}");
+        Console.WriteLine($"   - Puede acceder: {AuthState.UserCanAccess("EQUIPOS")}");
+        Console.WriteLine($"   - Permisos escritura: {AuthState.UserHasPermission("EQUIPOS_WRITE")}");
 
         await base.OnInitializedAsync();
+    }
 
+    private void NavigateToIndex()
+    {
+        Navigation.NavigateTo("/index");
     }
 
     private async Task<GridDataProviderResult<EquipoDesarrolloDTO>> GetAllEquipos(GridDataProviderRequest<EquipoDesarrolloDTO> request)
     {
         Console.WriteLine("GetAllEquipos");
 
-        if (equipos is null) // pull employees only one time for client-side filtering, sorting, and paging
-            equipos = await ApiClient.GetAllAsync(); // call a service or an API to pull the employees
+        if (equipos is null)
+            equipos = await ApiClient.GetAllAsync();
 
         return await Task.FromResult(request.ApplyTo(equipos));
     }
 
-    //-------------------------------
-    // Para la creacion de un Equipo
-    //-------------------------------
-
     private async Task AddEquipo()
     {
+        if (!AuthState.UserHasPermission("EQUIPOS_WRITE"))
+        {
+            Console.WriteLine("Sin permisos para crear equipo");
+            return;
+        }
+
         var lista = equipos.ToList();
         var nuevo = CreateEquipo();
         lista.Add(nuevo);
@@ -82,11 +156,9 @@
 
     private EquipoDesarrolloDTO CreateEquipo()
     {
-        // Usar verificación para manejar colecciones vacías de forma segura
         var numero = (equipos?.Any() == true) ? equipos.Max(x => x.IdEquipoDesarrollo) + 1 : 1;
 
         var nuevo = new EquipoDesarrolloDTO();
-
         nuevo.IdEquipoDesarrollo = 0;
         nuevo.Nombre = $"Nuevo Equipo {numero}";
         nuevo.IdCliente = 1;
@@ -94,43 +166,52 @@
         return nuevo;
     }
 
-    //------------------------------
-    // Para la edicion de un Equipo
-    //------------------------------
+    private async Task EditarEquipo(EquipoDesarrolloDTO equipo)
+    {
+        if (!AuthState.UserHasPermission("EQUIPOS_WRITE"))
+        {
+            Console.WriteLine("Sin permisos para editar equipo");
+            return;
+        }
+        
+        var param = new Dictionary<string, object>();
+        param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionEquipo));
+        param.Add("equipo", equipo);
+        await _EdicionEquipo.ShowAsync<FichaEquipo>(title: "Edición Equipo", parameters: param);
+    }
 
     private async Task OnEquipoDobleClick(GridRowEventArgs<EquipoDesarrolloDTO> args)
     {
+        if (!AuthState.UserHasPermission("EQUIPOS_WRITE"))
+        {
+            Console.WriteLine("Sin permisos para editar equipo - doble click ignorado");
+            return;
+        }
+        
         Console.WriteLine("Evento OnEquipoDobleClick");
         var param = new Dictionary<string, object>();
         param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionEquipo));
         param.Add("equipo", args.Item);
-        await _EdicionEquipo.ShowAsync<FichaEquipo>(title: "Edicion Equipo", parameters: param);
-
+        await _EdicionEquipo.ShowAsync<FichaEquipo>(title: "Edición Equipo", parameters: param);
     }
 
     private async Task OnCloseModalEdicionEquipo()
     {
         Console.WriteLine("OnCloseModalEdicionEquipo()");
-        await _EdicionEquipo.HideAsync(); // Ocultar el formulario de Edicion
-        await RefreshGrid(); // Refrescar la grilla
-
+        await _EdicionEquipo.HideAsync();
+        await RefreshGrid();
     }
 
     private async Task RefreshGrid()
     {
-        equipos= null; // Limpiar la caché local de equipos
+        equipos = null;
         await gridEquipo.RefreshDataAsync();
-        StateHasChanged(); // Forzar la actualización de la grilla
+        StateHasChanged();
     }
-
-    //-------------------
-    // Prueba de Onclick
-    //-------------------
 
     private async Task OnRowClick(GridRowEventArgs<EquipoDesarrolloDTO> args)
     {
         Console.WriteLine($"OnRowClick Equipo current: {currentIdEquipo} nuevo: {args.Item.IdEquipoDesarrollo} ");
         currentIdEquipo = args.Item.IdEquipoDesarrollo;
     }
-
 }

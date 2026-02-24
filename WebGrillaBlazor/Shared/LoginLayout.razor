@@ -1,0 +1,45 @@
+@inherits LayoutComponentBase
+@using WebGrillaBlazor.Services
+@inject AuthStateService AuthState
+
+<div class="login-layout" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh;">
+    <div class="container-fluid h-100">
+        <div class="row h-100 align-items-center justify-content-center">
+            <div class="col-12">
+                @Body
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer con información -->
+    <div class="position-fixed bottom-0 start-0 end-0 p-3 text-center text-white-50">
+        <small>
+            © @DateTime.Now.Year Sistema de Gestión de Grillas de Conocimiento - v1.0.0
+        </small>
+    </div>
+</div>
+
+<style>
+    .login-layout {
+        position: relative;
+        overflow-x: hidden;
+    }
+    
+    .login-layout::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+            radial-gradient(ellipse at top left, rgba(255,255,255,0.1) 0%, transparent 50%),
+            radial-gradient(ellipse at bottom right, rgba(255,255,255,0.1) 0%, transparent 50%);
+        pointer-events: none;
+    }
+    
+    .login-layout .container-fluid {
+        position: relative;
+        z-index: 1;
+    }
+</style>

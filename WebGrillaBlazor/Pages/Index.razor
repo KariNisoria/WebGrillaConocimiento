@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/index"
 @using WebGrillaBlazor.DTOs
 @using WebGrillaBlazor.Services
 @inject AuthStateService AuthState
@@ -6,8 +6,22 @@
 
 <PageTitle>Grilla de Conocimiento</PageTitle>
 
-<!-- Componente de autorización que redirige automáticamente si no está autenticado -->
-<WebGrillaBlazor.Components.AuthorizeView RedirectToLogin="true">
+<!-- Verificar autenticación antes de mostrar contenido -->
+@if (isLoading)
+{
+    <!-- Pantalla de carga mientras se verifica autenticación -->
+    <div class="d-flex justify-content-center align-items-center" style="height: 80vh;">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3 text-muted">Verificando estado de autenticación...</p>
+        </div>
+    </div>
+}
+else if (AuthState.IsAuthenticated && AuthState.CurrentUser != null)
+{
+    <!-- Solo mostrar contenido si está autenticado -->
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
@@ -18,13 +32,10 @@
                     <p>Versión 1.0.0 - Sistema de evaluación por grillas de conocimiento</p>
                     
                     <!-- Mensaje de bienvenida personalizado -->
-                    @if (AuthState.IsAuthenticated)
-                    {
-                        <div class="mt-3">
-                            <h5>👋 ¡Bienvenido/a, @AuthState.GetUserDisplayName()!</h5>
-                            <p class="mb-0">Rol: <strong>@AuthState.CurrentUser?.NombreRol</strong></p>
-                        </div>
-                    }
+                    <div class="mt-3">
+                        <h5>👋 ¡Bienvenido/a, @AuthState.GetUserDisplayName()!</h5>
+                        <p class="mb-0">Rol: <strong>@AuthState.CurrentUser?.NombreRol</strong></p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -135,6 +146,40 @@
             </div>
         </div>
         
+        <!-- Nueva sección de Administración solo para administradores -->
+        @if (AuthState.UserHasPermission("PERMISOS_ADMIN"))
+        {
+            <div class="row mt-4">
+                <div class="col-12 mb-4">
+                    <div class="card border-danger shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-danger">
+                                <Icon Name="IconName.ShieldLock" class="me-2" />
+                                Administración del Sistema
+                            </h5>
+                            <p class="card-text">Panel de configuración avanzada y gestión de permisos del sistema.</p>
+                            <div class="d-flex gap-2">
+                                <a href="/permisos" class="btn btn-outline-danger btn-sm">
+                                    <Icon Name="IconName.Shield" class="me-1" />
+                                    Gestión de Permisos
+                                </a>
+                                <a href="/admin/permisos-roles" class="btn btn-danger btn-sm">
+                                    <Icon Name="IconName.Gear" class="me-1" />
+                                    Configurar Permisos y Rutas
+                                </a>
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-danger">
+                                    <Icon Name="IconName.ExclamationTriangle" class="me-1" />
+                                    <strong>Área restringida:</strong> Solo administradores del sistema
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        
         <div class="row mt-4">
             <div class="col-12">
                 <div class="alert alert-info">
@@ -152,13 +197,69 @@
             </div>
         </div>
     </div>
-</WebGrillaBlazor.Components.AuthorizeView>
+}
+else
+{
+    <!-- Si no está autenticado, mostrar mensaje y redirigir -->
+    <div class="d-flex justify-content-center align-items-center" style="height: 80vh;">
+        <div class="text-center">
+            <Icon Name="IconName.ShieldX" Size="IconSize.x5" class="text-warning mb-3" />
+            <h3>Acceso Requerido</h3>
+            <p class="text-muted">Debe iniciar sesión para acceder al sistema.</p>
+            <div class="mt-3">
+                <button class="btn btn-primary" @onclick="RedirectToLogin">
+                    <Icon Name="IconName.BoxArrowInRight" class="me-2" />
+                    Ir al Login
+                </button>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
+    private bool isLoading = true;
+
     protected override async Task OnInitializedAsync()
     {
-        // Inicializar el estado de autenticación
-        await AuthState.InitializeAsync();
+        Console.WriteLine("🏠 Index: Inicializando página...");
+        
+        try
+        {
+            // NO inicializar AuthState aquí, ya lo hace AppStateInitializer
+            // Solo verificar el estado actual después de una pequeña pausa
+            await Task.Delay(300);
+            
+            Console.WriteLine($"🏠 Index: Verificando estado auth...");
+            Console.WriteLine($"   - AuthState.IsAuthenticated: {AuthState.IsAuthenticated}");
+            Console.WriteLine($"   - AuthState.CurrentUser: {AuthState.CurrentUser?.NombreCompleto ?? "null"}");
+            
+            // Si no está autenticado, NO forzar redirección aquí
+            // Dejar que el AppStateInitializer maneje la navegación
+            if (!AuthState.IsAuthenticated)
+            {
+                Console.WriteLine("🏠 Index: No autenticado, pero NO redirigiendo automáticamente");
+                // El AppStateInitializer se encargará de la redirección si es necesario
+            }
+            else
+            {
+                Console.WriteLine("🏠 Index: Usuario autenticado, mostrando dashboard");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error en Index: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void RedirectToLogin()
+    {
+        Console.WriteLine("🏠 Index: Redirección manual a login");
+        Navigation.NavigateTo("/", forceLoad: true);
     }
 }
 

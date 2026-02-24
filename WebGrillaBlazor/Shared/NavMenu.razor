@@ -47,13 +47,25 @@
     <nav class="flex-column">
         <!-- Inicio - Siempre visible -->
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <NavLink class="nav-link" href="index" Match="NavLinkMatch.All">
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
 
         @if (AuthState.IsAuthenticated)
         {
+            <!-- Separador -->
+            <div class="nav-section-header px-3 mt-3 mb-2">
+                <small class="text-muted fw-semibold">NAVEGACIÓN</small>
+            </div>
+
+            <!-- Dashboard -->
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="index">
+                    <span class="bi bi-speedometer2" aria-hidden="true"></span> Dashboard
+                </NavLink>
+            </div>
+
             <!-- Separador -->
             <div class="nav-section-header px-3 mt-3 mb-2">
                 <small class="text-muted fw-semibold">GESTIÓN DE DATOS</small>
@@ -184,6 +196,13 @@
                             <span class="bi bi-shield-check" aria-hidden="true"></span> Permisos
                         </NavLink>
                     </div>
+                    
+                    <!-- Nueva página de Configuración de Permisos -->
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="admin/permisos-roles">
+                            <span class="bi bi-gear-fill" aria-hidden="true"></span> Configurar Permisos
+                        </NavLink>
+                    </div>
                 }
             }
 
@@ -248,21 +267,25 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Suscribirse a cambios de estado
+        Console.WriteLine("🧭 NavMenu: Inicializando...");
+        
+        // Solo suscribirse a eventos, NO inicializar AuthState
+        // El AppStateInitializer se encarga de la inicialización
         AuthState.OnUserChanged += OnAuthStateChanged;
         AuthState.OnLogout += OnLogoutStateChanged;
 
-        // Inicializar estado de autenticación
-        await AuthState.InitializeAsync();
+        Console.WriteLine($"🧭 NavMenu: Estado actual - Auth: {AuthState.IsAuthenticated}");
     }
 
     private void OnAuthStateChanged(RecursoSessionDTO? user)
     {
+        Console.WriteLine($"🧭 NavMenu: Usuario cambió a {user?.NombreCompleto ?? "null"}");
         InvokeAsync(() => StateHasChanged());
     }
 
     private void OnLogoutStateChanged()
     {
+        Console.WriteLine("🧭 NavMenu: Evento de logout recibido");
         InvokeAsync(() => StateHasChanged());
     }
 
@@ -273,13 +296,16 @@
 
     private void GoToLogin()
     {
-        Navigation.NavigateTo("/login");
+        Console.WriteLine("🧭 NavMenu: Navegando a login");
+        Navigation.NavigateTo("/", forceLoad: false);
     }
 
     private async Task HandleLogout()
     {
+        Console.WriteLine("🧭 NavMenu: Iniciando logout");
         await AuthState.LogoutAsync();
-        Navigation.NavigateTo("/login");
+        Console.WriteLine("🧭 NavMenu: Logout completado, navegando a login");
+        Navigation.NavigateTo("/", forceLoad: false);
     }
 
     public void Dispose()

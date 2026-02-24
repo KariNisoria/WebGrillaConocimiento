@@ -1,57 +1,124 @@
 ﻿@page "/recursos"
 @using WebGrillaBlazor.DTOs
 @using WebGrillaBlazor.ApiClient
+@using WebGrillaBlazor.Services
 @inject ApiClientRecurso ApiClient
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
 
-<h3>Gestion de Recusos</h3>
+<PageTitle>Gestión de Recursos</PageTitle>
 
-<div class="row mb-3">
-    <div class="col-2">
-        <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddRecurso">+Recurso</Button>
+<WebGrillaBlazor.Components.AuthorizeView RedirectToLogin="true">
+    @if (!AuthState.UserCanAccess("RECURSOS"))
+    {
+        <div class="alert alert-danger">
+            <h4 class="alert-heading">Acceso Denegado</h4>
+            <p>No tienes permisos para acceder a la gestión de recursos.</p>
+            <hr>
+            <p class="mb-0">
+                <strong>Permisos requeridos:</strong> RECURSOS_READ<br>
+                <strong>Tu rol actual:</strong> @AuthState.CurrentUser?.NombreRol<br>
+                Contacta con un administrador si necesitas acceso a esta funcionalidad.
+            </p>
+            <div class="mt-3">
+                <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/index"))">
+                    <Icon Name="IconName.ArrowLeft" class="me-1" />
+                    Volver al Dashboard
+                </button>
+            </div>
+        </div>
+        return;
+    }
+
+    <div class="container-fluid">
+        <div class="row mb-3">
+            <div class="col">
+                <h3>
+                    <Icon Name="IconName.People" class="me-2 text-primary" />
+                    Gestión de Recursos
+                </h3>
+                <p class="text-muted">Administrar personas y sus roles dentro de la organización</p>
+            </div>
+            <div class="col-auto">
+                @if (AuthState.UserHasPermission("RECURSOS_WRITE"))
+                {
+                    <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddRecurso">
+                        <Icon Name="IconName.Plus" class="me-1" />
+                        Agregar Recurso
+                    </Button>
+                }
+                else
+                {
+                    <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" disabled title="Sin permisos de escritura">
+                        <Icon Name="IconName.Lock" class="me-1" />
+                        Sin permisos
+                    </Button>
+                }
+            </div>
+        </div>
+
+        <!-- Grilla de Recursos -->
+        <div class="card">
+            <div class="card-body">
+                <Grid @ref="gridRecurso"
+                      TItem="RecursoDTO"
+                      Class="table table-hover table-bordered table-striped"
+                      DataProvider="GetAllRecurso"
+                      AllowPaging="true"
+                      PageSize="10"
+                      AllowSorting="true"
+                      AllowRowClick="true"
+                      OnRowDoubleClick="OnRecursoDobleClick"
+                      SelectionMode="GridSelectionMode.Single"
+                      Responsive="true">
+
+                    <GridColumns>
+                        <GridColumn TItem="RecursoDTO" HeaderText="ID" PropertyName="IdRecurso" SortKeySelector="item => item.IdRecurso">
+                            @context.IdRecurso
+                        </GridColumn>
+
+                        <GridColumn TItem="RecursoDTO" HeaderText="Nro Documento" PropertyName="Documento" SortKeySelector="item => item.NumeroDocumento">
+                            @context.NumeroDocumento
+                        </GridColumn>
+
+                        <GridColumn TItem="RecursoDTO" HeaderText="Nombre" PropertyName="Nombre" SortKeySelector="item => item.Nombre">
+                            @context.Nombre
+                        </GridColumn>
+
+                        <GridColumn TItem="RecursoDTO" HeaderText="Apellido" PropertyName="Apellido" SortKeySelector="item => item.Apellido">
+                            @context.Apellido
+                        </GridColumn>
+
+                        <GridColumn TItem="RecursoDTO" HeaderText="Fecha Ingreso" PropertyName="Ingreso" SortKeySelector="item => item.FechaIngreso">
+                            @context.FechaIngreso.ToString("dd-MM-yyyy")
+                        </GridColumn>
+
+                        @if (AuthState.UserHasPermission("RECURSOS_WRITE"))
+                        {
+                            <GridColumn TItem="RecursoDTO" HeaderText="Acciones">
+                                <Button Color="ButtonColor.Primary" Size="ButtonSize.ExtraSmall" @onclick="() => EditarRecurso(context)">
+                                    <Icon Name="IconName.Pencil" />
+                                </Button>
+                            </GridColumn>
+                        }
+                    </GridColumns>
+                </Grid>
+            </div>
+        </div>
+
+        <!-- Ficha Edicion Recurso -->
+        <Modal @ref="_EdicionRecurso" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
+        
+        <!-- Información adicional para usuarios sin permisos de escritura -->
+        @if (!AuthState.UserHasPermission("RECURSOS_WRITE"))
+        {
+            <div class="alert alert-info mt-3">
+                <Icon Name="IconName.InfoCircle" class="me-2" />
+                <strong>Modo solo lectura:</strong> Puedes consultar la información pero no realizar modificaciones.
+            </div>
+        }
     </div>
-</div>
-
-<!-- Grilla de Recursos -->
-
-<Grid @ref="gridRecurso"
-      TItem="RecursoDTO"
-      Class="table table-hover table-bordered table-striped"
-      DataProvider="GetAllRecurso"
-      AllowPaging="true"
-      PageSize="5"
-      AllowSorting="true"
-      AllowRowClick="true"
-      OnRowDoubleClick="OnRecursoDobleClick"
-      SelectionMode="GridSelectionMode.Single"
-      Responsive="true">
-
-    <GridColumns>
-        <GridColumn TItem="RecursoDTO" HeaderText="IdRecurso" PropertyName="IdRecurso" SortKeySelector="item => item.IdRecurso">
-            @context.IdRecurso
-        </GridColumn>
-
-        <GridColumn TItem="RecursoDTO" HeaderText="NroDocumento" PropertyName="Documento" SortKeySelector="item => item.NumeroDocumento">
-            @context.NumeroDocumento
-        </GridColumn>
-
-        <GridColumn TItem="RecursoDTO" HeaderText="Nombre" PropertyName="Nombre" SortKeySelector="item => item.Nombre">
-            @context.Nombre
-        </GridColumn>
-
-        <GridColumn TItem="RecursoDTO" HeaderText="Apellido" PropertyName="Apellido" SortKeySelector="item => item.Apellido">
-            @context.Apellido
-        </GridColumn>
-
-        <GridColumn TItem="RecursoDTO" HeaderText="Ingreso" PropertyName="Ingreso" SortKeySelector="item => item.FechaIngreso">
-            @context.FechaIngreso.ToString("dd-MM-yyyy")
-        </GridColumn>
-
-    </GridColumns>
-</Grid>
-
-<!-- Ficha Edicion Rol -->
-<Modal @ref="_EdicionRecurso" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
-
+</WebGrillaBlazor.Components.AuthorizeView>
 
 @code {
     Modal _EdicionRecurso = default!;
@@ -59,36 +126,34 @@
     IEnumerable<RecursoDTO> recursos;
     int currentIdRecurso = 0;
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-
-        Console.WriteLine("OnInitalizedAsync()");
-
-        return base.OnInitializedAsync();
+        Console.WriteLine("Recursos: Inicializando página...");
+        Console.WriteLine($"   - Usuario: {AuthState.CurrentUser?.NombreCompleto}");
+        Console.WriteLine($"   - Puede acceder: {AuthState.UserCanAccess("RECURSOS")}");
+        Console.WriteLine($"   - Permisos escritura: {AuthState.UserHasPermission("RECURSOS_WRITE")}");
+        
+        await base.OnInitializedAsync();
     }
 
     private async Task<GridDataProviderResult<RecursoDTO>> GetAllRecurso(GridDataProviderRequest<RecursoDTO> request)
     {
         Console.WriteLine("GetAllRecurso");
 
-        if (recursos ==null)
+        if (recursos == null)
             recursos = await ApiClient.GetAllAsync();
 
         return await Task.FromResult(request.ApplyTo(recursos));
     }
 
-    private void OnRecursoDobleClick()
-    {
-        Console.WriteLine("OnRecursoDobleClick");
-
-    }
-
-    //--------------------------------
-    // Para la creacion de un recurso
-    //--------------------------------
-
     private async Task AddRecurso()
     {
+        if (!AuthState.UserHasPermission("RECURSOS_WRITE"))
+        {
+            Console.WriteLine("Sin permisos para crear recurso");
+            return;
+        }
+
         var lista = recursos.ToList();
         var nuevo = CreateRecurso();
         lista.Add(nuevo);
@@ -105,7 +170,7 @@
 
         nuevo.IdRecurso = 0;
         nuevo.Nombre = $"Nombre Nuevo {numero}";
-        nuevo.Apellido= $"Apellido Nuevo {numero}";
+        nuevo.Apellido = $"Apellido Nuevo {numero}";
         nuevo.IdTipoDocumento = 1;
         nuevo.IdEquipoDesarrollo = 1;
         nuevo.IdRol = 1;
@@ -117,18 +182,33 @@
         return nuevo;
     }
 
-    //-------------------------------
-    // Para la edicion de un recurso
-    //-------------------------------
+    private async Task EditarRecurso(RecursoDTO recurso)
+    {
+        if (!AuthState.UserHasPermission("RECURSOS_WRITE"))
+        {
+            Console.WriteLine("Sin permisos para editar recurso");
+            return;
+        }
+        
+        var param = new Dictionary<string, object>();
+        param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionRecurso));
+        param.Add("recurso", recurso);
+        await _EdicionRecurso.ShowAsync<FichaRecurso>(title: "Edición Recurso", parameters: param);
+    }
 
     private async Task OnRecursoDobleClick(GridRowEventArgs<RecursoDTO> args)
     {
-        Console.WriteLine("Evento OnRecursoClick");
+        if (!AuthState.UserHasPermission("RECURSOS_WRITE"))
+        {
+            Console.WriteLine("Sin permisos para editar recurso - doble click ignorado");
+            return;
+        }
+        
+        Console.WriteLine("Evento OnRecursoDobleClick");
         var param = new Dictionary<string, object>();
         param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionRecurso));
         param.Add("recurso", args.Item);
-        await _EdicionRecurso.ShowAsync<FichaRecurso>(title: "Edicion Recurso", parameters: param);
-
+        await _EdicionRecurso.ShowAsync<FichaRecurso>(title: "Edición Recurso", parameters: param);
     }
 
     private async Task OnCloseModalEdicionRecurso()
@@ -136,24 +216,18 @@
         Console.WriteLine("OnCloseModalEdicionRecurso()");
         await _EdicionRecurso.HideAsync(); // Ocultar el formulario de Edicion
         await RefreshGrid(); // Refrescar la grilla
-
     }
 
     private async Task RefreshGrid()
     {
-        recursos= null; // Limpiar la caché local de roles
+        recursos = null; // Limpiar la caché local de recursos
         await gridRecurso.RefreshDataAsync();
         StateHasChanged(); // Forzar la actualización de la grilla
     }
 
-    //-------------------
-    // Prueba de Onclick
-    //-------------------
-
     private async Task OnRowClick(GridRowEventArgs<RecursoDTO> args)
     {
-        Console.WriteLine($"OnRowClick Rol current: {currentIdRecurso} nuevo: {args.Item.IdRol} ");
-        currentIdRecurso = args.Item.IdRol;
+        Console.WriteLine($"OnRowClick Recurso current: {currentIdRecurso} nuevo: {args.Item.IdRecurso} ");
+        currentIdRecurso = args.Item.IdRecurso;
     }
-
 }
