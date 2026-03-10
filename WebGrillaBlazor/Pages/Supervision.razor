@@ -1,0 +1,439 @@
+@page "/supervision"
+@using WebGrillaBlazor.DTOs
+@using WebGrillaBlazor.Services
+@inject WebGrillaBlazor.ApiClient.ApiClientRecursoSupervisor ApiClientSupervisor
+@inject WebGrillaBlazor.ApiClient.ApiClientRecurso ApiClientRecurso
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+
+<PageTitle>Gestión de Supervisión</PageTitle>
+
+<WebGrillaBlazor.Components.AuthorizeView RedirectToLogin="true">
+    @if (!AuthState.UserCanAccess("SUPERVISION"))
+    {
+        <div class="alert alert-danger">
+            <h4 class="alert-heading">Acceso Denegado</h4>
+            <p>No tienes permisos para acceder a la gestión de supervisión.</p>
+            <hr>
+            <p class="mb-0">
+                <strong>Permisos requeridos:</strong> SUPERVISION_READ<br>
+                <strong>Tu rol actual:</strong> @AuthState.CurrentUser?.NombreRol<br>
+                Contacta con un administrador si necesitas acceso a esta funcionalidad.
+            </p>
+            <div class="mt-3">
+                <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/index"))">
+                    <Icon Name="IconName.ArrowLeft" class="me-1" />
+                    Volver al Dashboard
+                </button>
+            </div>
+        </div>
+        return;
+    }
+
+    <div class="container-fluid">
+        <div class="row mb-3">
+            <div class="col">
+                <h3>
+                    <Icon Name="IconName.People" class="me-2 text-primary" />
+                    Gestión de Supervisión
+                </h3>
+                <p class="text-muted">Administrar relaciones supervisor-supervisado entre recursos</p>
+            </div>
+        </div>
+
+        <!-- Selector de Supervisor -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <Icon Name="IconName.PersonBadge" class="me-2" />
+                            Seleccionar Supervisor
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Recurso Supervisor:</label>
+                            <select class="form-select" @onchange="OnSupervisorSeleccionado">
+                                <option value="0">-- Seleccionar Supervisor --</option>
+                                @foreach (var recurso in recursosDisponibles)
+                                {
+                                    <option value="@recurso.IdRecurso" selected="@(recurso.IdRecurso == supervisorSeleccionadoId)">@recurso.NombreCompleto - @recurso.NombreRol</option>
+                                }
+                            </select>
+                        </div>
+
+                        @if (supervisorSeleccionado != null)
+                        {
+                            <div class="alert alert-info">
+                                <strong>Supervisor seleccionado:</strong><br>
+                                <Icon Name="IconName.Person" class="me-1" />@supervisorSeleccionado.NombreCompleto<br>
+                                <Icon Name="IconName.Briefcase" class="me-1" />@supervisorSeleccionado.NombreRol<br>
+                                <Icon Name="IconName.Envelope" class="me-1" />@supervisorSeleccionado.CorreoElectronico<br>
+                                <Icon Name="IconName.Building" class="me-1" />@supervisorSeleccionado.NombreEquipo
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            @if (supervisorSeleccionado != null && AuthState.UserHasPermission("SUPERVISION_WRITE"))
+            {
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <Icon Name="IconName.PersonPlus" class="me-2" />
+                                Asignar Supervisado
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Recurso a Supervisar:</label>
+                                <select class="form-select" @bind="supervisadoSeleccionadoId">
+                                    <option value="0">-- Seleccionar Supervisado --</option>
+                                    @foreach (var recurso in recursosDisponiblesFiltrados)
+                                    {
+                                        <option value="@recurso.IdRecurso">@recurso.NombreCompleto - @recurso.NombreRol</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Observaciones (opcional):</label>
+                                <textarea class="form-control" rows="3" @bind="observacionesAsignacion" placeholder="Observaciones sobre la asignación"></textarea>
+                            </div>
+                            <Button Color="ButtonColor.Success" @onclick="AsignarSupervisado" Disabled="@(supervisadoSeleccionadoId == 0 || isProcessing)">
+                                @if (isProcessing)
+                                {
+                                    <Spinner Size="SpinnerSize.Small" class="me-1" />
+                                }
+                                else
+                                {
+                                    <Icon Name="IconName.Plus" class="me-1" />
+                                }
+                                Asignar Supervisado
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (supervisorSeleccionado != null)
+        {
+            <!-- Lista de Supervisados -->
+            <div class="row">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <Icon Name="IconName.List" class="me-2" />
+                                Recursos Supervisados por @supervisorSeleccionado.NombreCompleto
+                            </h5>
+                            <span class="badge bg-primary">@recursosSupervisados.Count supervisados</span>
+                        </div>
+                        <div class="card-body">
+                            @if (recursosSupervisados.Any())
+                            {
+                                <Grid TItem="RecursoSimpleDTO"
+                                      Class="table table-hover table-striped"
+                                      Data="recursosSupervisados"
+                                      AllowSorting="true"
+                                      Responsive="true">
+                                    <GridColumns>
+                                        <GridColumn TItem="RecursoSimpleDTO" HeaderText="Nombre Completo" PropertyName="NombreCompleto" SortKeySelector="item => item.NombreCompleto">
+                                            <strong>@context.NombreCompleto</strong>
+                                        </GridColumn>
+                                        <GridColumn TItem="RecursoSimpleDTO" HeaderText="Rol" PropertyName="NombreRol" SortKeySelector="item => item.NombreRol">
+                                            <span class="badge bg-secondary">@context.NombreRol</span>
+                                        </GridColumn>
+                                        <GridColumn TItem="RecursoSimpleDTO" HeaderText="Equipo" PropertyName="NombreEquipo" SortKeySelector="item => item.NombreEquipo">
+                                            @context.NombreEquipo
+                                        </GridColumn>
+                                        <GridColumn TItem="RecursoSimpleDTO" HeaderText="Email" PropertyName="CorreoElectronico">
+                                            <a href="mailto:@context.CorreoElectronico">@context.CorreoElectronico</a>
+                                        </GridColumn>
+                                        @if (AuthState.UserHasPermission("SUPERVISION_WRITE"))
+                                        {
+                                            <GridColumn TItem="RecursoSimpleDTO" HeaderText="Acciones">
+                                                <Button Color="ButtonColor.Danger" Size="ButtonSize.Small" @onclick="() => DesasignarSupervisado(context.IdRecurso)">
+                                                    <Icon Name="IconName.PersonX" class="me-1" />
+                                                    Desasignar
+                                                </Button>
+                                            </GridColumn>
+                                        }
+                                    </GridColumns>
+                                </Grid>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info text-center">
+                                    <Icon Name="IconName.InfoCircle" class="me-2" />
+                                    Este supervisor no tiene recursos asignados actualmente.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Resumen Global -->
+        <div class="row mt-4">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <Icon Name="IconName.BarChart" class="me-2" />
+                            Resumen Global de Supervisión
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <Grid TItem="RecursoSupervisorDTO"
+                              Class="table table-hover table-striped table-sm"
+                              Data="relacionesSupervision"
+                              AllowPaging="true"
+                              PageSize="10"
+                              AllowSorting="true"
+                              Responsive="true">
+                            <GridColumns>
+                                <GridColumn TItem="RecursoSupervisorDTO" HeaderText="Supervisor" PropertyName="NombreSupervisor" SortKeySelector="item => item.NombreSupervisor">
+                                    <div>
+                                        <strong>@context.NombreSupervisor</strong><br>
+                                        <small class="text-muted">@context.RolSupervisor</small>
+                                    </div>
+                                </GridColumn>
+                                <GridColumn TItem="RecursoSupervisorDTO" HeaderText="Supervisado" PropertyName="NombreSupervisado" SortKeySelector="item => item.NombreSupervisado">
+                                    <div>
+                                        <strong>@context.NombreSupervisado</strong><br>
+                                        <small class="text-muted">@context.RolSupervisado</small>
+                                    </div>
+                                </GridColumn>
+                                <GridColumn TItem="RecursoSupervisorDTO" HeaderText="Fecha Asignación" PropertyName="FechaAsignacion" SortKeySelector="item => item.FechaAsignacion">
+                                    @context.FechaAsignacion.ToString("dd/MM/yyyy")
+                                </GridColumn>
+                                <GridColumn TItem="RecursoSupervisorDTO" HeaderText="Estado" PropertyName="Activo">
+                                    <span class="badge @(context.Activo ? "bg-success" : "bg-secondary")">
+                                        @(context.Activo ? "Activo" : "Inactivo")
+                                    </span>
+                                </GridColumn>
+                                <GridColumn TItem="RecursoSupervisorDTO" HeaderText="Observaciones">
+                                    @(string.IsNullOrEmpty(context.Observaciones) ? "Sin observaciones" : context.Observaciones)
+                                </GridColumn>
+                            </GridColumns>
+                        </Grid>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información para usuarios sin permisos de escritura -->
+        @if (!AuthState.UserHasPermission("SUPERVISION_WRITE"))
+        {
+            <div class="alert alert-info mt-3">
+                <Icon Name="IconName.InfoCircle" class="me-2" />
+                <strong>Modo solo lectura:</strong> Puedes consultar las relaciones de supervisión, pero no realizar modificaciones.
+            </div>
+        }
+    </div>
+
+    <!-- Toast para mensajes -->
+    <Toasts class="p-3" Messages="messages" Placement="ToastsPlacement.TopRight" />
+</WebGrillaBlazor.Components.AuthorizeView>
+
+@code {
+    private List<RecursoSimpleDTO> recursosDisponibles = new();
+    private List<RecursoSimpleDTO> recursosSupervisados = new();
+    private List<RecursoSupervisorDTO> relacionesSupervision = new();
+    private List<ToastMessage> messages = new();
+
+    private int supervisorSeleccionadoId = 0;
+    private int supervisadoSeleccionadoId = 0;
+    private string observacionesAsignacion = string.Empty;
+    private bool isProcessing = false;
+
+    private RecursoSimpleDTO? supervisorSeleccionado = null;
+
+    private List<RecursoSimpleDTO> recursosDisponiblesFiltrados =>
+        recursosDisponibles.Where(r => 
+            r.IdRecurso != supervisorSeleccionadoId && 
+            !recursosSupervisados.Any(s => s.IdRecurso == r.IdRecurso)).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("Supervision: Inicializando página...");
+        Console.WriteLine($"   - Usuario: {AuthState.CurrentUser?.NombreCompleto}");
+        Console.WriteLine($"   - Puede acceder: {AuthState.UserCanAccess("SUPERVISION")}");
+        Console.WriteLine($"   - Permisos escritura: {AuthState.UserHasPermission("SUPERVISION_WRITE")}");
+
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        try
+        {
+            // Cargar recursos disponibles
+            recursosDisponibles = (await ApiClientSupervisor.GetRecursosDisponiblesAsync()).ToList();
+            
+            // Cargar relaciones globales de supervisión
+            relacionesSupervision = (await ApiClientSupervisor.GetAllAsync()).ToList();
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error cargando datos: {ex.Message}");
+            ShowMessage($"Error cargando datos: {ex.Message}", ToastType.Danger);
+        }
+    }
+
+    private async Task OnSupervisorSeleccionado(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int idSupervisor))
+        {
+            supervisorSeleccionadoId = idSupervisor;
+            
+            if (idSupervisor > 0)
+            {
+                supervisorSeleccionado = recursosDisponibles.FirstOrDefault(r => r.IdRecurso == idSupervisor);
+                await CargarRecursosSupervisados();
+            }
+            else
+            {
+                supervisorSeleccionado = null;
+                recursosSupervisados.Clear();
+            }
+            
+            // Limpiar selección de supervisado
+            supervisadoSeleccionadoId = 0;
+            observacionesAsignacion = string.Empty;
+            
+            StateHasChanged();
+        }
+    }
+
+    private async Task CargarRecursosSupervisados()
+    {
+        if (supervisorSeleccionadoId > 0)
+        {
+            try
+            {
+                var supervisionView = await ApiClientSupervisor.GetSupervisionViewAsync(supervisorSeleccionadoId);
+                if (supervisionView != null)
+                {
+                    recursosSupervisados = supervisionView.RecursosSupervisados;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error cargando supervisados: {ex.Message}");
+                ShowMessage($"Error cargando supervisados: {ex.Message}", ToastType.Danger);
+            }
+        }
+    }
+
+    private async Task AsignarSupervisado()
+    {
+        if (supervisorSeleccionadoId == 0 || supervisadoSeleccionadoId == 0)
+        {
+            ShowMessage("Seleccione supervisor y supervisado", ToastType.Warning);
+            return;
+        }
+
+        if (supervisorSeleccionadoId == supervisadoSeleccionadoId)
+        {
+            ShowMessage("Un recurso no puede supervisarse a sí mismo", ToastType.Warning);
+            return;
+        }
+
+        isProcessing = true;
+        StateHasChanged();
+
+        try
+        {
+            var resultado = await ApiClientSupervisor.AsignarSupervisadoAsync(
+                supervisorSeleccionadoId, 
+                supervisadoSeleccionadoId, 
+                observacionesAsignacion);
+
+            if (resultado)
+            {
+                ShowMessage("Supervisado asignado correctamente", ToastType.Success);
+                
+                // Limpiar formulario
+                supervisadoSeleccionadoId = 0;
+                observacionesAsignacion = string.Empty;
+                
+                // Recargar datos
+                await CargarRecursosSupervisados();
+                await CargarDatos();
+            }
+            else
+            {
+                ShowMessage("No se pudo asignar el supervisado. Verifique que no exista ya la relación.", ToastType.Danger);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error asignando supervisado: {ex.Message}");
+            ShowMessage($"Error asignando supervisado: {ex.Message}", ToastType.Danger);
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DesasignarSupervisado(int idSupervisado)
+    {
+        if (supervisorSeleccionadoId == 0)
+        {
+            ShowMessage("No hay supervisor seleccionado", ToastType.Warning);
+            return;
+        }
+
+        try
+        {
+            var resultado = await ApiClientSupervisor.DesasignarSupervisadoAsync(supervisorSeleccionadoId, idSupervisado);
+
+            if (resultado)
+            {
+                ShowMessage("Supervisado desasignado correctamente", ToastType.Success);
+                await CargarRecursosSupervisados();
+                await CargarDatos();
+            }
+            else
+            {
+                ShowMessage("No se pudo desasignar el supervisado", ToastType.Danger);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error desasignando supervisado: {ex.Message}");
+            ShowMessage($"Error desasignando supervisado: {ex.Message}", ToastType.Danger);
+        }
+    }
+
+    private void ShowMessage(string message, ToastType toastType)
+    {
+        var toastMessage = new ToastMessage
+        {
+            Type = toastType,
+            Title = toastType switch
+            {
+                ToastType.Success => "Éxito",
+                ToastType.Danger => "Error",
+                ToastType.Warning => "Advertencia",
+                _ => "Información"
+            },
+            HelpText = DateTime.Now.ToString("HH:mm:ss"),
+            Message = message,
+            AutoHide = true
+        };
+
+        messages.Add(toastMessage);
+        StateHasChanged();
+    }
+}

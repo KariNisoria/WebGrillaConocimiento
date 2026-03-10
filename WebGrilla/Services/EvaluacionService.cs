@@ -5,27 +5,6 @@ using WebGrilla.Repository;
 
 namespace WebGrilla.Services
 {
-    public interface IEvaluacionService
-    {
-        Task<List<EvaluacionDTO>> GetAllAsync();
-        Task<EvaluacionDTO?> GetByIdAsync(int id);
-        Task<EvaluacionDTO> CreateAsync(EvaluacionDTO evaluacionDto);
-        Task<EvaluacionDTO> CreateAsync(EvaluacionDTO evaluacionDto, bool generarConocimientosAutomatico);
-        Task<EvaluacionDTO> UpdateAsync(int id, EvaluacionDTO evaluacionDto);
-        Task<bool> DeleteAsync(int id);
-        Task<EvaluacionDTO?> GetEvaluacionActivaAsync();
-        Task<EvaluacionDTO?> GetEvaluacionActivaPorRecursoAsync(int idRecurso);
-        Task<List<EvaluacionDTO>> GetEvaluacionesPorRecursoAsync(int idRecurso);
-        Task<EvaluacionDTO> IniciarEvaluacionParaRecursoAsync(int idRecurso, int idGrilla, string descripcion);
-        Task<List<ConocimientoRecursoDTO>> GenerarConocimientosTemporalesAsync(int idEvaluacion, int idRecurso, int idGrilla);
-        
-        // Nuevos métodos para evaluación global
-        Task<List<EvaluacionDTO>> CrearEvaluacionGlobalAsync(int idGrilla, string descripcion, DateTime fechaFin);
-        Task<List<EvaluacionDTO>> GetEvaluacionesGlobalesAsync();
-        Task<List<EvaluacionDTO>> GetEvaluacionesPorGrillaYPeriodoAsync(int idGrilla, DateTime fechaInicio, DateTime fechaFin);
-        Task<EvaluacionGlobalResumenDTO> GetResumenEvaluacionGlobalAsync(int idGrilla, DateTime fechaInicio, DateTime fechaFin);
-    }
-
     public class EvaluacionService : IEvaluacionService
     {
         private readonly IEvaluacionRepository _repository;
@@ -62,7 +41,6 @@ namespace WebGrilla.Services
 
         public async Task<EvaluacionDTO> CreateAsync(EvaluacionDTO evaluacionDto)
         {
-            // Por defecto, NO generar conocimientos automáticamente
             return await CreateAsync(evaluacionDto, false);
         }
 
@@ -71,7 +49,6 @@ namespace WebGrilla.Services
             var evaluacion = _mapper.Map<Evaluacion>(evaluacionDto);
             var created = await _repository.AddAsync(evaluacion);
             
-            // Solo crear registros de conocimiento si se solicita explícitamente
             if (generarConocimientosAutomatico)
             {
                 await CrearConocimientosParaEvaluacionAsync(created.IdEvaluacion, created.IdRecurso, created.IdGrilla);
@@ -105,11 +82,22 @@ namespace WebGrilla.Services
             return _mapper.Map<List<EvaluacionDTO>>(evaluaciones);
         }
 
+        public async Task<List<EvaluacionDTO>> GetEvaluacionesPorSupervisionAsync(int idSupervisor)
+        {
+            var evaluaciones = await _repository.GetEvaluacionesPorSupervisionAsync(idSupervisor);
+            return _mapper.Map<List<EvaluacionDTO>>(evaluaciones);
+        }
+
+        public async Task<List<EvaluacionDTO>> GetEvaluacionesPorRecursoYSupervisionAsync(int idRecurso)
+        {
+            var evaluaciones = await _repository.GetEvaluacionesPorRecursoYSupervisionAsync(idRecurso);
+            return _mapper.Map<List<EvaluacionDTO>>(evaluaciones);
+        }
+
         public async Task<EvaluacionDTO> IniciarEvaluacionParaRecursoAsync(int idRecurso, int idGrilla, string descripcion)
         {
-            // Crear nueva evaluación específica para este recurso y grilla
             var fechaInicio = DateTime.Now;
-            var fechaFin = fechaInicio.AddDays(10); // 10 días de tolerancia
+            var fechaFin = fechaInicio.AddDays(10);
 
             var evaluacionDto = new EvaluacionDTO
             {
@@ -120,7 +108,6 @@ namespace WebGrilla.Services
                 IdGrilla = idGrilla
             };
 
-            // No generar conocimientos automáticamente al iniciar evaluación
             return await CreateAsync(evaluacionDto, false);
         }
 
@@ -130,23 +117,16 @@ namespace WebGrilla.Services
             return evaluacion != null ? _mapper.Map<EvaluacionDTO>(evaluacion) : null;
         }
 
-        /// <summary>
-        /// Genera una lista temporal de ConocimientoRecurso para todos los subtemas de una grilla
-        /// sin guardarlos en la base de datos
-        /// </summary>
         public async Task<List<ConocimientoRecursoDTO>> GenerarConocimientosTemporalesAsync(int idEvaluacion, int idRecurso, int idGrilla)
         {
-            // Obtener todos los subtemas de la grilla
             var grillaSubtemas = await _grillaSubtemaRepository.GetByGrillaAsync(idGrilla);
-
             var conocimientosTemporales = new List<ConocimientoRecursoDTO>();
 
-            // Crear registros temporales para cada subtema
             foreach (var grillaSubtema in grillaSubtemas)
             {
                 var conocimientoTemporal = new ConocimientoRecursoDTO
                 {
-                    IdConocimientoRecurso = 0, // 0 indica que no está guardado en BD
+                    IdConocimientoRecurso = 0,
                     IdRecurso = idRecurso,
                     IdGrilla = idGrilla,
                     IdSubtema = grillaSubtema.IdSubtema,
@@ -155,7 +135,6 @@ namespace WebGrilla.Services
                     ValorTecnico = 0,
                     ValorFuncionalVerif = null,
                     ValorTecnicoVerif = null,
-                    // Información adicional para mostrar en la UI
                     NombreSubtema = grillaSubtema.Nombre
                 };
 
@@ -165,20 +144,15 @@ namespace WebGrilla.Services
             return conocimientosTemporales;
         }
 
-        /// <summary>
-        /// Crea evaluaciones automáticas para todos los recursos activos con la grilla especificada
-        /// </summary>
         public async Task<List<EvaluacionDTO>> CrearEvaluacionGlobalAsync(int idGrilla, string descripcion, DateTime fechaFin)
         {
             var fechaInicio = DateTime.Now;
             var evaluacionesCreadas = new List<EvaluacionDTO>();
 
-            // Obtener todos los recursos activos
             var recursos = await _recursoRepository.GetAllAsync();
             
             foreach (var recurso in recursos)
             {
-                // Crear evaluación para cada recurso
                 var evaluacionDto = new EvaluacionDTO
                 {
                     Descripcion = $"{descripcion} - {recurso.Nombre} {recurso.Apellido}",
@@ -195,27 +169,19 @@ namespace WebGrilla.Services
             return evaluacionesCreadas;
         }
 
-        /// <summary>
-        /// Obtiene todas las evaluaciones que fueron creadas como parte de una evaluación global
-        /// (evaluaciones con la misma grilla, descripción base y fechas similares)
-        /// </summary>
         public async Task<List<EvaluacionDTO>> GetEvaluacionesGlobalesAsync()
         {
             var evaluaciones = await _repository.GetAllAsync();
             
-            // Agrupar evaluaciones por características similares (misma fecha inicio y grilla)
             var evaluacionesGlobales = evaluaciones
                 .GroupBy(e => new { e.IdGrilla, Fecha = e.FechaInicio.Date })
-                .Where(g => g.Count() > 1) // Solo grupos con múltiples evaluaciones (evaluación global)
+                .Where(g => g.Count() > 1)
                 .SelectMany(g => g)
                 .ToList();
 
             return _mapper.Map<List<EvaluacionDTO>>(evaluacionesGlobales);
         }
 
-        /// <summary>
-        /// Obtiene evaluaciones por grilla y período específico
-        /// </summary>
         public async Task<List<EvaluacionDTO>> GetEvaluacionesPorGrillaYPeriodoAsync(int idGrilla, DateTime fechaInicio, DateTime fechaFin)
         {
             var evaluaciones = await _repository.GetAllAsync();
@@ -229,9 +195,6 @@ namespace WebGrilla.Services
             return _mapper.Map<List<EvaluacionDTO>>(evaluacionesFiltradas);
         }
 
-        /// <summary>
-        /// Obtiene un resumen de la evaluación global con estadísticas
-        /// </summary>
         public async Task<EvaluacionGlobalResumenDTO> GetResumenEvaluacionGlobalAsync(int idGrilla, DateTime fechaInicio, DateTime fechaFin)
         {
             var evaluaciones = await GetEvaluacionesPorGrillaYPeriodoAsync(idGrilla, fechaInicio, fechaFin);
@@ -242,13 +205,12 @@ namespace WebGrilla.Services
                 FechaInicio = fechaInicio,
                 FechaFin = fechaFin,
                 TotalEvaluaciones = evaluaciones.Count,
-                EvaluacionesCompletadas = 0, // Se calculará basado en conocimientos guardados
+                EvaluacionesCompletadas = 0,
                 EvaluacionesPendientes = evaluaciones.Count,
                 PorcentajeCompletitud = 0,
                 Evaluaciones = evaluaciones
             };
 
-            // Calcular completitud revisando conocimientos guardados
             foreach (var evaluacion in evaluaciones)
             {
                 var conocimientos = await _conocimientoRepository.GetByEvaluacionAndRecursoAsync(evaluacion.IdEvaluacion, evaluacion.IdRecurso);
@@ -268,10 +230,8 @@ namespace WebGrilla.Services
 
         private async Task CrearConocimientosParaEvaluacionAsync(int idEvaluacion, int idRecurso, int idGrilla)
         {
-            // Obtener todos los subtemas de la grilla
             var grillaSubtemas = await _grillaSubtemaRepository.GetByGrillaAsync(idGrilla);
 
-            // Crear registros de conocimiento para cada subtema para este recurso específico
             foreach (var grillaSubtema in grillaSubtemas)
             {
                 var conocimiento = new ConocimientoRecurso

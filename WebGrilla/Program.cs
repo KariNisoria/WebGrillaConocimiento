@@ -109,6 +109,10 @@ builder.Services.AddScoped<IConocimientoRecursoService, ConocimientoRecursoServi
 // NUEVO: Registrar servicio de autenticación
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
+// NUEVO: Registrar servicio de supervisión
+builder.Services.AddScoped<IRecursoSupervisorRepository, RecursoSupervisorRepository>();
+builder.Services.AddScoped<IRecursoSupervisorService, RecursoSupervisorService>();
+
 var app = builder.Build();
 
 //------

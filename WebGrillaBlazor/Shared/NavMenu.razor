@@ -54,6 +54,25 @@
 
         @if (AuthState.IsAuthenticated)
         {
+            <!-- DEBUG: Mostrar información del usuario -->
+            @if (isDebugMode)
+            {
+                <div class="alert alert-info m-2 small">
+                    <strong>Debug:</strong><br>
+                    Usuario: @AuthState.CurrentUser?.NombreCompleto<br>
+                    Rol: @AuthState.CurrentUser?.NombreRol<br>
+                    Permisos Admin: @AuthState.UserHasPermission("PERMISOS_ADMIN")<br>
+                    Supervision: @AuthState.UserCanAccess("SUPERVISION")<br>
+                    <button class="btn btn-sm btn-outline-primary" @onclick="() => isDebugMode = false">Ocultar Debug</button>
+                </div>
+            }
+            else
+            {
+                <div class="nav-item px-3">
+                    <button class="btn btn-sm btn-outline-light" @onclick="() => isDebugMode = true">Debug</button>
+                </div>
+            }
+
             <!-- Separador -->
             <div class="nav-section-header px-3 mt-3 mb-2">
                 <small class="text-muted fw-semibold">NAVEGACIÓN</small>
@@ -68,7 +87,7 @@
 
             <!-- Separador -->
             <div class="nav-section-header px-3 mt-3 mb-2">
-                <small class="text-muted fw-semibold">GESTIÓN DE DATOS</small>
+                <small class="text-muted fw-semibold">GESTIÓN DE RECURSOS</small>
             </div>
 
             <!-- Recursos - Solo lectura para todos, escritura para admin/manager -->
@@ -80,6 +99,21 @@
                     </NavLink>
                 </div>
             }
+
+            <!-- Supervisión - Con permiso específico -->
+            @if (AuthState.UserCanAccess("SUPERVISION") || AuthState.CurrentUser?.NombreRol == "Administrador")
+            {
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="supervision">
+                        <span class="bi bi-diagram-3" aria-hidden="true"></span> Supervisión
+                    </NavLink>
+                </div>
+            }
+
+            <!-- Separador -->
+            <div class="nav-section-header px-3 mt-3 mb-2">
+                <small class="text-muted fw-semibold">GESTIÓN DE DATOS</small>
+            </div>
 
             <!-- Roles - Solo admin y manager -->
             @if (AuthState.UserCanAccess("ROLES"))
@@ -162,7 +196,7 @@
             </div>
 
             <!-- Evaluaciones -->
-            @if (AuthState.UserCanAccess("EVALUACIONES"))
+            @if (AuthState.CanAccessEvaluations())
             {
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="evaluaciones">
@@ -182,14 +216,14 @@
             }
 
             <!-- Separador - Solo para administradores -->
-            @if (AuthState.UserHasPermission("PERMISOS_ADMIN") || AuthState.UserHasPermission("CONFIGURACION_SISTEMA"))
+            @if (AuthState.UserHasPermission("PERMISOS_ADMIN") || AuthState.UserHasPermission("CONFIGURACION_SISTEMA") || AuthState.CurrentUser?.NombreRol == "Administrador")
             {
                 <div class="nav-section-header px-3 mt-3 mb-2">
                     <small class="text-muted fw-semibold">ADMINISTRACIÓN</small>
                 </div>
 
                 <!-- Gestión de Permisos -->
-                @if (AuthState.UserHasPermission("PERMISOS_ADMIN"))
+                @if (AuthState.UserHasPermission("PERMISOS_ADMIN") || AuthState.CurrentUser?.NombreRol == "Administrador")
                 {
                     <div class="nav-item px-3">
                         <NavLink class="nav-link" href="permisos">
@@ -262,6 +296,7 @@
 
 @code {
     private bool collapseNavMenu = true;
+    private bool isDebugMode = false;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 

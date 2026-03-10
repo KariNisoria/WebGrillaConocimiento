@@ -312,5 +312,47 @@ namespace WebGrillaBlazor.ApiClient
                 return false;
             }
         }
+
+        public async Task<List<EvaluacionDTO>> GetEvaluacionesPorSupervisionAsync(int idSupervisor)
+        {
+            try
+            {
+                Console.WriteLine($"GET evaluaciones por supervision: {_endpoint}/por-supervision/{idSupervisor}");
+                var response = await _httpClient.GetAsync($"{_baseUrl}{_endpoint}/por-supervision/{idSupervisor}");
+                response.EnsureSuccessStatusCode();
+                
+                var jsonString = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<List<EvaluacionDTO>>(jsonString, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? new List<EvaluacionDTO>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en GetEvaluacionesPorSupervisionAsync: {ex.Message}");
+                return new List<EvaluacionDTO>();
+            }
+        }
+
+        public async Task<List<EvaluacionDTO>> GetMisEvaluacionesAsync(int idRecurso)
+        {
+            try
+            {
+                Console.WriteLine($"GET mis evaluaciones: {_endpoint}/mis-evaluaciones/{idRecurso}");
+                var response = await _httpClient.GetAsync($"{_baseUrl}{_endpoint}/mis-evaluaciones/{idRecurso}");
+                response.EnsureSuccessStatusCode();
+                
+                var jsonString = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<List<EvaluacionDTO>>(jsonString, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? new List<EvaluacionDTO>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en GetMisEvaluacionesAsync: {ex.Message}");
+                return new List<EvaluacionDTO>();
+            }
+        }
     }
 }

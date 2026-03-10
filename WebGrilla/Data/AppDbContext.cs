@@ -27,6 +27,8 @@ namespace WebGrilla.Data
         public DbSet<ConocimientoRecurso> ConocimientoRecurso { get; set; }
         // Sexta
         public DbSet<TipoDocumento> TiposDocumentos { get; set; }
+        // Supervisión
+        public DbSet<RecursoSupervisor> RecursosSupervisores { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -256,6 +258,34 @@ namespace WebGrilla.Data
                 .WithMany(x => x.Recursos)
                 .HasForeignKey(x => x.IdTipoDocumento);
 
+            /*RecursoSupervisor - Relación muchos a muchos para supervisión*/
+
+            modelBuilder.Entity<RecursoSupervisor>(entity =>
+            {
+                entity.HasKey(x => x.IdRecursoSupervisor);
+                entity.Property(x => x.FechaAsignacion).IsRequired();
+                entity.Property(x => x.Activo).IsRequired().HasDefaultValue(true);
+                entity.Property(x => x.Observaciones).HasMaxLength(500);
+                
+                // Índice único para evitar duplicados
+                entity.HasIndex(x => new { x.IdRecursoSupervisorAsignado, x.IdRecursoSupervisado })
+                      .IsUnique()
+                      .HasDatabaseName("IX_RecursoSupervisor_Unique");
+            });
+
+            // Relación: un recurso puede supervisar a muchos
+            modelBuilder.Entity<RecursoSupervisor>()
+                .HasOne(x => x.RecursoSupervisorAsignado)
+                .WithMany(x => x.RecursosSupervisados)
+                .HasForeignKey(x => x.IdRecursoSupervisorAsignado)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Relación: un recurso puede ser supervisado por muchos
+            modelBuilder.Entity<RecursoSupervisor>()
+                .HasOne(x => x.RecursoSupervisado)
+                .WithMany(x => x.Supervisores)
+                .HasForeignKey(x => x.IdRecursoSupervisado)
+                .OnDelete(DeleteBehavior.NoAction);
 
             base.OnModelCreating(modelBuilder);
         }

@@ -84,7 +84,7 @@
                                         <ul class="small">
                                             <li>RECURSOS, ROLES, GRILLAS, TEMAS, SUBTEMAS</li>
                                             <li>EVALUACIONES, CLIENTES, EQUIPOS, TIPOS_DOCUMENTO</li>
-                                            <li>EVALUACIONES_GLOBALES_READ (especial)</li>
+                                            <li>SUPERVISION, EVALUACIONES_GLOBALES</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -130,7 +130,7 @@
                                         </td>
                                         <td>
                                             <span class="badge bg-success">Todos los módulos</span>
-                                            <br><small>READ, WRITE, DELETE en todos los módulos</small>
+                                            <br><small>READ, WRITE, DELETE en todos los módulos + SUPERVISION</small>
                                         </td>
                                         <td>
                                             <span class="badge bg-success">Configurado</span>
@@ -148,7 +148,7 @@
                                         </td>
                                         <td>
                                             <span class="badge bg-info">Gestión</span>
-                                            <br><small>READ/WRITE en la mayoría, READ en roles y equipos</small>
+                                            <br><small>READ/WRITE en la mayoría, READ en roles y equipos + SUPERVISION</small>
                                         </td>
                                         <td>
                                             <span class="badge bg-success">Configurado</span>
@@ -199,72 +199,12 @@
                             </table>
                         </div>
 
-                        <!-- Consultas SQL útiles -->
-                        <div class="mt-4">
-                            <h5>?? Consultas SQL Útiles</h5>
-                            <div class="accordion" id="sqlQueries">
-                                <div class="accordion-item">
-                                    <h2 class="accordion-header">
-                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#query1">
-                                            Ver todos los permisos por rol
-                                        </button>
-                                    </h2>
-                                    <div id="query1" class="accordion-collapse collapse" data-bs-parent="#sqlQueries">
-                                        <div class="accordion-body">
-                                            <div class="bg-dark text-white p-3 rounded">
-                                                <code>
-SELECT r.Nombre as Rol, rp.CodigoPermiso, rp.Descripcion, rp.Activo<br>
-FROM RolPermisos rp<br>
-INNER JOIN Roles r ON r.IdRol = rp.IdRol<br>
-ORDER BY r.Nombre, rp.CodigoPermiso
-                                                </code>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="accordion-item">
-                                    <h2 class="accordion-header">
-                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#query2">
-                                            Agregar permiso a un rol
-                                        </button>
-                                    </h2>
-                                    <div id="query2" class="accordion-collapse collapse" data-bs-parent="#sqlQueries">
-                                        <div class="accordion-body">
-                                            <div class="bg-dark text-white p-3 rounded">
-                                                <code>
-INSERT INTO RolPermisos (IdRol, CodigoPermiso, Descripcion)<br>
-VALUES (<br>
-&nbsp;&nbsp;(SELECT IdRol FROM Roles WHERE Nombre = 'NombreRol'),<br>
-&nbsp;&nbsp;'MODULO_ACTION',<br>
-&nbsp;&nbsp;'Descripción del permiso'<br>
-)
-                                                </code>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="accordion-item">
-                                    <h2 class="accordion-header">
-                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#query3">
-                                            Desactivar permiso
-                                        </button>
-                                    </h2>
-                                    <div id="query3" class="accordion-collapse collapse" data-bs-parent="#sqlQueries">
-                                        <div class="accordion-body">
-                                            <div class="bg-dark text-white p-3 rounded">
-                                                <code>
-UPDATE RolPermisos <br>
-SET Activo = 0<br>
-WHERE IdRol = (SELECT IdRol FROM Roles WHERE Nombre = 'NombreRol')<br>
-AND CodigoPermiso = 'MODULO_ACTION'
-                                                </code>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <!-- Nota informativa -->
+                        <div class="alert alert-light mt-4">
+                            <Icon Name="IconName.InfoCircle" class="me-2" />
+                            <strong>Nota:</strong> Para configuraciones avanzadas de permisos, utiliza la página de 
+                            <a href="/admin/permisos-roles" class="alert-link">Configuración de Permisos</a> 
+                            donde puedes gestionar los permisos de forma detallada.
                         </div>
 
                     </div>
@@ -294,7 +234,7 @@ AND CodigoPermiso = 'MODULO_ACTION'
         await Task.Delay(500);
         
         totalRoles = 4; // Admin, Manager, Evaluador, Desarrollador
-        totalPermisos = 50; // Estimado basado en el script
+        totalPermisos = 55; // Estimado basado en el script + supervision
         fechaUltimaActualizacion = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
         
         StateHasChanged();

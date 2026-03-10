@@ -1,23 +1,84 @@
 @page "/evaluaciones"
 @using WebGrillaBlazor.DTOs
 @using WebGrillaBlazor.ApiClient
+@using WebGrillaBlazor.Services
 @inject ApiClientEvaluacion EvaluacionClient
 @inject ApiClientGeneric<RecursoDTO> RecursoClient
 @inject ApiClientGeneric<GrillaDTO> GrillaClient
+@inject AuthStateService AuthState
 @inject NavigationManager Navigation
 
 <div class="container-fluid">
     <div class="row mb-3">
         <div class="col">
             <h3>Gestión de Evaluaciones</h3>
-            <small class="text-muted">Gestiona y monitorea todas las evaluaciones del sistema</small>
+            <small class="text-muted">
+                @if (soloSupervision && AuthState.CanSupervise())
+                {
+                    <Icon Name="IconName.InfoCircle" /> @("Mostrando solo evaluaciones de recursos que supervisa: ") @AuthState.GetUserDisplayName()
+                }
+                else if (AuthState.CanViewOwnEvaluationsOnly())
+                {
+                    <Icon Name="IconName.InfoCircle" /> @("Mostrando solo sus evaluaciones: ") @AuthState.GetUserDisplayName()
+                }
+                else
+                {
+                    @("Gestiona y monitorea todas las evaluaciones del sistema")
+                }
+            </small>
         </div>
         <div class="col-auto">
-            <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" @onclick="RefrescarDatos">
-                <Icon Name="IconName.ArrowClockwise" /> Refrescar
-            </Button>
+            @if (AuthState.CanSupervise() && !soloSupervision)
+            {
+                <Button Color="ButtonColor.Info" Size="ButtonSize.Small" @onclick="MostrarSoloSupervision" class="me-2">
+                    <Icon Name="IconName.PersonCheck" /> Solo Mis Supervisados
+                </Button>
+            }
+            @if (soloSupervision && AuthState.CanViewAllEvaluations())
+            {
+                <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" @onclick="MostrarTodasLasEvaluaciones" class="me-2">
+                    <Icon Name="IconName.People" /> Todas las Evaluaciones
+                </Button>
+            }
+            @if (!AuthState.CanViewOwnEvaluationsOnly())
+            {
+                <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" @onclick="RefrescarDatos">
+                    <Icon Name="IconName.ArrowClockwise" /> Refrescar
+                </Button>
+            }
+            else
+            {
+                <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" @onclick="RefrescarDatos">
+                    <Icon Name="IconName.ArrowClockwise" /> Refrescar Mis Evaluaciones
+                </Button>
+            }
         </div>
     </div>
+
+    <!-- Alerta de supervisión -->
+    @if (soloSupervision && AuthState.CanSupervise())
+    {
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <Icon Name="IconName.InfoCircle" class="me-2" />
+                    <strong>Modo Supervisión:</strong> Solo se muestran evaluaciones de recursos bajo su supervisión.
+                    <button type="button" class="btn-close" @onclick="MostrarTodasLasEvaluaciones" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+    }
+    else if (AuthState.CanViewOwnEvaluationsOnly())
+    {
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="alert alert-primary">
+                    <Icon Name="IconName.InfoCircle" class="me-2" />
+                    <strong>Mis Evaluaciones:</strong> Solo se muestran sus propias evaluaciones.
+                </div>
+            </div>
+        </div>
+    }
 
     <!-- Filtros -->
     <div class="row mb-4">
@@ -44,7 +105,7 @@
                             <label for="filtroRecurso" class="form-label">Recurso</label>
                             <select class="form-select" id="filtroRecurso" @bind="recursoFiltroSeleccionado">
                                 <option value="0">Todos los recursos</option>
-                                @foreach (var recurso in recursos)
+                                @foreach (var recurso in recursosDisponibles)
                                 {
                                     <option value="@recurso.IdRecurso">@recurso.Nombre @recurso.Apellido</option>
                                 }
@@ -76,163 +137,179 @@
     </div>
 
     <!-- Sección para iniciar nueva evaluación -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <Icon Name="IconName.Plus" /> Iniciar Nueva Evaluación
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <!-- Tabs para Individual vs Global -->
-                    <ul class="nav nav-tabs mb-3" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link @(tipoEvaluacion == "individual" ? "active" : "")" 
-                                    @onclick='() => CambiarTipoEvaluacion("individual")' 
-                                    type="button">
-                                <Icon Name="IconName.Person" /> Evaluación Individual
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link @(tipoEvaluacion == "global" ? "active" : "")" 
-                                    @onclick='() => CambiarTipoEvaluacion("global")' 
-                                    type="button">
-                                <Icon Name="IconName.People" /> Evaluación Global
-                            </button>
-                        </li>
-                    </ul>
+    @if (!AuthState.CanViewOwnEvaluationsOnly())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <Icon Name="IconName.Plus" /> Iniciar Nueva Evaluación
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Tabs para Individual vs Global -->
+                        <ul class="nav nav-tabs mb-3" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link @(tipoEvaluacion == "individual" ? "active" : "")" 
+                                        @onclick='() => CambiarTipoEvaluacion("individual")' 
+                                        type="button">
+                                    <Icon Name="IconName.Person" /> Evaluación Individual
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link @(tipoEvaluacion == "global" ? "active" : "")" 
+                                        @onclick='() => CambiarTipoEvaluacion("global")' 
+                                        type="button">
+                                    <Icon Name="IconName.People" /> Evaluación Global
+                                </button>
+                            </li>
+                        </ul>
 
-                    <!-- Contenido del tab Individual -->
-                    @if (tipoEvaluacion == "individual")
-                    {
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label for="recursoEvaluacion" class="form-label">Recurso</label>
-                                    <select class="form-select" id="recursoEvaluacion" @bind="recursoSeleccionadoId">
-                                        <option value="0">Seleccionar recurso...</option>
-                                        @foreach (var recurso in recursos)
-                                        {
-                                            <option value="@recurso.IdRecurso">@recurso.Nombre @recurso.Apellido</option>
-                                        }
-                                    </select>
+                        <!-- Contenido del tab Individual -->
+                        @if (tipoEvaluacion == "individual")
+                        {
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="recursoEvaluacion" class="form-label">Recurso</label>
+                                        <select class="form-select" id="recursoEvaluacion" @bind="recursoSeleccionadoId">
+                                            <option value="0">Seleccionar recurso...</option>
+                                            @foreach (var recurso in recursosDisponibles)
+                                            {
+                                                <option value="@recurso.IdRecurso">@recurso.Nombre @recurso.Apellido</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="grillaEvaluacion" class="form-label">Grilla</label>
+                                        <select class="form-select" id="grillaEvaluacion" @bind="grillaSeleccionadaId">
+                                            <option value="0">Seleccionar grilla...</option>
+                                            @foreach (var grilla in grillas)
+                                            {
+                                                <option value="@grilla.IdGrilla">@grilla.Nombre</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="descripcionEvaluacion" class="form-label">Descripción</label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="descripcionEvaluacion" 
+                                               @bind="nuevaDescripcionEvaluacion"
+                                               placeholder="Ej: Evaluación Q1 2024" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="fechaFin" class="form-label">Fecha Fin</label>
+                                        <input type="datetime-local" 
+                                               class="form-control" 
+                                               id="fechaFin" 
+                                               @bind="fechaFinEvaluacion"
+                                               min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label for="grillaEvaluacion" class="form-label">Grilla</label>
-                                    <select class="form-select" id="grillaEvaluacion" @bind="grillaSeleccionadaId">
-                                        <option value="0">Seleccionar grilla...</option>
-                                        @foreach (var grilla in grillas)
-                                        {
-                                            <option value="@grilla.IdGrilla">@grilla.Nombre</option>
-                                        }
-                                    </select>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <Button Color="ButtonColor.Success" 
+                                            @onclick="CrearNuevaEvaluacion"
+                                            Disabled="@(string.IsNullOrWhiteSpace(nuevaDescripcionEvaluacion) || fechaFinEvaluacion <= DateTime.Now || grillaSeleccionadaId <= 0 || recursoSeleccionadoId <= 0)">
+                                        <Icon Name="IconName.PlayFill" /> Crear Evaluación Individual
+                                    </Button>
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label for="descripcionEvaluacion" class="form-label">Descripción</label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="descripcionEvaluacion" 
-                                           @bind="nuevaDescripcionEvaluacion"
-                                           placeholder="Ej: Evaluación Q1 2024" />
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label for="fechaFin" class="form-label">Fecha Fin</label>
-                                    <input type="datetime-local" 
-                                           class="form-control" 
-                                           id="fechaFin" 
-                                           @bind="fechaFinEvaluacion"
-                                           min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <Button Color="ButtonColor.Success" 
-                                        @onclick="CrearNuevaEvaluacion"
-                                        Disabled="@(string.IsNullOrWhiteSpace(nuevaDescripcionEvaluacion) || fechaFinEvaluacion <= DateTime.Now || grillaSeleccionadaId <= 0 || recursoSeleccionadoId <= 0)">
-                                    <Icon Name="IconName.PlayFill" /> Crear Evaluación Individual
-                                </Button>
-                            </div>
-                        </div>
-                    }
+                        }
 
-                    <!-- Contenido del tab Global -->
-                    @if (tipoEvaluacion == "global")
-                    {
-                        <div class="alert alert-info">
-                            <Icon Name="IconName.InfoCircle" class="me-2" />
-                            <strong>Evaluación Global:</strong> Se creará automáticamente una evaluación para todos los recursos en la base de datos.
-                        </div>
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="grillaEvaluacionGlobal" class="form-label">Grilla para Evaluación Global</label>
-                                    <select class="form-select" id="grillaEvaluacionGlobal" @bind="grillaGlobalSeleccionadaId">
-                                        <option value="0">Seleccionar grilla...</option>
-                                        @foreach (var grilla in grillas)
+                        <!-- Contenido del tab Global -->
+                        @if (tipoEvaluacion == "global")
+                        {
+                            <div class="alert alert-info">
+                                <Icon Name="IconName.InfoCircle" class="me-2" />
+                                <strong>Evaluación Global:</strong> Se creará automáticamente una evaluación para @(soloSupervision ? "todos los recursos bajo su supervisión" : "todos los recursos en la base de datos").
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="grillaEvaluacionGlobal" class="form-label">Grilla para Evaluación Global</label>
+                                        <select class="form-select" id="grillaEvaluacionGlobal" @bind="grillaGlobalSeleccionadaId">
+                                            <option value="0">Seleccionar grilla...</option>
+                                            @foreach (var grilla in grillas)
+                                            {
+                                                <option value="@grilla.IdGrilla">@grilla.Nombre</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="descripcionEvaluacionGlobal" class="form-label">Descripción Base</label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="descripcionEvaluacionGlobal" 
+                                               @bind="descripcionEvaluacionGlobal"
+                                               placeholder="Ej: Evaluación Global Q1 2024" />
+                                        <small class="text-muted">Se agregará el nombre del recurso automáticamente</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="fechaFinGlobal" class="form-label">Fecha Fin</label>
+                                        <input type="datetime-local" 
+                                               class="form-control" 
+                                               id="fechaFinGlobal" 
+                                               @bind="fechaFinEvaluacionGlobal"
+                                               min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <Button Color="ButtonColor.Warning" 
+                                            @onclick="CrearEvaluacionGlobal"
+                                            Disabled="@(string.IsNullOrWhiteSpace(descripcionEvaluacionGlobal) || fechaFinEvaluacionGlobal <= DateTime.Now || grillaGlobalSeleccionadaId <= 0 || creandoEvaluacionGlobal)">
+                                        @if (creandoEvaluacionGlobal)
                                         {
-                                            <option value="@grilla.IdGrilla">@grilla.Nombre</option>
+                                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
                                         }
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="descripcionEvaluacionGlobal" class="form-label">Descripción Base</label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="descripcionEvaluacionGlobal" 
-                                           @bind="descripcionEvaluacionGlobal"
-                                           placeholder="Ej: Evaluación Global Q1 2024" />
-                                    <small class="text-muted">Se agregará el nombre del recurso automáticamente</small>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="fechaFinGlobal" class="form-label">Fecha Fin</label>
-                                    <input type="datetime-local" 
-                                           class="form-control" 
-                                           id="fechaFinGlobal" 
-                                           @bind="fechaFinEvaluacionGlobal"
-                                           min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <Button Color="ButtonColor.Warning" 
-                                        @onclick="CrearEvaluacionGlobal"
-                                        Disabled="@(string.IsNullOrWhiteSpace(descripcionEvaluacionGlobal) || fechaFinEvaluacionGlobal <= DateTime.Now || grillaGlobalSeleccionadaId <= 0 || creandoEvaluacionGlobal)">
-                                    @if (creandoEvaluacionGlobal)
+                                        else
+                                        {
+                                            <Icon Name="IconName.Globe" />
+                                        }
+                                        Crear Evaluación Global para @(soloSupervision ? "Mis Supervisados" : "Todos los Recursos")
+                                    </Button>
+                                    @if (totalRecursosDisponibles > 0)
                                     {
-                                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                        <small class="text-muted d-block mt-1">
+                                            Se crearán <strong>@totalRecursosDisponibles evaluaciones</strong> (una por recurso)
+                                        </small>
                                     }
-                                    else
-                                    {
-                                        <Icon Name="IconName.Globe" />
-                                    }
-                                    Crear Evaluación Global para Todos los Recursos
-                                </Button>
-                                @if (totalRecursos > 0)
-                                {
-                                    <small class="text-muted d-block mt-1">
-                                        Se crearán <strong>@totalRecursos evaluaciones</strong> (una por recurso)
-                                    </small>
-                                }
+                                </div>
                             </div>
-                        </div>
-                    }
+                        }
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    }
+    else
+    {
+        <!-- Información para usuarios que solo pueden ver sus evaluaciones -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <Icon Name="IconName.InfoCircle" class="me-2" />
+                    <strong>Información:</strong> Como usuario final, puede ver sus evaluaciones asignadas abajo. 
+                    Para crear nuevas evaluaciones, contacte a su supervisor o administrador.
+                </div>
+            </div>
+        </div>
+    }
 
     <!-- Resumen de evaluaciones globales -->
     @if (resumenes.Any())
@@ -240,7 +317,19 @@
         <div class="row mb-4">
             <div class="col-12">
                 <h5>
-                    <Icon Name="IconName.BarChart" /> Todas las Evaluaciones
+                    <Icon Name="IconName.BarChart" /> 
+                    @if (soloSupervision && AuthState.CanSupervise()) 
+                    { 
+                        @("Evaluaciones de Mis Supervisados") 
+                    }
+                    else if (AuthState.CanViewOwnEvaluationsOnly())
+                    {
+                        @("Mis Evaluaciones")
+                    }
+                    else 
+                    { 
+                        @("Todas las Evaluaciones") 
+                    }
                 </h5>
             </div>
         </div>
@@ -410,9 +499,37 @@
                         else
                         {
                             <Icon Name="IconName.ExclamationTriangle" Size="IconSize.x2" />
-                            <p class="mt-2">No se encontraron evaluaciones</p>
+                            <p class="mt-2">
+                                @if (soloSupervision && AuthState.CanSupervise())
+                                {
+                                    @("No se encontraron evaluaciones para los recursos que supervisa")
+                                }
+                                else if (AuthState.CanViewOwnEvaluationsOnly())
+                                {
+                                    @("No tiene evaluaciones asignadas actualmente")
+                                }
+                                else if (!AuthState.CanViewAllEvaluations() && !AuthState.CanSupervise() && !AuthState.CanViewOwnEvaluationsOnly())
+                                {
+                                    @("No tiene permisos para ver evaluaciones")
+                                }
+                                else
+                                {
+                                    @("No se encontraron evaluaciones")
+                                }
+                            </p>
                             <small class="text-muted">
-                                Las evaluaciones aparecerán aquí cuando se crean desde el panel de arriba.
+                                @if (AuthState.CanViewAllEvaluations() || AuthState.CanSupervise())
+                                {
+                                    @("Las evaluaciones aparecerán aquí cuando se crean desde el panel de arriba.")
+                                }
+                                else if (AuthState.CanViewOwnEvaluationsOnly())
+                                {
+                                    @("Las evaluaciones asignadas por su supervisor aparecerán aquí.")
+                                }
+                                else
+                                {
+                                    @("Contacte al administrador para obtener permisos de acceso.")
+                                }
                             </small>
                         }
                     </div>
@@ -437,12 +554,14 @@
 
 @code {
     private List<RecursoDTO> recursos = new();
+    private List<RecursoDTO> recursosDisponibles = new(); // Los recursos que puede ver según supervisión
     private List<GrillaDTO> grillas = new();
     private List<EvaluacionDTO> evaluacionesHistorial = new();
     private List<EvaluacionGlobalResumenDTO> resumenes = new();
     private EvaluacionDTO? evaluacionActiva;
     
-    // Filtros
+    // Filtros y modo supervisión
+    private bool soloSupervision = false;
     private int grillaFiltroSeleccionada = 0;
     private int recursoFiltroSeleccionado = 0;
     private DateTime fechaDesde = DateTime.Now.AddDays(-30);
@@ -472,10 +591,33 @@
     private string tipoToast = "success";
 
     // Propiedades calculadas
-    private int totalRecursos => recursos.Count;
+    private int totalRecursosDisponibles => recursosDisponibles.Count;
 
     protected override async Task OnInitializedAsync()
     {
+        // Determinar qué tipo de vista mostrar
+        if (AuthState.CanViewAllEvaluations())
+        {
+            // Administrador: puede ver todas las evaluaciones
+            soloSupervision = false;
+        }
+        else if (AuthState.CanSupervise())
+        {
+            // Supervisor: puede ver sus supervisados y cambiar vista
+            soloSupervision = true;
+        }
+        else if (AuthState.CanViewOwnEvaluationsOnly())
+        {
+            // Usuario normal: solo sus propias evaluaciones
+            soloSupervision = false; // Usaremos un filtro especial
+        }
+        else
+        {
+            // Sin permisos - redireccionar
+            Navigation.NavigateTo("/", forceLoad: true);
+            return;
+        }
+        
         await CargarDatos();
     }
 
@@ -509,11 +651,58 @@
         try
         {
             recursos = await RecursoClient.GetAllAsync();
+            await DeterminarRecursosDisponibles();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error al cargar recursos: {ex.Message}");
             recursos = new List<RecursoDTO>();
+            recursosDisponibles = new List<RecursoDTO>();
+        }
+    }
+
+    private async Task DeterminarRecursosDisponibles()
+    {
+        recursosDisponibles.Clear();
+        
+        if (soloSupervision && AuthState.CanSupervise())
+        {
+            // Solo mostrar recursos supervisados
+            try
+            {
+                var evaluacionesSupervisadas = await EvaluacionClient.GetEvaluacionesPorSupervisionAsync(AuthState.GetCurrentUserId());
+                var idRecursosSupervisados = evaluacionesSupervisadas.Select(e => e.IdRecurso).Distinct().ToList();
+                
+                recursosDisponibles = recursos.Where(r => idRecursosSupervisados.Contains(r.IdRecurso)).ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al obtener recursos supervisados: {ex.Message}");
+                recursosDisponibles = new List<RecursoDTO>();
+            }
+        }
+        else if (!soloSupervision && AuthState.CanViewAllEvaluations())
+        {
+            // Mostrar todos los recursos (solo si tiene permiso para ver todas las evaluaciones)
+            recursosDisponibles = recursos.ToList();
+        }
+        else if (AuthState.CanViewOwnEvaluationsOnly())
+        {
+            // Solo mostrar al usuario actual
+            var usuarioActual = recursos.FirstOrDefault(r => r.IdRecurso == AuthState.GetCurrentUserId());
+            if (usuarioActual != null)
+            {
+                recursosDisponibles = new List<RecursoDTO> { usuarioActual };
+            }
+            else
+            {
+                recursosDisponibles = new List<RecursoDTO>();
+            }
+        }
+        else
+        {
+            // Sin permisos suficientes - no mostrar recursos
+            recursosDisponibles = new List<RecursoDTO>();
         }
     }
 
@@ -550,54 +739,69 @@
             resumenes.Clear();
             evaluacionesSeleccionadas.Clear();
             
+            // Obtener evaluaciones base según permisos
+            List<EvaluacionDTO> evaluacionesBase = new();
+            
+            if (soloSupervision && AuthState.CanSupervise())
+            {
+                evaluacionesBase = await EvaluacionClient.GetEvaluacionesPorSupervisionAsync(AuthState.GetCurrentUserId());
+            }
+            else if (!soloSupervision && AuthState.CanViewAllEvaluations())
+            {
+                evaluacionesBase = await EvaluacionClient.GetAllAsync();
+            }
+            else if (AuthState.CanViewOwnEvaluationsOnly())
+            {
+                // Solo evaluaciones propias del usuario actual
+                evaluacionesBase = await EvaluacionClient.GetMisEvaluacionesAsync(AuthState.GetCurrentUserId());
+            }
+            else
+            {
+                // Sin permisos suficientes - no cargar evaluaciones
+                evaluacionesBase = new List<EvaluacionDTO>();
+                MostrarToast("No tiene permisos para ver evaluaciones", "error");
+                StateHasChanged();
+                return;
+            }
+
             if (grillaFiltroSeleccionada > 0)
             {
-                // Obtener resumen para una grilla específica
-                var resumen = await EvaluacionClient.GetResumenEvaluacionGlobalAsync(grillaFiltroSeleccionada, fechaDesde, fechaHasta);
-                if (resumen != null && resumen.TotalEvaluaciones > 0)
+                // Filtrar por grilla específica
+                var evaluacionesFiltradas = evaluacionesBase.Where(e => e.IdGrilla == grillaFiltroSeleccionada).ToList();
+                
+                if (evaluacionesFiltradas.Any())
                 {
-                    resumen.NombreGrilla = grillas.FirstOrDefault(g => g.IdGrilla == grillaFiltroSeleccionada)?.Nombre;
-                    
-                    // Aplicar filtro por recurso si está seleccionado
-                    if (recursoFiltroSeleccionado > 0)
-                    {
-                        resumen.Evaluaciones = resumen.Evaluaciones.Where(e => e.IdRecurso == recursoFiltroSeleccionado).ToList();
-                        resumen.TotalEvaluaciones = resumen.Evaluaciones.Count;
-                        resumen.EvaluacionesCompletadas = resumen.Evaluaciones.Count(e => e.FechaFin <= DateTime.Now);
-                        resumen.EvaluacionesPendientes = resumen.Evaluaciones.Count(e => e.FechaFin > DateTime.Now);
-                        resumen.PorcentajeCompletitud = resumen.TotalEvaluaciones > 0 ? 
-                            (decimal)resumen.EvaluacionesCompletadas / resumen.TotalEvaluaciones * 100 : 0;
-                    }
-                    
-                    if (resumen.TotalEvaluaciones > 0)
-                        resumenes.Add(resumen);
+                    var resumen = CrearResumenDesdeEvaluaciones(evaluacionesFiltradas, grillaFiltroSeleccionada);
+                    resumenes.Add(resumen);
                 }
             }
             else
             {
-                // Obtener resúmenes para todas las grillas
-                foreach (var grilla in grillas)
+                // Agrupar por grilla
+                var evaluacionesPorGrilla = evaluacionesBase.GroupBy(e => e.IdGrilla);
+                
+                foreach (var grupo in evaluacionesPorGrilla)
                 {
-                    var resumen = await EvaluacionClient.GetResumenEvaluacionGlobalAsync(grilla.IdGrilla, fechaDesde, fechaHasta);
-                    if (resumen != null && resumen.TotalEvaluaciones > 0)
-                    {
-                        resumen.NombreGrilla = grilla.Nombre;
-                        
-                        // Aplicar filtro por recurso si está seleccionado
-                        if (recursoFiltroSeleccionado > 0)
-                        {
-                            resumen.Evaluaciones = resumen.Evaluaciones.Where(e => e.IdRecurso == recursoFiltroSeleccionado).ToList();
-                            resumen.TotalEvaluaciones = resumen.Evaluaciones.Count;
-                            resumen.EvaluacionesCompletadas = resumen.Evaluaciones.Count(e => e.FechaFin <= DateTime.Now);
-                            resumen.EvaluacionesPendientes = resumen.Evaluaciones.Count(e => e.FechaFin > DateTime.Now);
-                            resumen.PorcentajeCompletitud = resumen.TotalEvaluaciones > 0 ? 
-                                (decimal)resumen.EvaluacionesCompletadas / resumen.TotalEvaluaciones * 100 : 0;
-                        }
-                        
-                        if (resumen.TotalEvaluaciones > 0)
-                            resumenes.Add(resumen);
-                    }
+                    var resumen = CrearResumenDesdeEvaluaciones(grupo.ToList(), grupo.Key);
+                    resumenes.Add(resumen);
                 }
+            }
+
+            // Aplicar filtro por recurso si está seleccionado
+            if (recursoFiltroSeleccionado > 0)
+            {
+                foreach (var resumen in resumenes)
+                {
+                    resumen.Evaluaciones = resumen.Evaluaciones.Where(e => e.IdRecurso == recursoFiltroSeleccionado).ToList();
+                    resumen.TotalEvaluaciones = resumen.Evaluaciones.Count;
+                    resumen.EvaluacionesCompletadas = resumen.Evaluaciones.Count(e => e.FechaFin <= DateTime.Now);
+                    resumen.EvaluacionesPendientes = resumen.Evaluaciones.Count(e => e.FechaFin > DateTime.Now);
+                    resumen.PorcentajeCompletitud = resumen.TotalEvaluaciones > 0 ? 
+                        (decimal)resumen.EvaluacionesCompletadas / resumen.TotalEvaluaciones * 100 : 0;
+                }
+                
+                // Remover resúmenes sin evaluaciones
+                resumenes = resumenes.Where(r => r.TotalEvaluaciones > 0).ToList();
             }
 
             StateHasChanged();
@@ -609,114 +813,52 @@
         }
     }
 
-    private async Task LimpiarFiltros()
+    private EvaluacionGlobalResumenDTO CrearResumenDesdeEvaluaciones(List<EvaluacionDTO> evaluaciones, int idGrilla)
     {
-        grillaFiltroSeleccionada = 0;
-        recursoFiltroSeleccionado = 0;
-        fechaDesde = DateTime.Now.AddDays(-30);
-        fechaHasta = DateTime.Now.AddDays(30);
+        var fechaMinima = evaluaciones.Min(e => e.FechaInicio);
+        var fechaMaxima = evaluaciones.Max(e => e.FechaFin);
+        
+        return new EvaluacionGlobalResumenDTO
+        {
+            IdGrilla = idGrilla,
+            FechaInicio = fechaMinima,
+            FechaFin = fechaMaxima,
+            TotalEvaluaciones = evaluaciones.Count,
+            EvaluacionesCompletadas = evaluaciones.Count(e => e.FechaFin <= DateTime.Now),
+            EvaluacionesPendientes = evaluaciones.Count(e => e.FechaFin > DateTime.Now),
+            PorcentajeCompletitud = evaluaciones.Count > 0 ? 
+                (decimal)evaluaciones.Count(e => e.FechaFin <= DateTime.Now) / evaluaciones.Count * 100 : 0,
+            Evaluaciones = evaluaciones,
+            NombreGrilla = grillas.FirstOrDefault(g => g.IdGrilla == idGrilla)?.Nombre
+        };
+    }
+
+    private async Task MostrarSoloSupervision()
+    {
+        soloSupervision = true;
+        await DeterminarRecursosDisponibles();
         await AplicarFiltros();
-    }
-
-    private void ToggleDetalleResumen(int idGrilla, DateTime fechaInicio)
-    {
-        var key = $"{idGrilla}_{fechaInicio:yyyyMMdd}";
-        resumenExpandido = resumenExpandido == key ? string.Empty : key;
-        evaluacionesSeleccionadas.Clear(); // Limpiar selección al cambiar de resumen
         StateHasChanged();
     }
 
-    private void ToggleSeleccionEvaluacion(int idEvaluacion, bool seleccionado)
+    private async Task MostrarTodasLasEvaluaciones()
     {
-        if (seleccionado)
-            evaluacionesSeleccionadas.Add(idEvaluacion);
-        else
-            evaluacionesSeleccionadas.Remove(idEvaluacion);
-            
-        StateHasChanged();
-    }
-
-    private void ToggleTodasLasEvaluaciones(List<EvaluacionDTO> evaluaciones, bool seleccionarTodas)
-    {
-        if (seleccionarTodas)
+        // Verificar que el usuario tenga permiso para ver todas las evaluaciones
+        if (!AuthState.CanViewAllEvaluations())
         {
-            foreach (var evaluacion in evaluaciones)
-            {
-                evaluacionesSeleccionadas.Add(evaluacion.IdEvaluacion);
-            }
-        }
-        else
-        {
-            foreach (var evaluacion in evaluaciones)
-            {
-                evaluacionesSeleccionadas.Remove(evaluacion.IdEvaluacion);
-            }
-        }
-        StateHasChanged();
-    }
-
-    private void LimpiarSeleccion()
-    {
-        evaluacionesSeleccionadas.Clear();
-        StateHasChanged();
-    }
-
-    private async Task FinalizarEvaluacionesSeleccionadas()
-    {
-        if (!evaluacionesSeleccionadas.Any())
-        {
-            MostrarToast("No hay evaluaciones seleccionadas", "error");
+            MostrarToast("No tiene permisos para ver todas las evaluaciones", "error");
             return;
         }
-
-        try
-        {
-            var evaluacionesFinalizadas = 0;
-            foreach (var idEvaluacion in evaluacionesSeleccionadas)
-            {
-                var evaluacion = await EvaluacionClient.GetByIdAsync(idEvaluacion);
-                if (evaluacion != null)
-                {
-                    evaluacion.FechaFin = DateTime.Now;
-                    await EvaluacionClient.UpdateAsync(idEvaluacion, evaluacion);
-                    evaluacionesFinalizadas++;
-                }
-            }
-
-            evaluacionesSeleccionadas.Clear();
-            await AplicarFiltros();
-            MostrarToast($"Se finalizaron {evaluacionesFinalizadas} evaluaciones correctamente", "success");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error al finalizar evaluaciones: {ex.Message}");
-            MostrarToast("Error al finalizar las evaluaciones seleccionadas", "error");
-        }
+        
+        soloSupervision = false;
+        await DeterminarRecursosDisponibles();
+        await AplicarFiltros();
+        StateHasChanged();
     }
 
-    private async Task FinalizarEvaluacionIndividual(int idEvaluacion)
+    private async Task RefrescarDatos()
     {
-        try
-        {
-            var evaluacion = await EvaluacionClient.GetByIdAsync(idEvaluacion);
-            if (evaluacion != null)
-            {
-                evaluacion.FechaFin = DateTime.Now;
-                await EvaluacionClient.UpdateAsync(idEvaluacion, evaluacion);
-                await AplicarFiltros();
-                MostrarToast("Evaluación finalizada correctamente", "success");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error al finalizar evaluación: {ex.Message}");
-            MostrarToast("Error al finalizar la evaluación", "error");
-        }
-    }
-
-    private void AccederAEvaluacion(int idEvaluacion, int idRecurso)
-    {
-        Navigation.NavigateTo($"/evaluacion/{idEvaluacion}/recurso/{idRecurso}");
+        await CargarDatos();
     }
 
     private async Task CrearNuevaEvaluacion()
@@ -819,9 +961,68 @@
         }
     }
 
-    private async Task RefrescarDatos()
+    private async Task FinalizarEvaluacionesSeleccionadas()
     {
-        await CargarDatos();
+        if (!evaluacionesSeleccionadas.Any())
+        {
+            MostrarToast("No hay evaluaciones seleccionadas", "error");
+            return;
+        }
+
+        try
+        {
+            var evaluacionesFinalizadas = 0;
+            foreach (var idEvaluacion in evaluacionesSeleccionadas)
+            {
+                var evaluacion = await EvaluacionClient.GetByIdAsync(idEvaluacion);
+                if (evaluacion != null)
+                {
+                    evaluacion.FechaFin = DateTime.Now;
+                    await EvaluacionClient.UpdateAsync(idEvaluacion, evaluacion);
+                    evaluacionesFinalizadas++;
+                }
+            }
+
+            evaluacionesSeleccionadas.Clear();
+            await AplicarFiltros();
+            MostrarToast($"Se finalizaron {evaluacionesFinalizadas} evaluaciones correctamente", "success");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al finalizar evaluaciones: {ex.Message}");
+            MostrarToast("Error al finalizar las evaluaciones seleccionadas", "error");
+        }
+    }
+
+    private void LimpiarSeleccion()
+    {
+        evaluacionesSeleccionadas.Clear();
+        StateHasChanged();
+    }
+
+    private async Task FinalizarEvaluacionIndividual(int idEvaluacion)
+    {
+        try
+        {
+            var evaluacion = await EvaluacionClient.GetByIdAsync(idEvaluacion);
+            if (evaluacion != null)
+            {
+                evaluacion.FechaFin = DateTime.Now;
+                await EvaluacionClient.UpdateAsync(idEvaluacion, evaluacion);
+                await AplicarFiltros();
+                MostrarToast("Evaluación finalizada correctamente", "success");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al finalizar evaluación: {ex.Message}");
+            MostrarToast("Error al finalizar la evaluación", "error");
+        }
+    }
+
+    private void AccederAEvaluacion(int idEvaluacion, int idRecurso)
+    {
+        Navigation.NavigateTo($"/evaluacion/{idEvaluacion}/recurso/{idRecurso}");
     }
 
     private void MostrarToast(string mensaje, string tipo)
@@ -845,5 +1046,51 @@
         descripcionEvaluacionGlobal = string.Empty;
         fechaFinEvaluacionGlobal = DateTime.Now.AddDays(30);
         grillaGlobalSeleccionadaId = 0;
+    }
+
+    private async Task LimpiarFiltros()
+    {
+        grillaFiltroSeleccionada = 0;
+        recursoFiltroSeleccionado = 0;
+        fechaDesde = DateTime.Now.AddDays(-30);
+        fechaHasta = DateTime.Now.AddDays(30);
+        await AplicarFiltros();
+    }
+
+    private void ToggleDetalleResumen(int idGrilla, DateTime fechaInicio)
+    {
+        var key = $"{idGrilla}_{fechaInicio:yyyyMMdd}";
+        resumenExpandido = resumenExpandido == key ? string.Empty : key;
+        evaluacionesSeleccionadas.Clear();
+        StateHasChanged();
+    }
+
+    private void ToggleSeleccionEvaluacion(int idEvaluacion, bool seleccionado)
+    {
+        if (seleccionado)
+            evaluacionesSeleccionadas.Add(idEvaluacion);
+        else
+            evaluacionesSeleccionadas.Remove(idEvaluacion);
+            
+        StateHasChanged();
+    }
+
+    private void ToggleTodasLasEvaluaciones(List<EvaluacionDTO> evaluaciones, bool seleccionarTodas)
+    {
+        if (seleccionarTodas)
+        {
+            foreach (var evaluacion in evaluaciones)
+            {
+                evaluacionesSeleccionadas.Add(evaluacion.IdEvaluacion);
+            }
+        }
+        else
+        {
+            foreach (var evaluacion in evaluaciones)
+            {
+                evaluacionesSeleccionadas.Remove(evaluacion.IdEvaluacion);
+            }
+        }
+        StateHasChanged();
     }
 }

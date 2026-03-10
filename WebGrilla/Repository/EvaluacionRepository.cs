@@ -9,6 +9,8 @@ namespace WebGrilla.Repository
         Task<Evaluacion?> GetEvaluacionActivaAsync();
         Task<Evaluacion?> GetEvaluacionActivaPorRecursoAsync(int idRecurso);
         Task<List<Evaluacion>> GetEvaluacionesPorRecursoAsync(int idRecurso);
+        Task<List<Evaluacion>> GetEvaluacionesPorSupervisionAsync(int idSupervisor);
+        Task<List<Evaluacion>> GetEvaluacionesPorRecursoYSupervisionAsync(int idRecurso);
     }
 
     public class EvaluacionRepository : IEvaluacionRepository
@@ -107,6 +109,41 @@ namespace WebGrilla.Repository
             catch (Exception)
             {
                 return null;
+            }
+        }
+
+        public async Task<List<Evaluacion>> GetEvaluacionesPorSupervisionAsync(int idSupervisor)
+        {
+            try
+            {
+                return await _context.Evaluacion
+                    .Where(e => _context.RecursosSupervisores
+                        .Any(rs => rs.IdRecursoSupervisorAsignado == idSupervisor && rs.IdRecursoSupervisado == e.IdRecurso && rs.Activo))
+                    .OrderByDescending(e => e.FechaInicio)
+                    .ToListAsync();
+            }
+            catch (Exception)
+            {
+                return new List<Evaluacion>();
+            }
+        }
+
+        public async Task<List<Evaluacion>> GetEvaluacionesPorRecursoYSupervisionAsync(int idRecurso)
+        {
+            try
+            {
+                return await _context.Evaluacion
+                    .Where(e => e.IdRecurso == idRecurso || 
+                               _context.RecursosSupervisores
+                                   .Any(rs => rs.IdRecursoSupervisorAsignado == idRecurso && 
+                                             rs.IdRecursoSupervisado == e.IdRecurso && 
+                                             rs.Activo))
+                    .OrderByDescending(e => e.FechaInicio)
+                    .ToListAsync();
+            }
+            catch (Exception)
+            {
+                return new List<Evaluacion>();
             }
         }
     }

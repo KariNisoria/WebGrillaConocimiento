@@ -30,6 +30,9 @@ builder.Services.AddScoped(typeof(ApiClientGeneric<>));
 builder.Services.AddScoped<ApiClientAuthentication>();
 builder.Services.AddScoped<AuthStateService>();
 
+// NUEVO: Registrar cliente API de supervisión
+builder.Services.AddScoped<ApiClientRecursoSupervisor>();
+
 builder.Services.AddBlazorBootstrap();
 
 var app = builder.Build();

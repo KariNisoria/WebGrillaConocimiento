@@ -36,6 +36,57 @@ namespace WebGrillaBlazor.Services
         public bool IsAuthenticated => CurrentUser != null;
 
         /// <summary>
+        /// Obtener el ID del usuario actual
+        /// </summary>
+        public int GetCurrentUserId()
+        {
+            return IsAuthenticated ? CurrentUser!.IdRecurso : 0;
+        }
+
+        /// <summary>
+        /// Verificar si el usuario puede acceder al módulo de evaluaciones
+        /// </summary>
+        public bool CanAccessEvaluations()
+        {
+            if (!IsAuthenticated) return false;
+
+            // Cualquier usuario autenticado puede ver sus propias evaluaciones
+            // Los supervisores pueden ver evaluaciones de sus supervisados
+            // Los administradores pueden ver todas las evaluaciones
+            return UserHasPermission("EVALUACIONES_ALL") || 
+                   CanSupervise() || 
+                   UserHasPermission("EVALUACIONES_READ") ||
+                   UserHasPermission("EVALUACIONES_WRITE") ||
+                   IsAuthenticated; // Cualquier usuario autenticado puede ver sus propias evaluaciones
+        }
+
+        /// <summary>
+        /// Verificar si el usuario puede ver solo sus propias evaluaciones
+        /// </summary>
+        public bool CanViewOwnEvaluationsOnly()
+        {
+            return IsAuthenticated && 
+                   !CanViewAllEvaluations() && 
+                   !CanSupervise();
+        }
+
+        /// <summary>
+        /// Verificar si el usuario puede ver todas las evaluaciones (sin restricciones)
+        /// </summary>
+        public bool CanViewAllEvaluations()
+        {
+            return IsAuthenticated && UserHasPermission("EVALUACIONES_ALL");
+        }
+
+        /// <summary>
+        /// Verificar si el usuario actual es supervisor
+        /// </summary>
+        public bool CanSupervise()
+        {
+            return IsAuthenticated && (UserHasPermission("SUPERVISION_READ") || UserHasPermission("SUPERVISION_WRITE") || IsAdmin());
+        }
+
+        /// <summary>
         /// Establecer usuario autenticado y persistir en localStorage
         /// </summary>
         public async Task SetCurrentUserAsync(RecursoSessionDTO user)
@@ -191,6 +242,13 @@ namespace WebGrillaBlazor.Services
         public bool UserCanAccess(string module, string accessLevel = "READ")
         {
             if (!IsAuthenticated) return false;
+
+            // Manejo especial para el módulo de evaluaciones
+            if (module.Equals("EVALUACIONES", StringComparison.OrdinalIgnoreCase))
+            {
+                return CanAccessEvaluations();
+            }
+
             return CurrentUser!.TienePermiso($"{module}_{accessLevel}");
         }
 

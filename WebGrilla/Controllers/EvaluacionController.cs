@@ -9,10 +9,12 @@ namespace WebGrilla.Controllers
     public class EvaluacionController : ControllerBase
     {
         private readonly IEvaluacionService _service;
+        private readonly IRecursoSupervisorService _supervisionService;
 
-        public EvaluacionController(IEvaluacionService service)
+        public EvaluacionController(IEvaluacionService service, IRecursoSupervisorService supervisionService)
         {
             _service = service;
+            _supervisionService = supervisionService;
         }
 
         [HttpGet]
@@ -21,6 +23,40 @@ namespace WebGrilla.Controllers
             try
             {
                 var evaluaciones = await _service.GetAllAsync();
+                return Ok(evaluaciones);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno del servidor: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Obtener evaluaciones filtradas por supervisión del usuario logueado
+        /// </summary>
+        [HttpGet("por-supervision/{idSupervisor}")]
+        public async Task<ActionResult<IEnumerable<EvaluacionDTO>>> GetEvaluacionesPorSupervision(int idSupervisor)
+        {
+            try
+            {
+                var evaluacionesFiltradas = await _service.GetEvaluacionesPorSupervisionAsync(idSupervisor);
+                return Ok(evaluacionesFiltradas);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno del servidor: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Obtener evaluaciones propias y supervisadas del usuario
+        /// </summary>
+        [HttpGet("mis-evaluaciones/{idRecurso}")]
+        public async Task<ActionResult<IEnumerable<EvaluacionDTO>>> GetMisEvaluaciones(int idRecurso)
+        {
+            try
+            {
+                var evaluaciones = await _service.GetEvaluacionesPorRecursoYSupervisionAsync(idRecurso);
                 return Ok(evaluaciones);
             }
             catch (Exception ex)

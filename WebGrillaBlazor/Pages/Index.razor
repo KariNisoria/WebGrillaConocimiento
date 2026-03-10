@@ -97,7 +97,22 @@ else if (AuthState.IsAuthenticated && AuthState.CurrentUser != null)
         </div>
         
         <div class="row mt-4">
-            <div class="col-md-6 mb-4">
+            <!-- Supervisión -->
+            @if (AuthState.UserCanAccess("SUPERVISION"))
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <Icon Name="IconName.Diagram3" Size="IconSize.x3" class="text-warning mb-3" />
+                            <h5 class="card-title">Supervisión</h5>
+                            <p class="card-text">Gestionar relaciones supervisor-supervisado entre recursos del sistema.</p>
+                            <a href="/supervision" class="btn btn-warning">Gestionar Supervisión</a>
+                        </div>
+                    </div>
+                </div>
+            }
+            
+            <div class="col-md-4 mb-4">
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <h5 class="card-title">
@@ -123,7 +138,7 @@ else if (AuthState.IsAuthenticated && AuthState.CurrentUser != null)
                 </div>
             </div>
             
-            <div class="col-md-6 mb-4">
+            <div class="col-md-4 mb-4">
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <h5 class="card-title">
@@ -190,6 +205,7 @@ else if (AuthState.IsAuthenticated && AuthState.CurrentUser != null)
                     <ol class="mb-0">
                         <li><strong>Configurar:</strong> Crear grillas con temas y subtemas de conocimiento</li>
                         <li><strong>Asignar:</strong> Asignar recursos (personas) a equipos y roles</li>
+                        <li><strong>Supervisar:</strong> Definir relaciones supervisor-supervisado</li>
                         <li><strong>Evaluar:</strong> Crear evaluaciones específicas para un recurso usando una grilla</li>
                         <li><strong>Monitorear:</strong> Seguir el progreso y completitud de las evaluaciones</li>
                     </ol>

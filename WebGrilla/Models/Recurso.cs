@@ -40,5 +40,13 @@ namespace WebGrilla.Models
         public ICollection<ResultadoConocimiento> Resultados { get; set; } = new List<ResultadoConocimiento>();
         public ICollection<ConocimientoRecurso> Conocimientos { get; set; } = new List<ConocimientoRecurso>();
         public ICollection<Evaluacion> Evaluaciones { get; set; } = new List<Evaluacion>();
+        
+        // Relaciones de supervisión
+        public ICollection<RecursoSupervisor> RecursosSupervisados { get; set; } = new List<RecursoSupervisor>();
+        public ICollection<RecursoSupervisor> Supervisores { get; set; } = new List<RecursoSupervisor>();
+        
+        // Propiedades calculadas
+        [NotMapped]
+        public string NombreCompleto => $"{Nombre} {Apellido}";
     }
 }

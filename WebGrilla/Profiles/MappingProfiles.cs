@@ -29,6 +29,18 @@ namespace WebGrilla.Profiles
                 .ForMember(dest => dest.NombreTema, opt => opt.MapFrom(src => 
                     src.Subtema != null && src.Subtema.Tema != null ? src.Subtema.Tema.Nombre : null))
                 .ReverseMap();
+            
+            // Mapeos para supervisión
+            CreateMap<RecursoSupervisor, RecursoSupervisorDTO>()
+                .ForMember(dest => dest.NombreSupervisor, opt => opt.MapFrom(src => 
+                    src.RecursoSupervisorAsignado != null ? $"{src.RecursoSupervisorAsignado.Nombre} {src.RecursoSupervisorAsignado.Apellido}" : null))
+                .ForMember(dest => dest.NombreSupervisado, opt => opt.MapFrom(src => 
+                    src.RecursoSupervisado != null ? $"{src.RecursoSupervisado.Nombre} {src.RecursoSupervisado.Apellido}" : null))
+                .ForMember(dest => dest.CorreoSupervisor, opt => opt.MapFrom(src => 
+                    src.RecursoSupervisorAsignado != null ? src.RecursoSupervisorAsignado.CorreoElectronico : null))
+                .ForMember(dest => dest.CorreoSupervisado, opt => opt.MapFrom(src => 
+                    src.RecursoSupervisado != null ? src.RecursoSupervisado.CorreoElectronico : null))
+                .ReverseMap();
         }
     }
 }
