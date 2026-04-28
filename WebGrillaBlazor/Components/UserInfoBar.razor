@@ -1,0 +1,66 @@
+@using WebGrillaBlazor.Services
+@using WebGrillaBlazor.DTOs
+@inject AuthStateService AuthState
+
+@if (AuthState.IsAuthenticated && AuthState.CurrentUser != null)
+{
+    <div class="user-info-bar bg-light border-bottom py-2 px-3">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <Icon Name="IconName.PersonCircle" class="text-primary me-2" />
+                    <span class="text-muted">Hola</span>
+                    <strong class="mx-1">@AuthState.CurrentUser.NombreCompleto</strong>
+                    <span class="text-muted">, iniciaste sesión como</span>
+                    <span class="badge bg-primary ms-2">@AuthState.CurrentUser.NombreRol</span>
+                </div>
+                
+                <div class="d-flex align-items-center gap-2">
+                    <small class="text-muted">
+                        <Icon Name="IconName.Clock" class="me-1" />
+                        Última actividad: @DateTime.Now.ToString("HH:mm")
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .user-info-bar {
+        background: rgba(248, 249, 250, 0.95) !important;
+        backdrop-filter: blur(5px);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+        font-size: 0.9rem;
+    }
+    
+    .user-info-bar .badge {
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+</style>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        // Suscribirse a cambios en el estado de autenticación
+        AuthState.OnUserChanged += OnUserChanged;
+        AuthState.OnLogout += OnLogout;
+    }
+
+    private void OnUserChanged(RecursoSessionDTO? user)
+    {
+        InvokeAsync(() => StateHasChanged());
+    }
+
+    private void OnLogout()
+    {
+        InvokeAsync(() => StateHasChanged());
+    }
+
+    public void Dispose()
+    {
+        AuthState.OnUserChanged -= OnUserChanged;
+        AuthState.OnLogout -= OnLogout;
+    }
+}

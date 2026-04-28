@@ -50,6 +50,26 @@
     color: white;
 }
 
+/* Ajustes para el área superior del navbar */
+.top-row {
+    position: relative;
+    z-index: 1000;
+}
+
+.top-row .container-fluid {
+    height: 100%;
+}
+
+/* Mejor alineación de los elementos del navbar */
+.top-row .navbar-brand {
+    flex-shrink: 0;
+}
+
+.top-row .d-flex {
+    flex-shrink: 0;
+    gap: 0.5rem;
+}
+
 @media (min-width: 641px) {
     .navbar-toggler {
         display: none;
@@ -64,5 +84,23 @@
         /* Allow sidebar to scroll for tall menus */
         height: calc(100vh - 3.5rem);
         overflow-y: auto;
+    }
+}
+
+/* Ajustes específicos para dispositivos móviles */
+@media (max-width: 640px) {
+    .top-row {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    .navbar-brand {
+        font-size: 1rem;
+        margin-right: 0.5rem;
+    }
+    
+    .navbar-toggler {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.9rem;
     }
 }

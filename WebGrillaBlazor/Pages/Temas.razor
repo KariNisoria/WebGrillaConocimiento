@@ -31,6 +31,15 @@
     }
 
     <div class="container-fluid">
+        <!-- Alerta de éxito -->
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <Alert Color="AlertColor.Success" Dismissible="true" @onclose="ClearSuccessMessage">
+                <Icon Name="IconName.Check" class="me-2" />
+                @successMessage
+            </Alert>
+        }
+
         <div class="row mb-3">
             <div class="col">
                 <h3>
@@ -42,7 +51,7 @@
             <div class="col-auto">
                 @if (AuthState.UserHasPermission("TEMAS_WRITE"))
                 {
-                    <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddTema">
+                    <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AbrirModalAltaTema">
                         <Icon Name="IconName.Plus" class="me-1" />
                         Agregar Tema
                     </Button>
@@ -147,10 +156,13 @@
             </div>
         </div>
 
-        <!-- Ficha Edicion Tema -->
+        <!-- Modal para Alta de Tema -->
+        <Modal @ref="_AltaTema" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
+
+        <!-- Modal para Edición de Tema -->
         <Modal @ref="_EdicionTema" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
 
-        <!-- Ficha Edicion Subtema -->
+        <!-- Modal para Edición de Subtema -->
         <Modal @ref="_EdicionSubtema" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
         
         <!-- Información adicional para usuarios sin permisos de escritura -->
@@ -177,6 +189,8 @@
 
     private int currentIdTema = 0;
     private int currentIdSubtema = 0;
+
+    private string successMessage = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -224,7 +238,7 @@
         return subtemas.Where(x => x.IdTema == idTema);
     }
 
-    private async Task AddTema()
+    private async Task AbrirModalAltaTema()
     {
         if (!AuthState.UserHasPermission("TEMAS_WRITE"))
         {
@@ -232,24 +246,16 @@
             return;
         }
 
-        var lista = temas.ToList();
-        var nuevo = CreateTema();
-        lista.Add(nuevo);
-        temas = lista;
-        await gridTema.RefreshDataAsync();
-    }
-
-    private TemaDTO CreateTema()
-    {
-        var numero = temas!.Max(x => x.IdTema) + 1;
-
-        var nuevo = new TemaDTO();
-
-        nuevo.IdTema = 0;
-        nuevo.Nombre = $"Nuevo Tema {numero}";
-        nuevo.Orden = temas!.Max(x => x.Orden) + 1;
-
-        return nuevo;
+        Console.WriteLine("Abriendo modal para agregar nuevo tema");
+        
+        // Crear un nuevo tema vacío
+        var nuevoTema = CreateNuevoTema();
+        
+        var param = new Dictionary<string, object>();
+        param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalAltaTema));
+        param.Add("tema", nuevoTema);
+        
+        await _AltaTema.ShowAsync<FichaTema>(title: "Agregar Nuevo Tema", parameters: param);
     }
 
     private async Task AddSubtema(int idTema)
@@ -264,6 +270,19 @@
         lista.Add(CreateSubtema(idTema));
         subtemas = lista;
         await gridSubtema.RefreshDataAsync();
+    }
+
+    private TemaDTO CreateNuevoTema()
+    {
+        var nuevoTema = new TemaDTO
+        {
+            IdTema = 0, // Nuevo tema, el ID lo asignará la base de datos
+            Nombre = "",
+            Orden = (temas?.Any() == true) ? temas.Max(x => x.Orden) + 1 : 1
+        };
+
+        Console.WriteLine($"Nuevo tema creado con orden: {nuevoTema.Orden}");
+        return nuevoTema;
     }
 
     private SubtemaDTO CreateSubtema(int idTema)
@@ -323,11 +342,24 @@
         await _EdicionTema.ShowAsync<FichaTema>(title: "Edición Tema", parameters: param);
     }
 
+    private async Task OnCloseModalAltaTema()
+    {
+        Console.WriteLine("OnCloseModalAltaTema()");
+        await _AltaTema.HideAsync(); // Ocultar el modal de alta
+        await RefreshGrid(); // Refrescar la grilla
+        
+        // Mostrar mensaje de éxito
+        ShowSuccessMessage("¡Tema agregado exitosamente!");
+    }
+
     private async Task OnCloseModalEdicionTema()
     {
         Console.WriteLine("OnCloseModalEdicionTema()");
         await _EdicionTema.HideAsync(); // Ocultar el formulario de Edicion
         await RefreshGrid(); // Refrescar la grilla
+        
+        // Mostrar mensaje de éxito
+        ShowSuccessMessage("¡Tema actualizado exitosamente!");
     }
 
     private async Task RefreshGrid()
@@ -357,6 +389,9 @@
         Console.WriteLine("OnCloseModalEdicionSubtema()");
         await _EdicionSubtema.HideAsync(); // Ocultar el formulario de Edicion
         await RefreshGridDetail(); // Refrescar la grilla
+        
+        // Mostrar mensaje de éxito
+        ShowSuccessMessage("¡Subtema actualizado exitosamente!");
     }
 
     private async Task RefreshGridDetail()
@@ -378,5 +413,26 @@
     {
         Console.WriteLine($"OnRowClick Subtema current: {currentIdSubtema} nuevo: {args.Item.IdSubtema} ");
         currentIdSubtema = args.Item.IdSubtema;
+    }
+
+    private void ShowSuccessMessage(string message)
+    {
+        successMessage = message;
+        StateHasChanged();
+        
+        // Auto-ocultar el mensaje después de 5 segundos
+        var timer = new System.Timers.Timer(5000);
+        timer.Elapsed += (sender, e) =>
+        {
+            successMessage = "";
+            InvokeAsync(() => StateHasChanged());
+            timer.Dispose();
+        };
+        timer.Start();
+    }
+
+    private void ClearSuccessMessage()
+    {
+        successMessage = "";
     }
 }

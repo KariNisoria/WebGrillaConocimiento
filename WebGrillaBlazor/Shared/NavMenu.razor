@@ -7,81 +7,48 @@
     <div class="container-fluid">
         <a class="navbar-brand" href="">WebGrillaBlazor</a>
         
-        @if (AuthState.IsAuthenticated)
-        {
-            <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center ms-auto">
+            @if (AuthState.IsAuthenticated)
+            {
                 <!-- Información del usuario -->
-                <div class="d-flex align-items-center text-white">
+                <div class="d-flex align-items-center text-white me-3">
                     <Icon Name="IconName.PersonCircle" class="me-2" />
-                    <div class="d-none d-md-block">
-                        <div class="fw-semibold">@AuthState.GetUserDisplayName()</div>
-                        <small class="text-white-50">@AuthState.CurrentUser?.NombreRol</small>
+                    <div class="d-none d-md-flex flex-column">
+                        <div class="fw-semibold small">@AuthState.GetUserDisplayName()</div>
+                        <small class="text-white-50 lh-1">@AuthState.CurrentUser?.NombreRol</small>
                     </div>
                 </div>
-                
-                <!-- Botón de logout -->
-                <Button Color="ButtonColor.Secondary" 
-                        Size="ButtonSize.Small" 
-                        Class="text-white border-light"
-                        @onclick="HandleLogout">
-                    <Icon Name="IconName.BoxArrowRight" class="me-1" />
-                    Salir
+            }
+            else
+            {
+                <Button Color="ButtonColor.Primary" Size="ButtonSize.Small" Class="me-2" @onclick="GoToLogin">
+                    <Icon Name="IconName.BoxArrowInRight" class="me-1" />
+                    <span class="d-none d-sm-inline">Iniciar Sesión</span>
+                    <span class="d-sm-none">Login</span>
                 </Button>
-            </div>
-        }
-        else
-        {
-            <Button Color="ButtonColor.Primary" Size="ButtonSize.Small" @onclick="GoToLogin">
-                <Icon Name="IconName.BoxArrowInRight" class="me-1" />
-                Iniciar Sesión
-            </Button>
-        }
-        
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+            }
+            
+            <!-- Botón hamburguesa siempre al final -->
+            <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
     </div>
 </div>
 
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="flex-column">
-        <!-- Inicio - Siempre visible -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="index" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
         @if (AuthState.IsAuthenticated)
         {
-            <!-- DEBUG: Mostrar información del usuario -->
-            @if (isDebugMode)
-            {
-                <div class="alert alert-info m-2 small">
-                    <strong>Debug:</strong><br>
-                    Usuario: @AuthState.CurrentUser?.NombreCompleto<br>
-                    Rol: @AuthState.CurrentUser?.NombreRol<br>
-                    Permisos Admin: @AuthState.UserHasPermission("PERMISOS_ADMIN")<br>
-                    Supervision: @AuthState.UserCanAccess("SUPERVISION")<br>
-                    <button class="btn btn-sm btn-outline-primary" @onclick="() => isDebugMode = false">Ocultar Debug</button>
-                </div>
-            }
-            else
-            {
-                <div class="nav-item px-3">
-                    <button class="btn btn-sm btn-outline-light" @onclick="() => isDebugMode = true">Debug</button>
-                </div>
-            }
-
             <!-- Separador -->
             <div class="nav-section-header px-3 mt-3 mb-2">
                 <small class="text-muted fw-semibold">NAVEGACIÓN</small>
             </div>
 
-            <!-- Dashboard -->
+            <!-- Inicio (anteriormente Dashboard) -->
             <div class="nav-item px-3">
-                <NavLink class="nav-link" href="index">
-                    <span class="bi bi-speedometer2" aria-hidden="true"></span> Dashboard
+                <NavLink class="nav-link" href="index" Match="NavLinkMatch.All">
+                    <span class="bi bi-house-door-fill" aria-hidden="true"></span> Inicio
                 </NavLink>
             </div>
 
@@ -230,13 +197,6 @@
                             <span class="bi bi-shield-check" aria-hidden="true"></span> Permisos
                         </NavLink>
                     </div>
-                    
-                    <!-- Nueva página de Configuración de Permisos -->
-                    <div class="nav-item px-3">
-                        <NavLink class="nav-link" href="admin/permisos-roles">
-                            <span class="bi bi-gear-fill" aria-hidden="true"></span> Configurar Permisos
-                        </NavLink>
-                    </div>
                 }
             }
 
@@ -251,14 +211,23 @@
                     <div>
                         <div class="fw-semibold">@AuthState.GetUserDisplayName()</div>
                         <small class="text-muted">@AuthState.CurrentUser?.NombreRol</small>
-                        <div class="mt-2">
-                            <Button Color="ButtonColor.Secondary" Size="ButtonSize.ExtraSmall" @onclick="HandleLogout">
-                                <Icon Name="IconName.BoxArrowRight" class="me-1" />
-                                Cerrar Sesión
-                            </Button>
-                        </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Separador y botón de cerrar sesión AL FINAL -->
+            <div class="nav-section-header px-3 mt-4 mb-2">
+                <small class="text-muted fw-semibold">SESIÓN</small>
+            </div>
+            
+            <div class="nav-item px-3 pb-3">
+                <Button Color="ButtonColor.Danger" 
+                        Size="ButtonSize.Small" 
+                        Class="w-100"
+                        @onclick="HandleLogout">
+                    <Icon Name="IconName.BoxArrowRight" class="me-1" />
+                    Cerrar Sesión
+                </Button>
             </div>
         }
         else
@@ -291,12 +260,75 @@
     
     .top-row {
         background: linear-gradient(45deg, #1b6ec2, #0d6efd) !important;
+        min-height: 3.5rem;
+    }
+    
+    /* Mejorar el espaciado del botón toggler */
+    .navbar-toggler {
+        border: 1px solid rgba(255,255,255,0.25);
+        padding: 0.375rem 0.5rem;
+        margin-left: 0.5rem;
+    }
+    
+    .navbar-toggler:focus {
+        box-shadow: 0 0 0 0.25rem rgba(255,255,255,0.25);
+    }
+    
+    /* Asegurar que el contenedor superior use todo el espacio disponible */
+    .top-row .container-fluid {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
+    
+    /* Mejorar la presentación del texto del usuario */
+    .top-row .fw-semibold.small {
+        font-size: 0.85rem;
+        line-height: 1.2;
+    }
+    
+    /* Estilo especial para el botón de cerrar sesión */
+    .nav-item .btn-danger {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        border: none;
+        box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+        transition: all 0.2s ease;
+    }
+    
+    .nav-item .btn-danger:hover {
+        background: linear-gradient(135deg, #c82333, #a71e2a);
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+        transform: translateY(-1px);
+    }
+    
+    /* Responsive adjustments */
+    @@media (max-width: 767.98px) {
+        .top-row {
+            padding-left: 1rem;
+            padding-right: 0.5rem;
+        }
+        
+        .navbar-brand {
+            font-size: 1rem;
+        }
+    }
+    
+    @@media (max-width: 575.98px) {
+        .top-row .me-3 {
+            margin-right: 0.5rem !important;
+        }
+        
+        .top-row .me-2 {
+            margin-right: 0.25rem !important;
+        }
     }
 </style>
 
 @code {
     private bool collapseNavMenu = true;
-    private bool isDebugMode = false;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
@@ -332,7 +364,7 @@
     private void GoToLogin()
     {
         Console.WriteLine("🧭 NavMenu: Navegando a login");
-        Navigation.NavigateTo("/", forceLoad: false);
+        Navigation.NavigateTo("/login", forceLoad: false);
     }
 
     private async Task HandleLogout()
@@ -340,7 +372,7 @@
         Console.WriteLine("🧭 NavMenu: Iniciando logout");
         await AuthState.LogoutAsync();
         Console.WriteLine("🧭 NavMenu: Logout completado, navegando a login");
-        Navigation.NavigateTo("/", forceLoad: false);
+        Navigation.NavigateTo("/login", forceLoad: false);
     }
 
     public void Dispose()

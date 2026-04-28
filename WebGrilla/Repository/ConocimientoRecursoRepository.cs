@@ -12,6 +12,7 @@ namespace WebGrilla.Repository
         Task<ConocimientoRecurso> BuscarConocimientoAsync(int idEvaluacion, int idRecurso, int idSubtema);
         Task<Dictionary<int, decimal>> GetCompletitudSubtemasPorGrillaAsync(int idGrilla);
         Task<List<ConocimientoRecurso>> GetByEvaluacionAndRecursoAsync(int idEvaluacion, int idRecurso);
+        Task<int> GetConocimientosEvaluadosCountAsync(int idEvaluacion, int idRecurso);
     }
 
     public class ConocimientoRecursoRepository : IConocimientoRecursoRepository
@@ -169,6 +170,15 @@ namespace WebGrilla.Repository
         public async Task<List<ConocimientoRecurso>> GetByEvaluacionAndRecursoAsync(int idEvaluacion, int idRecurso)
         {
             return await GetConocimientosPorEvaluacionYRecursoAsync(idEvaluacion, idRecurso);
+        }
+
+        public async Task<int> GetConocimientosEvaluadosCountAsync(int idEvaluacion, int idRecurso)
+        {
+            return await _context.ConocimientoRecurso
+                .Where(c => c.IdEvaluacion == idEvaluacion && 
+                           c.IdRecurso == idRecurso &&
+                           (c.ValorFuncional > 0 || c.ValorTecnico > 0))
+                .CountAsync();
         }
     }
 }

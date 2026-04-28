@@ -1,20 +1,15 @@
 ﻿@inherits LayoutComponentBase
+@using WebGrillaBlazor.Components
 
-<BlazorBootstrapLayout StickyHeader="true">
-    <HeaderSection>
-        <ThemeSwitcher Class="ps-3 ps-lg-2" />
-    </HeaderSection>
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
 
-    <SidebarSection>
-        <Sidebar2 Href="/"
-                  ImageSrc="https://demos.blazorbootstrap.com/images/logo/logo-white.svg"
-                  Title="Grilla Blazor"
-                  BadgeText="1.0.0"
-                  DataProvider="Sidebar2DataProvider"
-                  WidthUnit="Unit.Px" />
-    </SidebarSection>
-
-    <ContentSection>
+    <main>
+        <!-- Removido UserInfoBar para evitar duplicación de información del usuario -->
+        <!-- <UserInfoBar /> -->
+        
         <div class="top-row px-4">
             <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
         </div>
@@ -22,39 +17,8 @@
         <article class="content px-4">
             @Body
         </article>
-    </ContentSection>
+    </main>
+</div>
 
-    <FooterSection>
-        Footer links...
-    </FooterSection>
-</BlazorBootstrapLayout>
-
-@code {
-    private IEnumerable<NavItem> navItems = default!;
-
-    private async Task<Sidebar2DataProviderResult> Sidebar2DataProvider(Sidebar2DataProviderRequest request)
-    {
-        if (navItems is null)
-            navItems = GetNavItems();
-
-        return await Task.FromResult(request.ApplyTo(navItems));
-    }
-
-    private IEnumerable<NavItem> GetNavItems()
-    {
-        navItems = new List<NavItem>
-        {
-            new NavItem { Id = "1", Href = "/", IconName = IconName.HouseDoorFill, Text = "Home", Match=NavLinkMatch.All},
-            new NavItem { Id = "2", Href = "/evaluaciones", IconName = IconName.ClipboardCheck, Text = "Evaluaciones"},
-            new NavItem { Id = "3", Href = "/Grillas", IconName = IconName.Grid, Text = "Grillas"},
-            new NavItem { Id = "4", Href = "/Clientes", IconName = IconName.Building, Text = "Clientes"},
-            new NavItem { Id = "5", Href = "/Temas", IconName = IconName.BookHalf, Text = "Temas"},
-            new NavItem { Id = "6", Href = "/Recursos", IconName = IconName.People, Text = "Recursos"},
-            new NavItem { Id = "7", Href = "/Equipos", IconName = IconName.Diagram3, Text = "Equipos"},
-            new NavItem { Id = "8", Href = "/Roles", IconName = IconName.PersonBadge, Text = "Roles"},
-            new NavItem { Id = "9", Href = "/Tipos", IconName = IconName.FileText, Text = "Tipos de Documento"},
-        };
-
-        return navItems;
-    }
-}
+<!-- Inicializador de estado de la aplicación (sin diagnóstico) -->
+<AppStateInitializer />

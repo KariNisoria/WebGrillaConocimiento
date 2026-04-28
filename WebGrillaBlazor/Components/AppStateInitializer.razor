@@ -6,12 +6,6 @@
 @if (isInitialized)
 {
     @ChildContent
-    
-    <!-- Panel de diagnóstico temporal (remover en producción) -->
-    @if (showDiagnostics)
-    {
-        <WebGrillaBlazor.Components.DiagnosticPanel />
-    }
 }
 else
 {
@@ -47,7 +41,6 @@ else
     private string loadingMessage = "Inicializando aplicación...";
     private bool hasError = false;
     private string errorMessage = "";
-    private bool showDiagnostics = true; // Cambiar a false en producción
 
     protected override async Task OnInitializedAsync()
     {
@@ -86,26 +79,32 @@ else
             Console.WriteLine($"   - CurrentUser: {AuthState.CurrentUser?.NombreCompleto ?? "null"}");
             Console.WriteLine($"   - Ruta: {currentPath}");
             
-            // PASO 2: SOLO limpiar sesión si estamos en la página de login Y queremos limpiar explícitamente
-            if (currentPath == "/" && !AuthState.IsAuthenticated)
+            // PASO 2: Manejar rutas de login
+            if (currentPath == "/login" && !AuthState.IsAuthenticated)
             {
                 loadingMessage = "Preparando página de login...";
                 StateHasChanged();
-                
                 Console.WriteLine("?? En página de login sin usuario - preparando formulario");
-                // NO limpiar localStorage aquí, ya que InitializeAsync maneja la carga
             }
-            else if (currentPath == "/" && AuthState.IsAuthenticated)
+            else if (currentPath == "/login" && AuthState.IsAuthenticated)
             {
                 Console.WriteLine("? Usuario ya autenticado en página de login - proceder a redirección");
             }
-            else if (currentPath != "/" && AuthState.IsAuthenticated)
+            else if (currentPath != "/login" && currentPath != "/" && AuthState.IsAuthenticated)
             {
                 Console.WriteLine($"? Usuario autenticado en ruta protegida '{currentPath}' - todo OK");
             }
-            else if (currentPath != "/" && !AuthState.IsAuthenticated)
+            else if ((currentPath != "/login" && currentPath != "/") && !AuthState.IsAuthenticated)
             {
                 Console.WriteLine($"?? Acceso a ruta protegida '{currentPath}' sin autenticación - requerirá redirección");
+            }
+            else if ((currentPath == "/" || currentPath == "/index") && AuthState.IsAuthenticated)
+            {
+                Console.WriteLine($"?? Usuario autenticado accediendo a home/dashboard - mostrar dashboard");
+            }
+            else if ((currentPath == "/" || currentPath == "/index") && !AuthState.IsAuthenticated)
+            {
+                Console.WriteLine($"?? Usuario no autenticado accediendo a home - redirigir a login");
             }
             
             loadingMessage = "Configurando navegación...";
@@ -153,18 +152,18 @@ else
         Console.WriteLine($"?? Usuario actual: {AuthState.CurrentUser?.NombreCompleto ?? "null"}");
         
         // REGLA 1: Si está en una ruta protegida Y NO está autenticado ? ir al login
-        if (currentPath != "/" && !AuthState.IsAuthenticated)
+        if (currentPath != "/login" && currentPath != "/" && !AuthState.IsAuthenticated)
         {
             Console.WriteLine("?? REGLA 1: Ruta protegida sin autenticación ? Redirigir a login");
             loadingMessage = "Acceso denegado - Redirigiendo al login...";
             StateHasChanged();
             await Task.Delay(1000); // Pausa para debug
-            Navigation.NavigateTo("/", forceLoad: false);
+            Navigation.NavigateTo("/login", forceLoad: false);
             return;
         }
         
         // REGLA 2: Si está en login Y YA está autenticado ? ir al dashboard  
-        if (currentPath == "/" && AuthState.IsAuthenticated)
+        if (currentPath == "/login" && AuthState.IsAuthenticated)
         {
             Console.WriteLine("?? REGLA 2: En login pero ya autenticado ? Redirigir a dashboard");
             loadingMessage = "Ya autenticado - Redirigiendo al dashboard...";
@@ -174,17 +173,28 @@ else
             return;
         }
         
-        // REGLA 3: Si está en ruta válida Y autenticado ? todo OK
-        if (currentPath != "/" && AuthState.IsAuthenticated)
+        // REGLA 3: Si está en home/index sin autenticación ? ir al login
+        if ((currentPath == "/" || currentPath == "/index") && !AuthState.IsAuthenticated)
         {
-            Console.WriteLine("? REGLA 3: En ruta protegida y autenticado ? Todo OK");
+            Console.WriteLine("?? REGLA 3: En home sin autenticación ? Redirigir a login");
+            loadingMessage = "Acceso requerido - Redirigiendo al login...";
+            StateHasChanged();
+            await Task.Delay(1000); // Pausa para debug
+            Navigation.NavigateTo("/login", forceLoad: false);
             return;
         }
         
-        // REGLA 4: Si está en login Y NO autenticado ? todo OK (mostrar login)
-        if (currentPath == "/" && !AuthState.IsAuthenticated)
+        // REGLA 4: Si está en ruta válida Y autenticado ? todo OK
+        if (currentPath != "/login" && AuthState.IsAuthenticated)
         {
-            Console.WriteLine("? REGLA 4: En login y no autenticado ? Mostrar formulario de login");
+            Console.WriteLine("? REGLA 4: En ruta válida y autenticado ? Todo OK");
+            return;
+        }
+        
+        // REGLA 5: Si está en login Y NO autenticado ? todo OK (mostrar login)
+        if (currentPath == "/login" && !AuthState.IsAuthenticated)
+        {
+            Console.WriteLine("? REGLA 5: En login y no autenticado ? Mostrar formulario de login");
             return;
         }
         

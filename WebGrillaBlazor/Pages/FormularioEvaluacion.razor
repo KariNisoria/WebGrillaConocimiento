@@ -195,7 +195,7 @@
                                                                    @onchange="@(e => ActualizarValorTecnico(subtema.IdSubtema, e))" />
                                                         </td>
                                                         <td class="text-center">
-                                                            @if (conocimiento != null)
+                                                            @if (conocimiento != null && (conocimiento.ValorFuncional > 0 || conocimiento.ValorTecnico > 0))
                                                             {
                                                                 <span class="badge bg-success">
                                                                     <Icon Name="IconName.Check" /> Evaluado
@@ -240,7 +240,7 @@
                                                 <strong>Tema: @tema.Nombre</strong>
                                                 <small class="text-muted d-block">
                                                     @tema.Subtemas.Count subtemas • 
-                                                    @tema.Subtemas.Count(s => conocimientos.Any(c => c.IdSubtema == s.IdSubtema)) evaluados
+                                                    @tema.Subtemas.Count(s => conocimientos.Any(c => c.IdSubtema == s.IdSubtema && (c.ValorFuncional > 0 || c.ValorTecnico > 0))) evaluados
                                                 </small>
                                             </div>
                                             <div class="btn-group" role="group">
@@ -257,11 +257,6 @@
                                                         <Icon Name="IconName.CloudCheck" />
                                                     }
                                                     Guardar Tema
-                                                </Button>
-                                                <Button Color="ButtonColor.Warning" 
-                                                        Size="ButtonSize.Small"
-                                                        @onclick="@(() => AutoEvaluarTemaPendientes(tema.IdGrillaTema))">
-                                                    <Icon Name="IconName.Magic" /> Auto-completar (0,0)
                                                 </Button>
                                             </div>
                                         </div>
@@ -334,9 +329,6 @@
                                     }
                                     Guardar Todo el Progreso
                                 </Button>
-                                <Button Color="ButtonColor.Warning" @onclick="AutoEvaluarPendientes">
-                                    <Icon Name="IconName.Magic" /> Crear Registros Pendientes (0,0)
-                                </Button>
                             </div>
                         </div>
                     </div>
@@ -397,7 +389,7 @@
         ? temasBinarizados.Average(t => t.ProgresoCompletitud) 
         : 0;
 
-    private int subtemasCargados => conocimientos.Count; // Total de registros en BD, independiente de valores
+    private int subtemasCargados => conocimientos.Count(c => c.ValorFuncional > 0 || c.ValorTecnico > 0); // Solo contar los realmente evaluados
     private int totalSubtemas => grillaSubtemas.Count;
 
     protected override async Task OnInitializedAsync()
@@ -577,7 +569,8 @@
             var subtemasEvaluados = tema.Subtemas.Count(subtema =>
             {
                 var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == subtema.IdSubtema);
-                return conocimiento != null; // Solo verificar que exista el registro, no importan los valores
+                // Considerar evaluado solo si tiene valores reales (no 0,0)
+                return conocimiento != null && (conocimiento.ValorFuncional > 0 || conocimiento.ValorTecnico > 0);
             });
 
             tema.ProgresoCompletitud = (decimal)subtemasEvaluados / tema.Subtemas.Count * 100;
@@ -747,55 +740,6 @@
         }
     }
 
-    private async Task AutoEvaluarTemaPendientes(int idGrillaTema)
-    {
-        try
-        {
-            var tema = temasBinarizados.FirstOrDefault(t => t.IdGrillaTema == idGrillaTema);
-            if (tema == null) return;
-
-            int nuevosConocimientos = 0;
-            
-            foreach (var subtema in tema.Subtemas)
-            {
-                var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == subtema.IdSubtema);
-                if (conocimiento == null)
-                {
-                    conocimientos.Add(new ConocimientoRecursoDTO
-                    {
-                        IdConocimientoRecurso = 0, // Nuevo registro
-                        IdSubtema = subtema.IdSubtema,
-                        IdRecurso = IdRecurso,
-                        IdEvaluacion = IdEvaluacion,
-                        IdGrilla = evaluacion?.IdGrilla ?? 0,
-                        ValorFuncional = 0,
-                        ValorTecnico = 0,
-                        ValorFuncionalVerif = null,
-                        ValorTecnicoVerif = null
-                    });
-                    nuevosConocimientos++;
-                }
-            }
-
-            CalcularProgreso();
-            
-            if (nuevosConocimientos > 0)
-            {
-                MostrarToast($"Se crearon {nuevosConocimientos} registros (0,0) en el tema '{tema.Nombre}'", "warning");
-                StateHasChanged();
-            }
-            else
-            {
-                MostrarToast($"Todos los subtemas del tema '{tema.Nombre}' ya tienen registros", "info");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error en auto-evaluación del tema: {ex.Message}");
-            MostrarToast("Error al auto-evaluar tema", "error");
-        }
-    }
-
     private async Task GuardarTodoElProgreso()
     {
         guardandoTodo = true;
@@ -843,53 +787,6 @@
         finally
         {
             guardandoTodo = false;
-        }
-    }
-
-    private async Task AutoEvaluarPendientes()
-    {
-        try
-        {
-            int nuevosConocimientos = 0;
-            
-            foreach (var subtema in grillaSubtemas)
-            {
-                var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == subtema.IdSubtema);
-                if (conocimiento == null)
-                {
-                    // Solo crear registros para subtemas que no tienen ningún registro en BD
-                    conocimientos.Add(new ConocimientoRecursoDTO
-                    {
-                        IdConocimientoRecurso = 0, // Nuevo registro
-                        IdSubtema = subtema.IdSubtema,
-                        IdRecurso = IdRecurso,
-                        IdEvaluacion = IdEvaluacion,
-                        IdGrilla = evaluacion?.IdGrilla ?? 0,
-                        ValorFuncional = 0,
-                        ValorTecnico = 0,
-                        ValorFuncionalVerif = null,
-                        ValorTecnicoVerif = null
-                    });
-                    nuevosConocimientos++;
-                }
-            }
-
-            CalcularProgreso();
-            
-            if (nuevosConocimientos > 0)
-            {
-                MostrarToast($"Se crearon {nuevosConocimientos} registros con valores (0,0) para subtemas pendientes", "warning");
-                StateHasChanged();
-            }
-            else
-            {
-                MostrarToast("Todos los subtemas ya tienen registros de evaluación", "info");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error en auto-evaluación: {ex.Message}");
-            MostrarToast("Error al auto-evaluar pendientes", "error");
         }
     }
 

@@ -1,4 +1,4 @@
-@page "/"
+Ôªø@page "/login"
 @layout LoginLayout
 @using WebGrillaBlazor.DTOs
 @using WebGrillaBlazor.ApiClient
@@ -11,7 +11,7 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-lg-5 col-md-7 col-sm-9">
-            <!-- Logo y tÌtulo principal -->
+            <!-- Logo y t√≠tulo principal -->
             <div class="text-center mb-4">
                 <div class="login-logo mb-3">
                     <Icon Name="IconName.Grid" Size="IconSize.x5" class="text-white" />
@@ -25,19 +25,19 @@
                     <div class="text-center">
                         <h3 class="font-weight-light my-4">
                             <Icon Name="IconName.PersonCircle" Size="IconSize.x2" class="text-primary me-2" />
-                            Iniciar SesiÛn
+                            Iniciar Sesi√≥n
                         </h3>
                     </div>
                 </div>
                 <div class="card-body p-4">
 
-                    <!-- Mensaje si ya hay una sesiÛn activa -->
+                    <!-- Mensaje si ya hay una sesi√≥n activa -->
                     @if (AuthState.IsAuthenticated)
                     {
                         <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
                             <Icon Name="IconName.InfoCircle" class="me-2" />
                             <div>
-                                <strong>SesiÛn activa detectada</strong><br>
+                                <strong>Sesi√≥n activa detectada</strong><br>
                                 Usuario: @AuthState.GetUserDisplayName()
                                 <div class="mt-2">
                                     <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="GoToDashboard" Class="me-2">
@@ -46,7 +46,7 @@
                                     </Button>
                                     <Button Color="ButtonColor.Secondary" Size="ButtonSize.Small" @onclick="StartNewSession">
                                         <Icon Name="IconName.PersonX" class="me-1" />
-                                        Nueva SesiÛn
+                                        Nueva Sesi√≥n
                                     </Button>
                                 </div>
                             </div>
@@ -64,7 +64,7 @@
                                        disabled="@isLoading" />
                             <label for="inputEmail">
                                 <Icon Name="IconName.Envelope" class="me-1" />
-                                Correo ElectrÛnico
+                                Correo Electr√≥nico
                             </label>
                             <ValidationMessage For="@(() => loginRequest.Email)" class="invalid-feedback" />
                         </div>
@@ -77,7 +77,7 @@
                                          disabled="@isLoading" />
                             <label for="inputDocument">
                                 <Icon Name="IconName.CardText" class="me-1" />
-                                N˙mero de Documento
+                                N√∫mero de Documento
                             </label>
                             <ValidationMessage For="@(() => loginRequest.NumeroDocumento)" class="invalid-feedback" />
                         </div>
@@ -252,40 +252,40 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("?? Login: Inicializando p·gina de login...");
+        Console.WriteLine("üîë Login: Inicializando p√°gina de login...");
         
         try
         {
-            // NO limpiar autom·ticamente - dejar que el usuario decida
-            // El AppStateInitializer ya ha cargado los datos de localStorage si existÌan
+            // NO limpiar autom√°ticamente - dejar que el usuario decida
+            // El AppStateInitializer ya ha cargado los datos de localStorage si exist√≠an
             
-            Console.WriteLine($"?? Login: Estado actual - Autenticado: {AuthState.IsAuthenticated}");
+            Console.WriteLine($"üîë Login: Estado actual - Autenticado: {AuthState.IsAuthenticated}");
             
             if (AuthState.IsAuthenticated)
             {
-                Console.WriteLine($"?? Login: Usuario actual: {AuthState.GetUserDisplayName()}");
-                // Mostrar opciones al usuario: continuar con sesiÛn actual o iniciar nueva
+                Console.WriteLine($"üîë Login: Usuario actual: {AuthState.GetUserDisplayName()}");
+                // Mostrar opciones al usuario: continuar con sesi√≥n actual o iniciar nueva
             }
             else
             {
-                Console.WriteLine("?? Login: No hay sesiÛn activa - mostrar formulario");
+                Console.WriteLine("üîë Login: No hay sesi√≥n activa - mostrar formulario");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"? Error inicializando login: {ex.Message}");
+            Console.WriteLine($"‚ùå Error inicializando login: {ex.Message}");
         }
     }
 
     private void GoToDashboard()
     {
-        Console.WriteLine("?? Login: Continuando con sesiÛn actual");
+        Console.WriteLine("üîë Login: Continuando con sesi√≥n actual");
         Navigation.NavigateTo("/index", forceLoad: false);
     }
 
     private async Task StartNewSession()
     {
-        Console.WriteLine("?? Login: Iniciando nueva sesiÛn - limpiando datos anteriores");
+        Console.WriteLine("üîë Login: Iniciando nueva sesi√≥n - limpiando datos anteriores");
         
         await AuthState.ForceLogoutAsync();
         await Task.Delay(100);
@@ -297,19 +297,19 @@
         
         StateHasChanged();
         
-        ShowToast("SesiÛn anterior cerrada. Ingrese nuevas credenciales.", "info");
+        ShowToast("Sesi√≥n anterior cerrada. Ingrese nuevas credenciales.", "info");
     }
 
     private async Task HandleLogin()
     {
-        Console.WriteLine($"?? === INICIO DE LOGIN ===");
-        Console.WriteLine($"?? Email: '{loginRequest.Email}', Documento: '{loginRequest.NumeroDocumento}'");
+        Console.WriteLine($"üîë === INICIO DE LOGIN ===");
+        Console.WriteLine($"üîë Email: '{loginRequest.Email}', Documento: '{loginRequest.NumeroDocumento}'");
         
-        // Validaciones b·sicas
+        // Validaciones b√°sicas
         if (string.IsNullOrEmpty(loginRequest.Email) || loginRequest.NumeroDocumento <= 0)
         {
             errorMessage = "Por favor, complete todos los campos";
-            Console.WriteLine($"? ValidaciÛn fallida: campos vacÌos");
+            Console.WriteLine($"‚ùå Validaci√≥n fallida: campos vac√≠os");
             return;
         }
 
@@ -319,66 +319,66 @@
 
         try
         {
-            Console.WriteLine($"?? Enviando peticiÛn de login...");
+            Console.WriteLine($"üîë Enviando petici√≥n de login...");
             var response = await AuthClient.LoginAsync(loginRequest);
 
-            Console.WriteLine($"?? Respuesta recibida:");
+            Console.WriteLine($"üîë Respuesta recibida:");
             Console.WriteLine($"   - IsSuccess: {response.IsSuccess}");
             Console.WriteLine($"   - Message: '{response.Message}'");
             Console.WriteLine($"   - Usuario: {(response.Usuario != null ? response.Usuario.NombreCompleto : "null")}");
 
             if (response.IsSuccess && response.Usuario != null)
             {
-                Console.WriteLine($"? Login exitoso para: {response.Usuario.NombreCompleto}");
+                Console.WriteLine($"‚úÖ Login exitoso para: {response.Usuario.NombreCompleto}");
                 Console.WriteLine($"   - Rol: {response.Usuario.NombreRol}");
                 Console.WriteLine($"   - Permisos: {response.Usuario.Permisos?.Count ?? 0} permisos");
                 
-                // Guardar estado de autenticaciÛn
+                // Guardar estado de autenticaci√≥n
                 await AuthState.SetCurrentUserAsync(response.Usuario);
                 
-                // Verificar que se guardÛ correctamente
-                await Task.Delay(200); // PequeÒa pausa para asegurar que se guardÛ
+                // Verificar que se guard√≥ correctamente
+                await Task.Delay(200); // Peque√±a pausa para asegurar que se guard√≥
                 
-                Console.WriteLine($"?? Estado despuÈs de SetCurrentUserAsync:");
+                Console.WriteLine($"üîë Estado despu√©s de SetCurrentUserAsync:");
                 Console.WriteLine($"   - AuthState.IsAuthenticated: {AuthState.IsAuthenticated}");
                 Console.WriteLine($"   - AuthState.CurrentUser: {AuthState.CurrentUser?.NombreCompleto ?? "null"}");
                 
-                // Mostrar toast de Èxito
-                ShowToast($"°Bienvenido/a, {response.Usuario.NombreCompleto}!", "success");
+                // Mostrar toast de √©xito
+                ShowToast($"¬°Bienvenido/a, {response.Usuario.NombreCompleto}!", "success");
                 
                 // Esperar un poco para que se vea el toast
                 await Task.Delay(1000);
                 
-                Console.WriteLine($"?? Redirigiendo a /index...");
+                Console.WriteLine($"üîë Redirigiendo a /index...");
                 
-                // Redirigir al Ìndice
+                // Redirigir al √≠ndice
                 Navigation.NavigateTo("/index", forceLoad: false);
             }
             else
             {
-                Console.WriteLine($"? Login fallido: {response.Message}");
+                Console.WriteLine($"‚ùå Login fallido: {response.Message}");
                 errorMessage = response.Message ?? "Error desconocido en el login";
                 ShowToast(errorMessage, "error");
             }
         }
         catch (HttpRequestException httpEx)
         {
-            Console.WriteLine($"? Error HTTP en login: {httpEx.Message}");
-            errorMessage = "Error de conexiÛn con el servidor. Verifique la conexiÛn.";
-            ShowToast("Error de conexiÛn", "error");
+            Console.WriteLine($"‚ùå Error HTTP en login: {httpEx.Message}");
+            errorMessage = "Error de conexi√≥n con el servidor. Verifique la conexi√≥n.";
+            ShowToast("Error de conexi√≥n", "error");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"? Error general en login: {ex.Message}");
+            Console.WriteLine($"‚ùå Error general en login: {ex.Message}");
             Console.WriteLine($"   Stack: {ex.StackTrace}");
-            errorMessage = "Error inesperado. Por favor, intÈntelo de nuevo.";
+            errorMessage = "Error inesperado. Por favor, int√©ntelo de nuevo.";
             ShowToast("Error inesperado", "error");
         }
         finally
         {
             isLoading = false;
             StateHasChanged();
-            Console.WriteLine($"?? === FIN DE LOGIN ===");
+            Console.WriteLine($"üîë === FIN DE LOGIN ===");
         }
     }
 
@@ -386,7 +386,7 @@
     {
         if (isLoading) return;
 
-        Console.WriteLine($"?? Setting test user: {userType}");
+        Console.WriteLine($"üîë Setting test user: {userType}");
 
         switch (userType.ToLower())
         {
@@ -428,7 +428,7 @@
         showToast = true;
         StateHasChanged();
 
-        // Auto-ocultar toast despuÈs de 3 segundos
+        // Auto-ocultar toast despu√©s de 3 segundos
         Task.Delay(3000).ContinueWith(_ => InvokeAsync(() =>
         {
             showToast = false;

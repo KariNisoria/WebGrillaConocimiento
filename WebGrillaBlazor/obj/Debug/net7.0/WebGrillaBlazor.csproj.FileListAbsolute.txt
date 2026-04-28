@@ -3353,9 +3353,6 @@ C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net
 C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\52a4z688wy-tptq2av103.gz
 C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\rqqlk83iri-lfu7j35m59.gz
 C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\aadj39y6p4-7cxe8oq9xu.gz
-C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\tavjk12k2h-9w1ftgjlfw.gz
-C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\y2k2hq3qtk-ubtbk2z347.gz
-C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\dyjae803e8-lpu8ec6f8b.gz
 C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\staticwebassets.build.json
 C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\staticwebassets.build.json.cache
 C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\staticwebassets.development.json
@@ -3366,3 +3363,6 @@ C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net
 C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\refint\WebGrillaBlazor.dll
 C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\WebGrillaBlazor.pdb
 C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\ref\WebGrillaBlazor.dll
+C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\tavjk12k2h-yvberwa9lg.gz
+C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\y2k2hq3qtk-6a1xvrqqw8.gz
+C:\Users\Karina\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\dyjae803e8-pkgum166aw.gz

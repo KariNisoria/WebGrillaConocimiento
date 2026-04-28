@@ -7,37 +7,86 @@
 
     <div class="form-group row mb-3">
         <label class="col-md-2 col-form-label">Id:</label>
-        <label class="col-md-10">@tema.IdTema</label>
+        <label class="col-md-10">
+            @if (tema.IdTema > 0)
+            {
+                <text>@tema.IdTema</text>
+            }
+            else
+            {
+                <span class="text-muted fst-italic">Se asignará automáticamente</span>
+            }
+        </label>
     </div>
 
     <div class="form-group row mb-3">
-        <label class="col-md-2 col-form-label">Nombre:</label>
+        <label class="col-md-2 col-form-label">
+            <span class="text-danger">*</span>
+            Nombre:
+        </label>
         <div class="col-md-10">
-            <TextInput @bind-Value="@tema.Nombre" Placeholder="Ingrese el nombre"></TextInput>
+            <TextInput @bind-Value="@tema.Nombre" Placeholder="Ingrese el nombre del tema" class="form-control"></TextInput>
+            <ValidationMessage For="@(() => tema.Nombre)" />
         </div>
     </div>
 
     <div class="form-group row mb-3">
         <label class="col-md-2 col-form-label">Orden:</label>
         <div class="col-md-10">
-            <NumberInput @bind-Value="@tema.Orden" Placeholder="Ingrese el Orden"></NumberInput>
+            <NumberInput @bind-Value="@tema.Orden" Placeholder="Orden de visualización" class="form-control"></NumberInput>
+            <ValidationMessage For="@(() => tema.Orden)" />
+            <div class="form-text">Determina el orden de visualización en las listas</div>
         </div>
     </div>
 
 </EditForm>
 
 <div class="row">
-    <div class="col-md-12 text-right">
-        <Button Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="ModificarTema">Grabar</Button>
-        <Button Type="ButtonType.Button" Color="ButtonColor.Warning" @onclick="EliminarTema">Eliminar</Button>
-        <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" @onclick="OnClickCallBack"> Cerrar</Button>
+    <div class="col-md-12 text-end">
+        <Button Type="ButtonType.Button" 
+                Color="ButtonColor.Success" 
+                @onclick="GrabarTema" 
+                Disabled="@isProcessing">
+            @if (isProcessing)
+            {
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            }
+            <Icon Name="IconName.Check" class="me-1" />
+            @(tema.IdTema > 0 ? "Actualizar" : "Crear") Tema
+        </Button>
+        
+        @if (tema.IdTema > 0)
+        {
+            <Button Type="ButtonType.Button" 
+                    Color="ButtonColor.Warning" 
+                    @onclick="EliminarTema"
+                    Disabled="@isProcessing"
+                    Class="ms-2">
+                <Icon Name="IconName.Trash" class="me-1" />
+                Eliminar
+            </Button>
+        }
+        
+        <Button Type="ButtonType.Button" 
+                Color="ButtonColor.Secondary" 
+                @onclick="CerrarModal"
+                Disabled="@isProcessing"
+                Class="ms-2">
+            <Icon Name="IconName.X" class="me-1" />
+            Cerrar
+        </Button>
     </div>
 </div>
 
 @if (!string.IsNullOrEmpty(errorMessage))
 {
     <div class="row mt-3">
-        <Alert Color="AlertColor.Danger">@errorMessage</Alert>
+        <div class="col-12">
+            <Alert Color="AlertColor.Danger" Dismissible="true" @onclose="ClearErrorMessage">
+                <Icon Name="IconName.ExclamationTriangle" class="me-2" />
+                @errorMessage
+            </Alert>
+        </div>
     </div>
 }
 
@@ -48,88 +97,145 @@
 
     private string errorMessage = "";
     private System.Timers.Timer _timer;
+    private bool isProcessing = false;
+    private bool isNewTema = false;
 
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine($"OnInitializedAsync() idTema: {tema.IdTema}");
+        Console.WriteLine($"FichaTema - OnInitializedAsync() idTema: {tema.IdTema}");
 
+        isNewTema = tema.IdTema == 0;
         editContext = new EditContext(tema);
 
-        var existeTema = await ExisteTema();
+        Console.WriteLine($"FichaTema - Es nuevo tema: {isNewTema}");
 
-        Console.WriteLine($"OnInitializedAsync() existeTema: {existeTema}");
-
-        if (!existeTema)
-        {
-            await AltaTema();
-        }
-
-        base.OnInitialized();
+        await base.OnInitializedAsync();
     }
 
     public void HandleOnValidSubmit()
     {
-        // additional check
         if (editContext.Validate())
         {
-            // do something
-            // submit the form
-            Console.WriteLine("Form submitted successfully");
+            Console.WriteLine("Formulario validado correctamente");
         }
     }
 
-    private async Task<bool> ExisteTema()
+    private async Task GrabarTema()
     {
-        var encontrado = await _apiClientTema.GetTemaByIdAsync(tema.IdTema);
-        if (encontrado == null)
+        if (isProcessing) return;
+
+        Console.WriteLine($"GrabarTema() - IdTema: {tema.IdTema}, Nombre: '{tema.Nombre}'");
+
+        // Validar campos requeridos
+        if (string.IsNullOrWhiteSpace(tema.Nombre))
         {
-            return false;
+            errorMessage = "El nombre del tema es obligatorio.";
+            return;
         }
-        Console.WriteLine($"ExisteTema() variable idTema: {encontrado.IdTema}");
-        return (encontrado.IdTema != null);
-    }
 
-    private async Task AltaTema()
-    {
-        Console.WriteLine("AltaTema()");
-        var nuevo = await _apiClientTema.AddTemaAsync(tema);
-        tema.IdTema = nuevo.IdTema;
+        try
+        {
+            isProcessing = true;
+            ClearErrorMessage();
 
-    }
+            if (isNewTema)
+            {
+                Console.WriteLine("Creando nuevo tema...");
+                var nuevoTema = await _apiClientTema.AddTemaAsync(tema);
+                tema.IdTema = nuevoTema.IdTema;
+                Console.WriteLine($"Tema creado con ID: {tema.IdTema}");
+            }
+            else
+            {
+                Console.WriteLine("Actualizando tema existente...");
+                await _apiClientTema.UpdateTemaAsync(tema.IdTema, tema);
+                Console.WriteLine("Tema actualizado correctamente");
+            }
 
-    private async Task ModificarTema()
-    {
-        Console.WriteLine("ModificarTema()");
-        await _apiClientTema.UpdateTemaAsync(tema.IdTema, tema);
+            // Cerrar modal y notificar éxito
+            await CerrarModal();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al grabar tema: {ex.Message}");
+            errorMessage = $"Error al {(isNewTema ? "crear" : "actualizar")} el tema: {ex.Message}";
+        }
+        finally
+        {
+            isProcessing = false;
+        }
     }
 
     private async Task EliminarTema()
     {
-        Console.WriteLine("EliminarTema()");
-        var resultado = await _apiClientTema.DeleteTemaAsync(tema.IdTema);
+        if (isProcessing || tema.IdTema == 0) return;
 
-        if (!resultado.IsSuccess)
-        {
-            Console.WriteLine("Error en el borrado");
-            errorMessage = resultado.Error; //muestra el mensaje de la api
+        Console.WriteLine($"EliminarTema() - IdTema: {tema.IdTema}");
 
-            // Inicia Temporizador
-            _timer = new System.Timers.Timer(3000); // 3000ms = 3 segundos
-            _timer.Elapsed += async (sender, e) =>
-            {
-                errorMessage = ""; // retorna a vacio
-                StateHasChanged();
-            };
-            _timer.Start();
-        }
-        else
+        try
         {
-            // Notificar al componente padre para cerrar la ficha
-            if (OnClickCallBack.HasDelegate)
+            isProcessing = true;
+            ClearErrorMessage();
+
+            var resultado = await _apiClientTema.DeleteTemaAsync(tema.IdTema);
+
+            if (!resultado.IsSuccess)
             {
-                await OnClickCallBack.InvokeAsync(null); // Dispara el callback
+                Console.WriteLine("Error en el borrado");
+                errorMessage = resultado.Error;
+                AutoClearErrorMessage();
+            }
+            else
+            {
+                Console.WriteLine("Tema eliminado correctamente");
+                await CerrarModal();
             }
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al eliminar tema: {ex.Message}");
+            errorMessage = $"Error al eliminar el tema: {ex.Message}";
+            AutoClearErrorMessage();
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
 
+    private async Task CerrarModal()
+    {
+        if (OnClickCallBack.HasDelegate)
+        {
+            await OnClickCallBack.InvokeAsync(null);
+        }
+    }
+
+    private void ClearErrorMessage()
+    {
+        errorMessage = "";
+        _timer?.Stop();
+        _timer?.Dispose();
+    }
+
+    private void AutoClearErrorMessage()
+    {
+        _timer?.Stop();
+        _timer?.Dispose();
+        
+        _timer = new System.Timers.Timer(5000); // 5 segundos
+        _timer.Elapsed += (sender, e) =>
+        {
+            errorMessage = "";
+            InvokeAsync(() => StateHasChanged());
+            _timer.Dispose();
+        };
+        _timer.Start();
+    }
+
+    public void Dispose()
+    {
+        _timer?.Stop();
+        _timer?.Dispose();
     }
 }

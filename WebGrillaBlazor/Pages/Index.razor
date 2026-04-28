@@ -1,4 +1,5 @@
-﻿@page "/index"
+﻿@page "/"
+@page "/index"
 @using WebGrillaBlazor.DTOs
 @using WebGrillaBlazor.Services
 @inject AuthStateService AuthState
@@ -178,10 +179,6 @@ else if (AuthState.IsAuthenticated && AuthState.CurrentUser != null)
                                     <Icon Name="IconName.Shield" class="me-1" />
                                     Gestión de Permisos
                                 </a>
-                                <a href="/admin/permisos-roles" class="btn btn-danger btn-sm">
-                                    <Icon Name="IconName.Gear" class="me-1" />
-                                    Configurar Permisos y Rutas
-                                </a>
                             </div>
                             <div class="mt-2">
                                 <small class="text-danger">
@@ -275,7 +272,7 @@ else
     private void RedirectToLogin()
     {
         Console.WriteLine("🏠 Index: Redirección manual a login");
-        Navigation.NavigateTo("/", forceLoad: true);
+        Navigation.NavigateTo("/login", forceLoad: true);
     }
 }
 

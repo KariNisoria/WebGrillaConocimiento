@@ -40,6 +40,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEaWFnbm9zdGljUGFuZWwucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Components/UserInfoBar.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xVc2VySW5mb0Jhci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Karina/Source/Repos/WebGrillaConocimiento/WebGrillaBlazor/Pages/Clientes.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpZW50ZXMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 

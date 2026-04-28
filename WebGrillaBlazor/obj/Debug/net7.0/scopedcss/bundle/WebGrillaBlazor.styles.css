@@ -135,6 +135,26 @@ main[b-gx6gzi1hjj] {
     color: white;
 }
 
+/* Ajustes para el �rea superior del navbar */
+.top-row[b-kbg7g5kk3t] {
+    position: relative;
+    z-index: 1000;
+}
+
+.top-row .container-fluid[b-kbg7g5kk3t] {
+    height: 100%;
+}
+
+/* Mejor alineaci�n de los elementos del navbar */
+.top-row .navbar-brand[b-kbg7g5kk3t] {
+    flex-shrink: 0;
+}
+
+.top-row .d-flex[b-kbg7g5kk3t] {
+    flex-shrink: 0;
+    gap: 0.5rem;
+}
+
 @media (min-width: 641px) {
     .navbar-toggler[b-kbg7g5kk3t] {
         display: none;
@@ -149,5 +169,23 @@ main[b-gx6gzi1hjj] {
         /* Allow sidebar to scroll for tall menus */
         height: calc(100vh - 3.5rem);
         overflow-y: auto;
+    }
+}
+
+/* Ajustes espec�ficos para dispositivos m�viles */
+@media (max-width: 640px) {
+    .top-row[b-kbg7g5kk3t] {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    .navbar-brand[b-kbg7g5kk3t] {
+        font-size: 1rem;
+        margin-right: 0.5rem;
+    }
+    
+    .navbar-toggler[b-kbg7g5kk3t] {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.9rem;
     }
 }

@@ -211,10 +211,25 @@ namespace WebGrilla.Services
                 Evaluaciones = evaluaciones
             };
 
+            // Obtener el total de subtemas para esta grilla
+            var totalSubtemasGrilla = await _grillaSubtemaRepository.GetByGrillaAsync(idGrilla);
+            var totalSubtemas = totalSubtemasGrilla.Count;
+
             foreach (var evaluacion in evaluaciones)
             {
                 var conocimientos = await _conocimientoRepository.GetByEvaluacionAndRecursoAsync(evaluacion.IdEvaluacion, evaluacion.IdRecurso);
-                if (conocimientos.Any())
+                
+                // Contar solo los conocimientos que han sido realmente evaluados (con valores > 0)
+                var conocimientosEvaluados = conocimientos.Count(c => 
+                    c.ValorFuncional > 0 || c.ValorTecnico > 0);
+                
+                // Calcular el porcentaje de completitud de esta evaluación
+                var porcentajeEvaluacion = totalSubtemas > 0 
+                    ? (decimal)conocimientosEvaluados / totalSubtemas * 100 
+                    : 0;
+
+                // Considerar evaluación completada solo si tiene al menos 80% de progreso
+                if (porcentajeEvaluacion >= 80)
                 {
                     resumen.EvaluacionesCompletadas++;
                     resumen.EvaluacionesPendientes--;
