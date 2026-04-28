@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj": {}
+    "C:\\Users\\knisoria\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj": {
+    "C:\\Users\\knisoria\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
+        "projectUniqueName": "C:\\Users\\knisoria\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
         "projectName": "WebGrillaBlazor",
-        "projectPath": "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
-        "packagesPath": "C:\\Users\\Karina\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\obj\\",
+        "projectPath": "C:\\Users\\knisoria\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
+        "packagesPath": "C:\\Users\\knisoria\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\knisoria\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Karina\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\knisoria\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -94,7 +94,7 @@
             "Microsoft.NET.Sdk.WebAssembly.Pack": {
               "suppressParent": "All",
               "target": "Package",
-              "version": "[9.0.9, )",
+              "version": "[9.0.6, )",
               "autoReferenced": true
             }
           },
@@ -120,7 +120,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301\\RuntimeIdentifierGraph.json"
         }
       },
       "runtimes": {

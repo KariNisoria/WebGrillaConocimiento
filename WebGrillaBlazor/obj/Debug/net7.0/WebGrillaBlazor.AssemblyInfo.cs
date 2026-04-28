@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WebGrillaBlazor")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ada63e49d49c9d7c1a0ffb5b055e24e52e9784f9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ce2c875fc8bd7d26ab07aeb8777384207099755c")]
 [assembly: System.Reflection.AssemblyProductAttribute("WebGrillaBlazor")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WebGrillaBlazor")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

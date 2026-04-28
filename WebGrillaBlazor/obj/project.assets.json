@@ -550,7 +550,7 @@
           "build/Microsoft.NET.ILLink.Tasks.props": {}
         }
       },
-      "Microsoft.NET.Sdk.WebAssembly.Pack/9.0.9": {
+      "Microsoft.NET.Sdk.WebAssembly.Pack/9.0.6": {
         "type": "package",
         "build": {
           "build/Microsoft.NET.Sdk.WebAssembly.Pack.props": {},
@@ -1164,7 +1164,7 @@
           "build/Microsoft.NET.ILLink.Tasks.props": {}
         }
       },
-      "Microsoft.NET.Sdk.WebAssembly.Pack/9.0.9": {
+      "Microsoft.NET.Sdk.WebAssembly.Pack/9.0.6": {
         "type": "package",
         "build": {
           "build/Microsoft.NET.Sdk.WebAssembly.Pack.props": {},
@@ -2201,10 +2201,10 @@
         "tools/net7.0/illink.runtimeconfig.json"
       ]
     },
-    "Microsoft.NET.Sdk.WebAssembly.Pack/9.0.9": {
-      "sha512": "Nx4yF/l8YyzwHM+xBRFOSGv77mjBZP0XkImzLMdrSBGYPB32nEZNXTSwhH9viDhxMhGij+fVUjJj5iAtUdMBww==",
+    "Microsoft.NET.Sdk.WebAssembly.Pack/9.0.6": {
+      "sha512": "0KAM0CWU4v1KbKdsyOAkqY3txcrvwVkgYkgRwCnKJS8so0B+O562YAUwDcok5YWC3qFK/+dBAwtn9KK1JL4Xrw==",
       "type": "package",
-      "path": "microsoft.net.sdk.webassembly.pack/9.0.9",
+      "path": "microsoft.net.sdk.webassembly.pack/9.0.6",
       "hasTools": true,
       "files": [
         ".nupkg.metadata",
@@ -2235,7 +2235,7 @@
         "build/Microsoft.NET.Sdk.WebAssembly.Pack.targets",
         "build/Wasm.web.config",
         "build/browser.runtimeconfig.template.json",
-        "microsoft.net.sdk.webassembly.pack.9.0.9.nupkg.sha512",
+        "microsoft.net.sdk.webassembly.pack.9.0.6.nupkg.sha512",
         "microsoft.net.sdk.webassembly.pack.nuspec",
         "tools/net472/Microsoft.NET.Sdk.WebAssembly.Pack.Tasks.dll",
         "tools/net472/Microsoft.NET.WebAssembly.Webcil.dll",
@@ -2384,27 +2384,27 @@
       "Microsoft.AspNetCore.Components.WebAssembly.DevServer >= 7.0.7",
       "Microsoft.NET.ILLink.Analyzers >= 7.0.100-1.23211.1",
       "Microsoft.NET.ILLink.Tasks >= 7.0.100-1.23211.1",
-      "Microsoft.NET.Sdk.WebAssembly.Pack >= 9.0.9"
+      "Microsoft.NET.Sdk.WebAssembly.Pack >= 9.0.6"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Karina\\.nuget\\packages\\": {},
+    "C:\\Users\\knisoria\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
+      "projectUniqueName": "C:\\Users\\knisoria\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
       "projectName": "WebGrillaBlazor",
-      "projectPath": "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
-      "packagesPath": "C:\\Users\\Karina\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Karina\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\obj\\",
+      "projectPath": "C:\\Users\\knisoria\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\WebGrillaBlazor.csproj",
+      "packagesPath": "C:\\Users\\knisoria\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\knisoria\\Source\\Repos\\WebGrillaConocimiento\\WebGrillaBlazor\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\Karina\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\knisoria\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -2481,7 +2481,7 @@
           "Microsoft.NET.Sdk.WebAssembly.Pack": {
             "suppressParent": "All",
             "target": "Package",
-            "version": "[9.0.9, )",
+            "version": "[9.0.6, )",
             "autoReferenced": true
           }
         },
@@ -2507,7 +2507,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301\\RuntimeIdentifierGraph.json"
       }
     },
     "runtimes": {

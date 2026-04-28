@@ -5,6 +5,7 @@
 @inject ApiClientEvaluacion EvaluacionClient
 @inject ApiClientGeneric<RecursoDTO> RecursoClient
 @inject ApiClientGeneric<GrillaDTO> GrillaClient
+@inject ApiClientRecursoSupervisor RecursoSupervisorClient
 @inject AuthStateService AuthState
 @inject NavigationManager Navigation
 
@@ -670,10 +671,12 @@
             // Solo mostrar recursos supervisados
             try
             {
-                var evaluacionesSupervisadas = await EvaluacionClient.GetEvaluacionesPorSupervisionAsync(AuthState.GetCurrentUserId());
-                var idRecursosSupervisados = evaluacionesSupervisadas.Select(e => e.IdRecurso).Distinct().ToList();
-                
-                recursosDisponibles = recursos.Where(r => idRecursosSupervisados.Contains(r.IdRecurso)).ToList();
+                var supervisionView = await RecursoSupervisorClient.GetSupervisionViewAsync(AuthState.GetCurrentUserId());
+                if (supervisionView != null && supervisionView.RecursosSupervisados.Any())
+                {
+                    var idRecursosSupervisados = supervisionView.RecursosSupervisados.Select(s => s.IdRecurso).ToList();
+                    recursosDisponibles = recursos.Where(r => idRecursosSupervisados.Contains(r.IdRecurso)).ToList();
+                }
             }
             catch (Exception ex)
             {
