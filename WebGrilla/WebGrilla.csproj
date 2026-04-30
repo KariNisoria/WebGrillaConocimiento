@@ -25,4 +25,8 @@
     <Folder Include="WebGrilla\Controllers\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="WebGrillaBlazor\WebGrillaBlazor.csproj" />
+  </ItemGroup>
+
 </Project>

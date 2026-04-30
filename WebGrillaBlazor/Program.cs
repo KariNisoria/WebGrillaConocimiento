@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Components.Web;
+Ôªøusing Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using WebGrillaBlazor;
 using WebGrillaBlazor.ApiClient;
@@ -9,13 +9,21 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
+// üéØ CONFIGURACI√ìN DE URL DIN√ÅMICA
+var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:8080/";
+
 // Configurar HttpClient con la URL base
 builder.Services.AddScoped(sp =>
 {
-    return new HttpClient
+    var httpClient = new HttpClient
     {
-        BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7093/")
+        BaseAddress = new Uri(apiBaseUrl)
     };
+
+    // Agregar headers necesarios
+    httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+
+    return httpClient;
 });
 
 // Registrar los clientes API
@@ -25,17 +33,18 @@ builder.Services.AddScoped<ApiClientRecurso>();
 builder.Services.AddScoped<ApiClientEvaluacion>();
 builder.Services.AddScoped<ApiClientConocimiento>();
 builder.Services.AddScoped(typeof(ApiClientGeneric<>));
-
-// NUEVO: Registrar servicios de autenticaciÛn
 builder.Services.AddScoped<ApiClientAuthentication>();
 builder.Services.AddScoped<AuthStateService>();
-
-// NUEVO: Registrar cliente API de supervisiÛn
 builder.Services.AddScoped<ApiClientRecursoSupervisor>();
 
 builder.Services.AddBlazorBootstrap();
 
 var app = builder.Build();
 
-// Remover la inicializaciÛn aquÌ - se har· en AppStateInitializer
+// Log de configuraci√≥n en consola (solo en desarrollo)
+if (builder.HostEnvironment.IsDevelopment())
+{
+    Console.WriteLine($"üåê Frontend configurado para conectar a: {apiBaseUrl}");
+}
+
 await app.RunAsync();

@@ -1,11 +1,14 @@
 @page "/evaluacion/{IdEvaluacion:int}/recurso/{IdRecurso:int}"
 @using WebGrillaBlazor.DTOs
 @using WebGrillaBlazor.ApiClient
+@using WebGrillaBlazor.Services
 @inject ApiClientEvaluacion EvaluacionClient
 @inject ApiClientConocimiento ConocimientoClient
 @inject ApiClientGeneric<RecursoDTO> RecursoClient
 @inject ApiClientGeneric<GrillaTemaDTO> GrillaTemaClient
 @inject ApiClientGeneric<GrillaSubtemaDTO> GrillaSubtemaClient
+@inject ApiClientRecursoSupervisor RecursoSupervisorClient
+@inject AuthStateService AuthState
 @inject NavigationManager Navigation
 
 <div class="container-fluid">
@@ -23,6 +26,18 @@
                     <small class="text-muted">
                         Progreso: <strong>@progresoTotal.ToString("F1")%</strong>
                     </small>
+                    @if (esRecursoDueño)
+                    {
+                        <span class="badge bg-success">
+                            <Icon Name="IconName.PersonFill" /> Tu Evaluación
+                        </span>
+                    }
+                    @if (esSupervisor)
+                    {
+                        <span class="badge bg-warning text-dark">
+                            <Icon Name="IconName.ShieldCheck" /> Supervisor
+                        </span>
+                    }
                 </div>
             }
         </div>
@@ -43,11 +58,11 @@
                         <small class="text-muted">@subtemasCargados de @totalSubtemas subtemas evaluados</small>
                     </div>
                     <div class="progress" style="height: 25px;">
-                        <div class="progress-bar @GetProgressBarClass()" 
-                             role="progressbar" 
-                             style="width: @progresoTotal%" 
-                             aria-valuenow="@progresoTotal" 
-                             aria-valuemin="0" 
+                        <div class="progress-bar @GetProgressBarClass()"
+                             role="progressbar"
+                             style="width: @progresoTotal%"
+                             aria-valuenow="@progresoTotal"
+                             aria-valuemin="0"
                              aria-valuemax="100">
                             @progresoTotal.ToString("F1")%
                         </div>
@@ -70,15 +85,15 @@
                             var tema = temasBinarizados.OrderBy(t => t.Orden).ElementAt(i);
                             var tabId = $"tema-tab-{tema.IdGrillaTema}";
                             var isActive = i == temaActivo;
-                            
+
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link @(isActive ? "active" : "")" 
-                                        id="@($"{tabId}-tab")" 
-                                        data-bs-toggle="tab" 
-                                        data-bs-target="@($"#{tabId}")" 
-                                        type="button" 
-                                        role="tab" 
-                                        aria-controls="@tabId" 
+                                <button class="nav-link @(isActive ? "active" : "")"
+                                        id="@($"{tabId}-tab")"
+                                        data-bs-toggle="tab"
+                                        data-bs-target="@($"#{tabId}")"
+                                        type="button"
+                                        role="tab"
+                                        aria-controls="@tabId"
                                         aria-selected="@(isActive ? "true" : "false")"
                                         @onclick="@(() => CambiarTemaActivo(i))">
                                     <span>@tema.Nombre</span>
@@ -97,13 +112,13 @@
                             var tema = temasBinarizados.OrderBy(t => t.Orden).ElementAt(i);
                             var tabId = $"tema-tab-{tema.IdGrillaTema}";
                             var isActive = i == temaActivo;
-                            
-                            <div class="tab-pane fade @(isActive ? "show active" : "")" 
-                                 id="@tabId" 
-                                 role="tabpanel" 
-                                 aria-labelledby="@($"{tabId}-tab")" 
+
+                            <div class="tab-pane fade @(isActive ? "show active" : "")"
+                                 id="@tabId"
+                                 role="tabpanel"
+                                 aria-labelledby="@($"{tabId}-tab")"
                                  tabindex="0">
-                                
+
                                 <!-- Header del tema en el tab -->
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <div class="d-flex align-items-center gap-3">
@@ -133,7 +148,7 @@
                                             Progreso: <strong>@tema.ProgresoCompletitud.ToString("F1")%</strong>
                                         </small>
                                         <div class="progress progress-completitud" style="width: 150px;">
-                                            <div class="progress-bar @(tema.ProgresoCompletitud >= 100 ? "bg-success" : "bg-warning")" 
+                                            <div class="progress-bar @(tema.ProgresoCompletitud >= 100 ? "bg-success" : "bg-warning")"
                                                  style="width: @Math.Min(tema.ProgresoCompletitud, 100)%">
                                             </div>
                                         </div>
@@ -156,9 +171,43 @@
                                             <thead>
                                                 <tr>
                                                     <th style="width: 40%;">Subtema</th>
-                                                    <th style="width: 20%;" class="text-center">Valor Funcional (0-5)</th>
-                                                    <th style="width: 20%;" class="text-center">Valor Técnico (0-5)</th>
-                                                    <th style="width: 15%;" class="text-center">Estado</th>
+                                                    <th style="width: 15%;" class="text-center">
+                                                        Valor Funcional (0-5)
+                                                        @if (esRecursoDueño)
+                                                        {
+                                                            <br />
+                                            
+                                                            <small class="text-success">Editable</small>
+                                                        }
+                                                    </th>
+                                                    <th style="width: 15%;" class="text-center">
+                                                        Valor Técnico (0-5)
+                                                        @if (esRecursoDueño)
+                                                        {
+                                                            <br />
+                                            
+                                                            <small class="text-success">Editable</small>
+                                                        }
+                                                    </th>
+                                                    <th style="width: 15%;" class="text-center">
+                                                        Valor Funcional Verificado (0-5)
+                                                        @if (esSupervisor)
+                                                        {
+                                                            <br />
+                                            
+                                                            <small class="text-warning">Supervisor</small>
+                                                        }
+                                                    </th>
+                                                    <th style="width: 15%;" class="text-center">
+                                                        Valor Técnico Verificado (0-5)
+                                                        @if (esSupervisor)
+                                                        {
+                                                            <br />
+                                            
+                                                            <small class="text-warning">Supervisor</small>
+                                                        }
+                                                    </th>
+                                                    <th style="width: 10%;" class="text-center">Estado</th>
                                                     <th style="width: 5%;" class="text-center">Acciones</th>
                                                 </tr>
                                             </thead>
@@ -166,6 +215,9 @@
                                                 @foreach (var subtema in tema.Subtemas.OrderBy(s => s.Orden))
                                                 {
                                                     var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == subtema.IdSubtema);
+                                                    var puedeEditarVerificacion = esSupervisor && conocimiento != null &&
+                                                    (conocimiento.ValorFuncional > 0 || conocimiento.ValorTecnico > 0);
+
                                                     <tr class="@(conocimiento != null ? "table-light" : "")">
                                                         <td>
                                                             <div>
@@ -176,30 +228,83 @@
                                                                 }
                                                             </div>
                                                         </td>
+
+                                                        <!-- Valor Funcional - Solo recurso dueño -->
                                                         <td class="text-center">
-                                                            <input type="number" 
-                                                                   class="form-control form-control-sm text-center" 
-                                                                   min="0" 
-                                                                   max="5" 
+                                                            <input type="number"
+                                                                   class="form-control form-control-sm text-center @(esRecursoDueño ? "border-success" : "")"
+                                                                   min="0"
+                                                                   max="5"
                                                                    step="1"
                                                                    value="@(conocimiento?.ValorFuncional ?? 0)"
-                                                                   @onchange="@(e => ActualizarValorFuncional(subtema.IdSubtema, e))" />
+                                                                   @onchange="@(e => ActualizarValorFuncional(subtema.IdSubtema, e))"
+                                                                   disabled="@(!esRecursoDueño)"
+                                                                   title="@(esRecursoDueño ? "Puedes editar este valor" : "Solo el recurso puede editar este valor")" />
                                                         </td>
+
+                                                        <!-- Valor Técnico - Solo recurso dueño -->
                                                         <td class="text-center">
-                                                            <input type="number" 
-                                                                   class="form-control form-control-sm text-center" 
-                                                                   min="0" 
-                                                                   max="5" 
+                                                            <input type="number"
+                                                                   class="form-control form-control-sm text-center @(esRecursoDueño ? "border-success" : "")"
+                                                                   min="0"
+                                                                   max="5"
                                                                    step="1"
                                                                    value="@(conocimiento?.ValorTecnico ?? 0)"
-                                                                   @onchange="@(e => ActualizarValorTecnico(subtema.IdSubtema, e))" />
+                                                                   @onchange="@(e => ActualizarValorTecnico(subtema.IdSubtema, e))"
+                                                                   disabled="@(!esRecursoDueño)"
+                                                                   title="@(esRecursoDueño ? "Puedes editar este valor" : "Solo el recurso puede editar este valor")" />
                                                         </td>
+
+                                                        <!-- Valor Funcional Verificado - Solo supervisor y si valores > 0 -->
+                                                        <td class="text-center">
+                                                            <input type="number"
+                                                                   class="form-control form-control-sm text-center @(puedeEditarVerificacion ? "border-warning" : "")"
+                                                                   min="0"
+                                                                   max="5"
+                                                                   step="1"
+                                                                   value="@(conocimiento?.ValorFuncionalVerif ?? 0)"
+                                                                   @onchange="@(e => ActualizarValorFuncionalVerif(subtema.IdSubtema, e))"
+                                                                   disabled="@(!puedeEditarVerificacion)"
+                                                                   title="@(puedeEditarVerificacion ? "Puedes verificar este valor como supervisor" : !esSupervisor ? "Solo supervisores pueden verificar" : "Primero deben cargarse los valores funcional y técnico")" />
+                                                            @if (!puedeEditarVerificacion && esSupervisor)
+                                                            {
+                                                                <small class="text-muted d-block">Pendiente evaluación</small>
+                                                            }
+                                                        </td>
+
+                                                        <!-- Valor Técnico Verificado - Solo supervisor y si valores > 0 -->
+                                                        <td class="text-center">
+                                                            <input type="number"
+                                                                   class="form-control form-control-sm text-center @(puedeEditarVerificacion ? "border-warning" : "")"
+                                                                   min="0"
+                                                                   max="5"
+                                                                   step="1"
+                                                                   value="@(conocimiento?.ValorTecnicoVerif ?? 0)"
+                                                                   @onchange="@(e => ActualizarValorTecnicoVerif(subtema.IdSubtema, e))"
+                                                                   disabled="@(!puedeEditarVerificacion)"
+                                                                   title="@(puedeEditarVerificacion ? "Puedes verificar este valor como supervisor" : !esSupervisor ? "Solo supervisores pueden verificar" : "Primero deben cargarse los valores funcional y técnico")" />
+                                                            @if (!puedeEditarVerificacion && esSupervisor)
+                                                            {
+                                                                <small class="text-muted d-block">Pendiente evaluación</small>
+                                                            }
+                                                        </td>
+
+                                                        <!-- Estado -->
                                                         <td class="text-center">
                                                             @if (conocimiento != null && (conocimiento.ValorFuncional > 0 || conocimiento.ValorTecnico > 0))
                                                             {
-                                                                <span class="badge bg-success">
-                                                                    <Icon Name="IconName.Check" /> Evaluado
-                                                                </span>
+                                                                @if (conocimiento.ValorFuncionalVerif.HasValue || conocimiento.ValorTecnicoVerif.HasValue)
+                                                                {
+                                                                    <span class="badge bg-success">
+                                                                        <Icon Name="IconName.CheckCircleFill" /> Verificado
+                                                                    </span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="badge bg-warning text-dark">
+                                                                        <Icon Name="IconName.Clock" /> Pendiente Verificación
+                                                                    </span>
+                                                                }
                                                             }
                                                             else
                                                             {
@@ -208,12 +313,14 @@
                                                                 </span>
                                                             }
                                                         </td>
+
+                                                        <!-- Acciones -->
                                                         <td class="text-center">
-                                                            <Button Color="ButtonColor.Primary" 
-                                                                    Size="ButtonSize.ExtraSmall" 
+                                                            <Button Color="ButtonColor.Primary"
+                                                                    Size="ButtonSize.ExtraSmall"
                                                                     Class="btn-save-row"
                                                                     @onclick="@(() => GuardarConocimiento(subtema.IdSubtema))"
-                                                                    Disabled="@guardandoConocimiento">
+                                                                    Disabled="@(guardandoConocimiento || (!esRecursoDueño && !esSupervisor))">
                                                                 @if (guardandoConocimiento)
                                                                 {
                                                                     <Icon Name="IconName.HourglassSplit" />
@@ -232,21 +339,21 @@
                                 }
 
                                 <!-- Botones de acción específicos del tema actual -->
-                                @if (tema.Subtemas.Any())
+                                @if (tema.Subtemas.Any() && (esRecursoDueño || esSupervisor))
                                 {
                                     <div class="mt-4 p-3 bg-light rounded">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div>
                                                 <strong>Tema: @tema.Nombre</strong>
                                                 <small class="text-muted d-block">
-                                                    @tema.Subtemas.Count subtemas • 
+                                                    @tema.Subtemas.Count subtemas •
                                                     @tema.Subtemas.Count(s => conocimientos.Any(c => c.IdSubtema == s.IdSubtema && (c.ValorFuncional > 0 || c.ValorTecnico > 0))) evaluados
                                                 </small>
                                             </div>
                                             <div class="btn-group" role="group">
-                                                <Button Color="ButtonColor.Success" 
-                                                        Size="ButtonSize.Small" 
-                                                        @onclick="@(() => GuardarTodoElTema(tema.IdGrillaTema))" 
+                                                <Button Color="ButtonColor.Success"
+                                                        Size="ButtonSize.Small"
+                                                        @onclick="@(() => GuardarTodoElTema(tema.IdGrillaTema))"
                                                         Disabled="@guardandoTema">
                                                     @if (guardandoTema)
                                                     {
@@ -287,12 +394,12 @@
                             <Icon Name="IconName.ExclamationTriangle" Size="IconSize.x2" />
                             <p class="mt-2">No hay temas disponibles para evaluar</p>
                             <small class="text-muted">
-                                Verifica que la evaluación tenga una grilla asignada con temas configurados.<br/>
-                                <strong>Debug Info:</strong><br/>
-                                - Evaluación ID: @IdEvaluacion<br/>
-                                - Recurso ID: @IdRecurso<br/>
-                                - Grilla ID: @(evaluacion?.IdGrilla.ToString() ?? "No asignada")<br/>
-                                - Temas encontrados: @grillaTemas.Count<br/>
+                                Verifica que la evaluación tenga una grilla asignada con temas configurados.<br />
+                                <strong>Debug Info:</strong><br />
+                                - Evaluación ID: @IdEvaluacion<br />
+                                - Recurso ID: @IdRecurso<br />
+                                - Grilla ID: @(evaluacion?.IdGrilla.ToString() ?? "No asignada")<br />
+                                - Temas encontrados: @grillaTemas.Count<br />
                                 - Subtemas encontrados: @grillaSubtemas.Count
                             </small>
                         }
@@ -303,7 +410,7 @@
     }
 
     <!-- Botones de acción globales -->
-    @if (temasBinarizados.Any())
+    @if (temasBinarizados.Any() && (esRecursoDueño || esSupervisor))
     {
         <div class="row mt-4">
             <div class="col-12">
@@ -313,8 +420,20 @@
                             <div>
                                 <h6 class="mb-1">Acciones Globales de Evaluación</h6>
                                 <small class="text-muted">
-                                    Progreso actual: @progresoTotal.ToString("F1")% completado • 
+                                    Progreso actual: @progresoTotal.ToString("F1")% completado •
                                     @temasBinarizados.Count temas • @totalSubtemas subtemas totales
+                                    @if (esRecursoDueño)
+                                    {
+                                        <br />
+                                
+                                        <span class="text-success">Puedes editar valores funcional y técnico</span>
+                                    }
+                                    @if (esSupervisor)
+                                    {
+                                        <br />
+                                
+                                        <span class="text-warning">Puedes verificar valores evaluados</span>
+                                    }
                                 </small>
                             </div>
                             <div class="btn-group" role="group">
@@ -346,7 +465,7 @@
             <div class="toast-body">
                 @mensajeToast
             </div>
-            <button type="button" class="btn-close @(tipoToast == "success" ? "btn-close-white" : "btn-close-white") me-2 m-auto" @onclick="()=>mostrarToast=false" aria-label="Close"></button>
+            <button type="button" class="btn-close @(tipoToast == "success" ? "btn-close-white" : "btn-close-white") me-2 m-auto" @onclick="() => mostrarToast = false" aria-label="Close"></button>
         </div>
     </div>
 }
@@ -362,6 +481,10 @@
     private List<ConocimientoRecursoDTO> conocimientos = new();
     private List<TemaConSubtemasEvaluacion> temasBinarizados = new();
 
+    // Variables de permisos y roles
+    private bool esRecursoDueño = false;
+    private bool esSupervisor = false;
+
     private bool cargandoDatos = true;
     private bool guardandoConocimiento = false;
     private bool guardandoTodo = false;
@@ -371,7 +494,7 @@
     private string tipoToast = "success";
 
     // Control de tabs
-    private int temaActivo = 0; // Índice del tema activo
+    private int temaActivo = 0;
 
     // Clase auxiliar para organizar temas con sus subtemas
     public class TemaConSubtemasEvaluacion
@@ -385,16 +508,48 @@
     }
 
     // Propiedades calculadas
-    private decimal progresoTotal => temasBinarizados.Count > 0 
-        ? temasBinarizados.Average(t => t.ProgresoCompletitud) 
+    private decimal progresoTotal => temasBinarizados.Count > 0
+        ? temasBinarizados.Average(t => t.ProgresoCompletitud)
         : 0;
 
-    private int subtemasCargados => conocimientos.Count(c => c.ValorFuncional > 0 || c.ValorTecnico > 0); // Solo contar los realmente evaluados
+    private int subtemasCargados => conocimientos.Count(c => c.ValorFuncional > 0 || c.ValorTecnico > 0);
     private int totalSubtemas => grillaSubtemas.Count;
 
     protected override async Task OnInitializedAsync()
     {
+        await VerificarPermisos();
         await CargarDatos();
+    }
+
+    private async Task VerificarPermisos()
+    {
+        try
+        {
+            // Verificar si el usuario actual es el dueño de la evaluación
+            var usuarioActual = AuthState.GetCurrentUserId();
+            esRecursoDueño = usuarioActual == IdRecurso;
+
+            // Verificar si el usuario actual es supervisor del recurso evaluado
+            if (!esRecursoDueño && AuthState.CanSupervise())
+            {
+                esSupervisor = await RecursoSupervisorClient.ExisteRelacionAsync(usuarioActual, IdRecurso);
+                Console.WriteLine($"Usuario {usuarioActual} es supervisor de {IdRecurso}: {esSupervisor}");
+            }
+
+            Console.WriteLine($"Permisos - Es dueño: {esRecursoDueño}, Es supervisor: {esSupervisor}");
+
+            // Si no es dueño ni supervisor, redirigir
+            if (!esRecursoDueño && !esSupervisor && !AuthState.CanViewAllEvaluations())
+            {
+                MostrarToast("No tienes permisos para acceder a esta evaluación", "error");
+                await Task.Delay(2000);
+                Navigation.NavigateTo("/evaluaciones");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al verificar permisos: {ex.Message}");
+        }
     }
 
     private void CambiarTemaActivo(int indice)
@@ -408,7 +563,7 @@
         if (progreso >= 100)
             return "complete";
         else if (progreso > 100)
-            return "exceed"; 
+            return "exceed";
         else if (progreso > 0)
             return "partial";
         else
@@ -518,7 +673,7 @@
             Console.WriteLine($"Cargando conocimientos para evaluación {IdEvaluacion} y recurso {IdRecurso}");
             conocimientos = await ConocimientoClient.GetConocimientosPorEvaluacionYRecursoAsync(IdEvaluacion, IdRecurso);
             Console.WriteLine($"Conocimientos cargados desde BD: {conocimientos.Count}");
-            
+
             // Si no hay conocimientos guardados en BD, generar conocimientos temporales
             if (!conocimientos.Any() && evaluacion?.IdGrilla != null)
             {
@@ -526,12 +681,6 @@
                 var conocimientosTemporales = await EvaluacionClient.GenerarConocimientosTemporalesAsync(IdEvaluacion, IdRecurso, evaluacion.IdGrilla);
                 conocimientos.AddRange(conocimientosTemporales);
                 Console.WriteLine($"Conocimientos temporales generados: {conocimientosTemporales.Count}");
-            }
-            
-            // Debug: Mostrar información de conocimientos cargados
-            foreach (var conocimiento in conocimientos)
-            {
-                Console.WriteLine($"Conocimiento ID: {conocimiento.IdConocimientoRecurso}, Subtema: {conocimiento.IdSubtema}, Func: {conocimiento.ValorFuncional}, Tec: {conocimiento.ValorTecnico}");
             }
         }
         catch (Exception ex)
@@ -562,14 +711,13 @@
         {
             if (!tema.Subtemas.Any())
             {
-                tema.ProgresoCompletitud = 100; // Si no hay subtemas, se considera completo
+                tema.ProgresoCompletitud = 100;
                 continue;
             }
 
             var subtemasEvaluados = tema.Subtemas.Count(subtema =>
             {
                 var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == subtema.IdSubtema);
-                // Considerar evaluado solo si tiene valores reales (no 0,0)
                 return conocimiento != null && (conocimiento.ValorFuncional > 0 || conocimiento.ValorTecnico > 0);
             });
 
@@ -590,6 +738,12 @@
 
     private void ActualizarValorFuncional(int idSubtema, ChangeEventArgs e)
     {
+        if (!esRecursoDueño)
+        {
+            MostrarToast("Solo el recurso dueño puede editar los valores funcional y técnico", "warning");
+            return;
+        }
+
         if (int.TryParse(e.Value?.ToString(), out var valor) && valor >= 0 && valor <= 5)
         {
             var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == idSubtema);
@@ -599,10 +753,9 @@
             }
             else
             {
-                // Crear nuevo conocimiento con todos los campos requeridos
                 var nuevoConocimiento = new ConocimientoRecursoDTO
                 {
-                    IdConocimientoRecurso = 0, // Nuevo registro
+                    IdConocimientoRecurso = 0,
                     IdSubtema = idSubtema,
                     IdRecurso = IdRecurso,
                     IdEvaluacion = IdEvaluacion,
@@ -613,16 +766,42 @@
                     ValorTecnicoVerif = null
                 };
                 conocimientos.Add(nuevoConocimiento);
-                
-                Console.WriteLine($"Nuevo conocimiento creado para subtema {idSubtema} con valor funcional {valor}");
             }
             CalcularProgreso();
             StateHasChanged();
         }
     }
 
+    private void ActualizarValorFuncionalVerif(int idSubtema, ChangeEventArgs e)
+    {
+        if (!esSupervisor)
+        {
+            MostrarToast("Solo los supervisores pueden verificar valores", "warning");
+            return;
+        }
+
+        var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == idSubtema);
+        if (conocimiento == null || (conocimiento.ValorFuncional == 0 && conocimiento.ValorTecnico == 0))
+        {
+            MostrarToast("Primero deben cargarse los valores funcional y técnico", "warning");
+            return;
+        }
+
+        if (int.TryParse(e.Value?.ToString(), out var valor) && valor >= 0 && valor <= 5)
+        {
+            conocimiento.ValorFuncionalVerif = valor;
+            StateHasChanged();
+        }
+    }
+
     private void ActualizarValorTecnico(int idSubtema, ChangeEventArgs e)
     {
+        if (!esRecursoDueño)
+        {
+            MostrarToast("Solo el recurso dueño puede editar los valores funcional y técnico", "warning");
+            return;
+        }
+
         if (int.TryParse(e.Value?.ToString(), out var valor) && valor >= 0 && valor <= 5)
         {
             var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == idSubtema);
@@ -632,10 +811,9 @@
             }
             else
             {
-                // Crear nuevo conocimiento with all required fields
                 var nuevoConocimiento = new ConocimientoRecursoDTO
                 {
-                    IdConocimientoRecurso = 0, // New record
+                    IdConocimientoRecurso = 0,
                     IdSubtema = idSubtema,
                     IdRecurso = IdRecurso,
                     IdEvaluacion = IdEvaluacion,
@@ -646,10 +824,30 @@
                     ValorTecnicoVerif = null
                 };
                 conocimientos.Add(nuevoConocimiento);
-                
-                Console.WriteLine($"Nuevo conocimiento creado para subtema {idSubtema} con valor técnico {valor}");
             }
             CalcularProgreso();
+            StateHasChanged();
+        }
+    }
+
+    private void ActualizarValorTecnicoVerif(int idSubtema, ChangeEventArgs e)
+    {
+        if (!esSupervisor)
+        {
+            MostrarToast("Solo los supervisores pueden verificar valores", "warning");
+            return;
+        }
+
+        var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == idSubtema);
+        if (conocimiento == null || (conocimiento.ValorFuncional == 0 && conocimiento.ValorTecnico == 0))
+        {
+            MostrarToast("Primero deben cargarse los valores funcional y técnico", "warning");
+            return;
+        }
+
+        if (int.TryParse(e.Value?.ToString(), out var valor) && valor >= 0 && valor <= 5)
+        {
+            conocimiento.ValorTecnicoVerif = valor;
             StateHasChanged();
         }
     }
@@ -662,10 +860,8 @@
             var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == idSubtema);
             if (conocimiento != null)
             {
-                // Usar el método crear o actualizar
                 var conocimientoGuardado = await ConocimientoClient.CrearOActualizarAsync(conocimiento);
-                
-                // Actualizar el conocimiento en la lista local con el ID devuelto
+
                 var index = conocimientos.FindIndex(c => c.IdSubtema == idSubtema);
                 if (index >= 0)
                 {
@@ -673,7 +869,7 @@
                 }
 
                 MostrarToast("Conocimiento guardado correctamente", "success");
-                StateHasChanged(); // Forzar actualización de la UI
+                StateHasChanged();
             }
         }
         catch (Exception ex)
@@ -695,25 +891,23 @@
             var tema = temasBinarizados.FirstOrDefault(t => t.IdGrillaTema == idGrillaTema);
             if (tema == null) return;
 
-            // Obtener conocimientos de este tema para guardar
             var subtemasDelTema = tema.Subtemas.Select(s => s.IdSubtema).ToList();
             var conocimientosParaGuardar = conocimientos
-                .Where(c => subtemasDelTema.Contains(c.IdSubtema) && 
+                .Where(c => subtemasDelTema.Contains(c.IdSubtema) &&
                            (c.IdConocimientoRecurso == 0 || c.ValorFuncional >= 0 || c.ValorTecnico >= 0))
                 .ToList();
 
             if (conocimientosParaGuardar.Any())
             {
                 var conocimientosGuardados = await ConocimientoClient.GuardarMultiplesAsync(conocimientosParaGuardar);
-                
-                // Actualizar la lista local con los IDs devueltos
+
                 foreach (var conocimientoGuardado in conocimientosGuardados)
                 {
-                    var index = conocimientos.FindIndex(c => 
-                        c.IdSubtema == conocimientoGuardado.IdSubtema && 
+                    var index = conocimientos.FindIndex(c =>
+                        c.IdSubtema == conocimientoGuardado.IdSubtema &&
                         c.IdRecurso == conocimientoGuardado.IdRecurso &&
                         c.IdEvaluacion == conocimientoGuardado.IdEvaluacion);
-                    
+
                     if (index >= 0)
                     {
                         conocimientos[index] = conocimientoGuardado;
@@ -745,25 +939,22 @@
         guardandoTodo = true;
         try
         {
-            // Obtener todos los conocimientos que han sido creados o modificados (incluye 0,0)
             var conocimientosParaGuardar = conocimientos
-                .Where(c => c.IdConocimientoRecurso == 0 || // Nuevos registros
-                           c.ValorFuncional >= 0 || c.ValorTecnico >= 0) // Registros modificados (incluye 0,0)
+                .Where(c => c.IdConocimientoRecurso == 0 ||
+                           c.ValorFuncional >= 0 || c.ValorTecnico >= 0)
                 .ToList();
 
             if (conocimientosParaGuardar.Any())
             {
-                // Usar el método de guardar múltiples
                 var conocimientosGuardados = await ConocimientoClient.GuardarMultiplesAsync(conocimientosParaGuardar);
-                
-                // Actualizar la lista local con los IDs devueltos
+
                 foreach (var conocimientoGuardado in conocimientosGuardados)
                 {
-                    var index = conocimientos.FindIndex(c => 
-                        c.IdSubtema == conocimientoGuardado.IdSubtema && 
+                    var index = conocimientos.FindIndex(c =>
+                        c.IdSubtema == conocimientoGuardado.IdSubtema &&
                         c.IdRecurso == conocimientoGuardado.IdRecurso &&
                         c.IdEvaluacion == conocimientoGuardado.IdEvaluacion);
-                    
+
                     if (index >= 0)
                     {
                         conocimientos[index] = conocimientoGuardado;
@@ -777,7 +968,7 @@
                 MostrarToast("No hay cambios para guardar", "warning");
             }
 
-            StateHasChanged(); // Forzar actualización de la UI
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -800,10 +991,10 @@
         mensajeToast = mensaje;
         tipoToast = tipo;
         mostrarToast = true;
-        Task.Delay(3000).ContinueWith(_ => InvokeAsync(() => 
-        { 
-            mostrarToast = false; 
-            StateHasChanged(); 
+        Task.Delay(3000).ContinueWith(_ => InvokeAsync(() =>
+        {
+            mostrarToast = false;
+            StateHasChanged();
         }));
     }
 }

@@ -1,0 +1,10 @@
+# Listar reglas activas
+Get-NetFirewallRule -DisplayName "*5086*" | Select-Object DisplayName, Enabled, Direction, Action
+
+# Desactivar firewall temporalmente para pruebas (¡SOLO PARA DIAGNÓSTICO!)
+Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
+
+# Probar acceso desde otra PC
+
+# Volver a activar firewall
+Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True

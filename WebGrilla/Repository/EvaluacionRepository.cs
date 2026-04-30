@@ -26,7 +26,9 @@ namespace WebGrilla.Repository
         {
             try
             {
-                return await _context.Evaluacion.ToListAsync();
+                return await _context.Evaluacion
+                .Include(e => e.Recurso)
+                .Include(e => e.Grilla).ToListAsync();
             }
             catch (Exception)
             {
@@ -36,7 +38,10 @@ namespace WebGrilla.Repository
 
         public async Task<Evaluacion> GetByIdAsync(int id)
         {
-            return await _context.Evaluacion.FirstOrDefaultAsync(e => e.IdEvaluacion == id);
+            return await _context.Evaluacion
+                .Include(e => e.Recurso)
+                .Include(e => e.Grilla)
+                .FirstOrDefaultAsync(e => e.IdEvaluacion == id);
         }
 
         public async Task<Evaluacion> AddAsync(Evaluacion item)
@@ -71,6 +76,8 @@ namespace WebGrilla.Repository
             {
                 var fechaActual = DateTime.Now;
                 return await _context.Evaluacion
+                    .Include(e => e.Recurso)
+                    .Include(e => e.Grilla)
                     .Where(e => e.FechaInicio <= fechaActual && e.FechaFin >= fechaActual)
                     .OrderByDescending(e => e.FechaInicio)
                     .FirstOrDefaultAsync();
@@ -86,6 +93,8 @@ namespace WebGrilla.Repository
             try
             {
                 return await _context.Evaluacion
+                    .Include(e => e.Recurso)
+                    .Include(e => e.Grilla)
                     .Where(e => e.IdRecurso == idRecurso)
                     .OrderByDescending(e => e.FechaInicio)
                     .ToListAsync();
@@ -102,6 +111,8 @@ namespace WebGrilla.Repository
             {
                 var fechaActual = DateTime.Now;
                 return await _context.Evaluacion
+                    .Include(e => e.Recurso)
+                    .Include(e => e.Grilla)
                     .Where(e => e.IdRecurso == idRecurso && e.FechaInicio <= fechaActual && e.FechaFin >= fechaActual)
                     .OrderByDescending(e => e.FechaInicio)
                     .FirstOrDefaultAsync();
@@ -117,6 +128,8 @@ namespace WebGrilla.Repository
             try
             {
                 return await _context.Evaluacion
+                    .Include(e => e.Recurso)
+                    .Include(e => e.Grilla)
                     .Where(e => _context.RecursosSupervisores
                         .Any(rs => rs.IdRecursoSupervisorAsignado == idSupervisor && rs.IdRecursoSupervisado == e.IdRecurso && rs.Activo))
                     .OrderByDescending(e => e.FechaInicio)
@@ -133,6 +146,8 @@ namespace WebGrilla.Repository
             try
             {
                 return await _context.Evaluacion
+                    .Include(e => e.Recurso)
+                    .Include(e => e.Grilla)
                     .Where(e => e.IdRecurso == idRecurso || 
                                _context.RecursosSupervisores
                                    .Any(rs => rs.IdRecursoSupervisorAsignado == idRecurso && 

@@ -4216,12 +4216,12 @@ C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\n
 C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\staticwebassets.build.json.cache
 C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\staticwebassets.development.json
 C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\staticwebassets.build.endpoints.json
-C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\staticwebassets.upToDateCheck.txt
 C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\WebGrill.6B480C7F.Up2Date
 C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\WebGrillaBlazor.dll
 C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\refint\WebGrillaBlazor.dll
 C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\WebGrillaBlazor.pdb
 C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\ref\WebGrillaBlazor.dll
-C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\tavjk12k2h-j5xcl1rym4.gz
-C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\y2k2hq3qtk-zu63gf1did.gz
-C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\dyjae803e8-qpypn8kvxk.gz
+C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\staticwebassets.upToDateCheck.txt
+C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\tavjk12k2h-brxmk2klzh.gz
+C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\y2k2hq3qtk-2gldp7uva4.gz
+C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\dyjae803e8-bytca2yc3g.gz
