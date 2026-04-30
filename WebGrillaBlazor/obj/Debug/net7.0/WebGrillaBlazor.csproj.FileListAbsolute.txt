@@ -4222,6 +4222,6 @@ C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\n
 C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\WebGrillaBlazor.pdb
 C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\ref\WebGrillaBlazor.dll
 C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\staticwebassets.upToDateCheck.txt
-C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\tavjk12k2h-brxmk2klzh.gz
-C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\y2k2hq3qtk-2gldp7uva4.gz
-C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\dyjae803e8-bytca2yc3g.gz
+C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\tavjk12k2h-0n5y6tv4be.gz
+C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\y2k2hq3qtk-3ft7j38fjk.gz
+C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Debug\net7.0\compressed\dyjae803e8-dl9tpmcbei.gz

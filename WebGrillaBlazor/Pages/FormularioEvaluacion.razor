@@ -10,6 +10,7 @@
 @inject ApiClientRecursoSupervisor RecursoSupervisorClient
 @inject AuthStateService AuthState
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <div class="container-fluid">
     <!-- Header -->
@@ -36,6 +37,12 @@
                     {
                         <span class="badge bg-warning text-dark">
                             <Icon Name="IconName.ShieldCheck" /> Supervisor
+                        </span>
+                    }
+                    @if (evaluacionFinalizada)
+                    {
+                        <span class="badge bg-danger">
+                            <Icon Name="IconName.StopCircleFill" /> Finalizada
                         </span>
                     }
                 </div>
@@ -176,7 +183,6 @@
                                                         @if (esRecursoDueño)
                                                         {
                                                             <br />
-                                            
                                                             <small class="text-success">Editable</small>
                                                         }
                                                     </th>
@@ -185,7 +191,6 @@
                                                         @if (esRecursoDueño)
                                                         {
                                                             <br />
-                                            
                                                             <small class="text-success">Editable</small>
                                                         }
                                                     </th>
@@ -194,7 +199,6 @@
                                                         @if (esSupervisor)
                                                         {
                                                             <br />
-                                            
                                                             <small class="text-warning">Supervisor</small>
                                                         }
                                                     </th>
@@ -203,7 +207,6 @@
                                                         @if (esSupervisor)
                                                         {
                                                             <br />
-                                            
                                                             <small class="text-warning">Supervisor</small>
                                                         }
                                                     </th>
@@ -217,6 +220,7 @@
                                                     var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == subtema.IdSubtema);
                                                     var puedeEditarVerificacion = esSupervisor && conocimiento != null &&
                                                     (conocimiento.ValorFuncional > 0 || conocimiento.ValorTecnico > 0);
+                                                    var esRegistroVacio = conocimiento != null && conocimiento.ValorFuncional == 0 && conocimiento.ValorTecnico == 0;
 
                                                     <tr class="@(conocimiento != null ? "table-light" : "")">
                                                         <td>
@@ -266,10 +270,7 @@
                                                                    @onchange="@(e => ActualizarValorFuncionalVerif(subtema.IdSubtema, e))"
                                                                    disabled="@(!puedeEditarVerificacion)"
                                                                    title="@(puedeEditarVerificacion ? "Puedes verificar este valor como supervisor" : !esSupervisor ? "Solo supervisores pueden verificar" : "Primero deben cargarse los valores funcional y técnico")" />
-                                                            @if (!puedeEditarVerificacion && esSupervisor)
-                                                            {
-                                                                <small class="text-muted d-block">Pendiente evaluación</small>
-                                                            }
+
                                                         </td>
 
                                                         <!-- Valor Técnico Verificado - Solo supervisor y si valores > 0 -->
@@ -283,10 +284,7 @@
                                                                    @onchange="@(e => ActualizarValorTecnicoVerif(subtema.IdSubtema, e))"
                                                                    disabled="@(!puedeEditarVerificacion)"
                                                                    title="@(puedeEditarVerificacion ? "Puedes verificar este valor como supervisor" : !esSupervisor ? "Solo supervisores pueden verificar" : "Primero deben cargarse los valores funcional y técnico")" />
-                                                            @if (!puedeEditarVerificacion && esSupervisor)
-                                                            {
-                                                                <small class="text-muted d-block">Pendiente evaluación</small>
-                                                            }
+
                                                         </td>
 
                                                         <!-- Estado -->
@@ -320,7 +318,8 @@
                                                                     Size="ButtonSize.ExtraSmall"
                                                                     Class="btn-save-row"
                                                                     @onclick="@(() => GuardarConocimiento(subtema.IdSubtema))"
-                                                                    Disabled="@(guardandoConocimiento || (!esRecursoDueño && !esSupervisor))">
+                                                                    Disabled="@(guardandoConocimiento || (!esRecursoDueño && !esSupervisor) || (esRegistroVacio && conocimiento.IdConocimientoRecurso > 0))"
+                                                                    Title="@(esRegistroVacio && conocimiento.IdConocimientoRecurso > 0 ? "No se pueden guardar registros con valores 0,0" : "Guardar conocimiento")">
                                                                 @if (guardandoConocimiento)
                                                                 {
                                                                     <Icon Name="IconName.HourglassSplit" />
@@ -425,19 +424,26 @@
                                     @if (esRecursoDueño)
                                     {
                                         <br />
-                                
                                         <span class="text-success">Puedes editar valores funcional y técnico</span>
                                     }
                                     @if (esSupervisor)
                                     {
                                         <br />
-                                
                                         <span class="text-warning">Puedes verificar valores evaluados</span>
+                                    }
+                                    @if (evaluacionFinalizada)
+                                    {
+                                        <br />
+                                        <span class="text-danger">
+                                            <Icon Name="IconName.ExclamationTriangle" /> Esta evaluación ha sido finalizada
+                                        </span>
                                     }
                                 </small>
                             </div>
                             <div class="btn-group" role="group">
-                                <Button Color="ButtonColor.Success" @onclick="GuardarTodoElProgreso" Disabled="@guardandoTodo">
+                                <Button Color="ButtonColor.Success"
+                                        @onclick="GuardarTodoElProgreso"
+                                        Disabled="@(guardandoTodo || evaluacionFinalizada)">
                                     @if (guardandoTodo)
                                     {
                                         <span class="spinner-border spinner-border-sm me-1" role="status"></span>
@@ -448,6 +454,23 @@
                                     }
                                     Guardar Todo el Progreso
                                 </Button>
+                                @if (esRecursoDueño && !evaluacionFinalizada)
+                                {
+                                    <Button Color="ButtonColor.Danger"
+                                            @onclick="MostrarModalFinalizarEvaluacion"
+                                            Disabled="@finalizandoEvaluacion"
+                                            Class="ms-2">
+                                        @if (finalizandoEvaluacion)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                        }
+                                        else
+                                        {
+                                            <Icon Name="IconName.StopCircleFill" />
+                                        }
+                                        Finalizar Evaluación
+                                    </Button>
+                                }
                             </div>
                         </div>
                     </div>
@@ -455,6 +478,54 @@
             </div>
         </div>
     }
+</div>
+
+<!-- Modal de confirmación para finalizar evaluación -->
+<div class="modal fade" id="modalFinalizarEvaluacion" tabindex="-1" aria-labelledby="modalFinalizarEvaluacionLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="modalFinalizarEvaluacionLabel">
+                    <Icon Name="IconName.ExclamationTriangleFill" /> Finalizar Evaluación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <Icon Name="IconName.InfoCircleFill" class="me-2" />
+                    <strong>Atención:</strong> Esta acción no se puede deshacer.
+                </div>
+                <p class="mb-3">
+                    <strong>Se cerrará su evaluación en curso. ¿Está seguro?</strong>
+                </p>
+                <p class="text-muted mb-0">
+                    Al finalizar la evaluación:
+                </p>
+                <ul class="text-muted">
+                    <li>La fecha de fin se actualizará al momento actual</li>
+                    <li>Se guardarán automáticamente todos los registros pendientes con valores 0,0</li>
+                    <li>No podrá realizar más cambios en esta evaluación</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <Button Color="ButtonColor.Secondary" data-bs-dismiss="modal">
+                    <Icon Name="IconName.XCircle" /> Cancelar
+                </Button>
+                <Button Color="ButtonColor.Danger" @onclick="FinalizarEvaluacion" Disabled="@finalizandoEvaluacion">
+                    @if (finalizandoEvaluacion)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        <text>Finalizando...</text>
+                    }
+                    else
+                    {
+                        <Icon Name="IconName.CheckCircleFill" />
+                        @(" Sí, Finalizar Evaluación")
+                    }
+                </Button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Toast de confirmación -->
@@ -489,12 +560,16 @@
     private bool guardandoConocimiento = false;
     private bool guardandoTodo = false;
     private bool guardandoTema = false;
+    private bool finalizandoEvaluacion = false;
     private bool mostrarToast = false;
     private string mensajeToast = string.Empty;
     private string tipoToast = "success";
 
     // Control de tabs
     private int temaActivo = 0;
+
+    // Estado de evaluación
+    private bool evaluacionFinalizada => evaluacion != null && evaluacion.FechaFin <= DateTime.Now;
 
     // Clase auxiliar para organizar temas con sus subtemas
     public class TemaConSubtemasEvaluacion
@@ -549,6 +624,119 @@
         catch (Exception ex)
         {
             Console.WriteLine($"Error al verificar permisos: {ex.Message}");
+        }
+    }
+
+    private async Task MostrarModalFinalizarEvaluacion()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("eval", @"
+                var modal = new bootstrap.Modal(document.getElementById('modalFinalizarEvaluacion'));
+                modal.show();
+            ");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al mostrar modal: {ex.Message}");
+        }
+    }
+
+    private async Task OcultarModalFinalizarEvaluacion()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("eval", @"
+                var modalElement = document.getElementById('modalFinalizarEvaluacion');
+                var modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) {
+                    modal.hide();
+                }
+            ");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al ocultar modal: {ex.Message}");
+        }
+    }
+
+    private async Task FinalizarEvaluacion()
+    {
+        finalizandoEvaluacion = true;
+        try
+        {
+            if (evaluacion == null)
+            {
+                MostrarToast("Error: No se pudo cargar la evaluación", "error");
+                return;
+            }
+
+            // 1. Identificar todos los subtemas de la grilla
+            var todosLosSubtemas = grillaSubtemas.Select(s => s.IdSubtema).ToList();
+
+            // 2. Identificar subtemas que ya tienen conocimientos guardados
+            var subtemasConConocimiento = conocimientos
+                .Where(c => c.IdConocimientoRecurso > 0)
+                .Select(c => c.IdSubtema)
+                .ToList();
+
+            // 3. Identificar subtemas pendientes (sin registro en BD)
+            var subtemasPendientes = todosLosSubtemas
+                .Except(subtemasConConocimiento)
+                .ToList();
+
+            // 4. Crear registros con valores 0,0 para los subtemas pendientes
+            var conocimientosPendientes = subtemasPendientes.Select(idSubtema => new ConocimientoRecursoDTO
+            {
+                IdConocimientoRecurso = 0,
+                IdSubtema = idSubtema,
+                IdRecurso = IdRecurso,
+                IdEvaluacion = IdEvaluacion,
+                IdGrilla = evaluacion.IdGrilla,
+                ValorFuncional = 0,
+                ValorTecnico = 0,
+                ValorFuncionalVerif = null,
+                ValorTecnicoVerif = null
+            }).ToList();
+
+            if (conocimientosPendientes.Any())
+            {
+                Console.WriteLine($"Guardando {conocimientosPendientes.Count} conocimientos pendientes con valores 0,0");
+                var conocimientosGuardados = await ConocimientoClient.GuardarMultiplesAsync(conocimientosPendientes);
+
+                // Agregar los conocimientos guardados a la lista local
+                conocimientos.AddRange(conocimientosGuardados);
+
+            }
+
+            // 5. Actualizar la fecha de fin de la evaluación al momento actual
+            evaluacion.FechaFin = DateTime.Now;
+            var evaluacionActualizada = await EvaluacionClient.UpdateAsync(IdEvaluacion, evaluacion);
+
+            if (evaluacionActualizada != null)
+            {
+                evaluacion = evaluacionActualizada;
+                await OcultarModalFinalizarEvaluacion();
+                MostrarToast($"Evaluación finalizada correctamente. Se guardaron {conocimientosPendientes.Count} registros pendientes.", "success");
+                StateHasChanged();
+
+                // Redirigir después de 3 segundos
+                await Task.Delay(3000);
+                Navigation.NavigateTo("/evaluaciones");
+            }
+            else
+            {
+                MostrarToast("Error al finalizar la evaluación", "error");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al finalizar evaluación: {ex.Message}");
+            MostrarToast("Error al finalizar la evaluación: " + ex.Message, "error");
+        }
+        finally
+        {
+            finalizandoEvaluacion = false;
         }
     }
 
@@ -860,6 +1048,15 @@
             var conocimiento = conocimientos.FirstOrDefault(c => c.IdSubtema == idSubtema);
             if (conocimiento != null)
             {
+                // Validar que no sea un registro con 0,0 que ya existe en BD
+                if (conocimiento.IdConocimientoRecurso > 0 &&
+                    conocimiento.ValorFuncional == 0 &&
+                    conocimiento.ValorTecnico == 0)
+                {
+                    MostrarToast("No se pueden guardar registros con valores 0,0", "warning");
+                    return;
+                }
+
                 var conocimientoGuardado = await ConocimientoClient.CrearOActualizarAsync(conocimiento);
 
                 var index = conocimientos.FindIndex(c => c.IdSubtema == idSubtema);
@@ -892,9 +1089,11 @@
             if (tema == null) return;
 
             var subtemasDelTema = tema.Subtemas.Select(s => s.IdSubtema).ToList();
+
+            // Filtrar conocimientos que no sean 0,0 o que sean nuevos (IdConocimientoRecurso == 0)
             var conocimientosParaGuardar = conocimientos
                 .Where(c => subtemasDelTema.Contains(c.IdSubtema) &&
-                           (c.IdConocimientoRecurso == 0 || c.ValorFuncional >= 0 || c.ValorTecnico >= 0))
+                           (c.IdConocimientoRecurso == 0 || c.ValorFuncional > 0 || c.ValorTecnico > 0))
                 .ToList();
 
             if (conocimientosParaGuardar.Any())
@@ -939,9 +1138,9 @@
         guardandoTodo = true;
         try
         {
+            // Filtrar conocimientos que no sean 0,0 o que sean nuevos (IdConocimientoRecurso == 0)
             var conocimientosParaGuardar = conocimientos
-                .Where(c => c.IdConocimientoRecurso == 0 ||
-                           c.ValorFuncional >= 0 || c.ValorTecnico >= 0)
+                .Where(c => c.IdConocimientoRecurso == 0 || c.ValorFuncional > 0 || c.ValorTecnico > 0)
                 .ToList();
 
             if (conocimientosParaGuardar.Any())
