@@ -21,7 +21,7 @@
                 Contacta con un administrador si necesitas acceso a esta funcionalidad.
             </p>
             <div class="mt-3">
-                <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/index"))">
+                <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("index"))">
                     <Icon Name="IconName.ArrowLeft" class="me-1" />
                     Volver al Dashboard
                 </button>
@@ -208,8 +208,8 @@
     {
         Console.WriteLine("GetAllTemas");
 
-        if (temas is null) // pull temas only one time for client-side filtering, sorting, and paging
-            temas = await ApiClient.GetAllTemasAsync(); // call a service or an API to pull the temas
+        if (temas is null) 
+            temas = await ApiClient.GetAllTemasAsync(); 
 
         return await Task.FromResult(request.ApplyTo(temas));
     }

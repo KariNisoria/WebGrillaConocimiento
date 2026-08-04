@@ -10,7 +10,7 @@
         public int IdTipoDocumento { get; set; }
         public decimal NumeroDocumento { get; set; }
         public string CorreoElectronico { get; set; } = string.Empty;
-        public string PerfilSeguridad { get; set; } = string.Empty;
+       // public string PerfilSeguridad { get; set; } = string.Empty;
         public int IdEquipoDesarrollo { get; set; }
         public int IdRol { get; set; }
         public int? IdGrilla { get; set; }

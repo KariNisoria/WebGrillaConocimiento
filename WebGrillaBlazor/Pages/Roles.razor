@@ -21,7 +21,7 @@
                 Contacta con un administrador si necesitas acceso a esta funcionalidad.
             </p>
             <div class="mt-3">
-                <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/index"))">
+                <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("index"))">
                     <Icon Name="IconName.ArrowLeft" class="me-1" />
                     Volver al Dashboard
                 </button>
@@ -42,7 +42,7 @@
             <div class="col-auto">
                 @if (AuthState.UserHasPermission("ROLES_WRITE"))
                 {
-                    <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddRol">
+                    <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AbrirModalAltaRol">
                         <Icon Name="IconName.Plus" class="me-1" />
                         Agregar Rol
                     </Button>
@@ -96,7 +96,9 @@
 
         <!-- Ficha Edicion Rol -->
         <Modal @ref="_EdicionRol" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
-        
+        <!-- Ficha Alta Rol -->
+        <Modal @ref="_AltaRol" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
+
         <!-- Información adicional para usuarios sin permisos de escritura -->
         @if (!AuthState.UserHasPermission("ROLES_WRITE"))
         {
@@ -119,7 +121,10 @@
     private IEnumerable<RolDTO> roles = default!;
     private int currentIdRol = 0;    
     private Modal _EdicionRol = default!;
+    private Modal _AltaRol = default!;
+
     private Grid<RolDTO> gridRol = default!;
+    private string successMessage = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -140,7 +145,36 @@
 
         return await Task.FromResult(request.ApplyTo(roles));
     }
+    private async Task AbrirModalAltaRol()
+    {
+        if (!AuthState.UserHasPermission("ROLES_WRITE"))
+        {
+            Console.WriteLine("Sin permisos para crear rol");
+            return;
+        }
 
+        Console.WriteLine("Abriendo modal para agregar nuevo rol");
+
+        // Crear un nuevo tema vacío
+        var nuevoRol = CreateNuevoRol();
+
+        var param = new Dictionary<string, object>();
+        param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalAltaRol));
+        param.Add("rol", nuevoRol);
+
+        await _AltaRol.ShowAsync<FichaRol>(title: "Agregar Nuevo Rol", parameters: param);
+    }
+    private RolDTO CreateNuevoRol()
+    {
+        var nuevoRol = new RolDTO
+        {
+            IdRol = 0, // Nuevo rol, el ID lo asignará la base de datos
+            Nombre = ""
+        };
+
+        Console.WriteLine($"Nuevo rol creado: {nuevoRol.IdRol}");
+        return nuevoRol;
+    }
     private async Task AddRol()
     {
         if (!AuthState.UserHasPermission("ROLES_WRITE"))
@@ -197,7 +231,15 @@
         param.Add("rol", args.Item);
         await _EdicionRol.ShowAsync<FichaRol>(title: "Edición Rol", parameters: param);
     }
+    private async Task OnCloseModalAltaRol()
+    {
+        Console.WriteLine("OnCloseModalAltaRol()");
+        await _AltaRol.HideAsync(); // Ocultar el modal de alta
+        await RefreshGrid(); // Refrescar la grilla
 
+        // Mostrar mensaje de éxito
+        ShowSuccessMessage("¡Rol agregado exitosamente!");
+    }
     private async Task OnCloseModalEdicionRol()
     {
         Console.WriteLine("OnCloseModalEdicionRol()");
@@ -216,5 +258,20 @@
     {
         Console.WriteLine($"OnRowClick Rol current: {currentIdRol} nuevo: {args.Item.IdRol} ");
         currentIdRol = args.Item.IdRol;
+    }
+    private void ShowSuccessMessage(string message)
+    {
+        successMessage = message;
+        StateHasChanged();
+
+        // Auto-ocultar el mensaje después de 5 segundos
+        var timer = new System.Timers.Timer(5000);
+        timer.Elapsed += (sender, e) =>
+        {
+            successMessage = "";
+            InvokeAsync(() => StateHasChanged());
+            timer.Dispose();
+        };
+        timer.Start();
     }
 }

@@ -3,7 +3,7 @@ using WebGrillaBlazor.DTOs;
 using WebGrillaBlazor.Utils;
 
 namespace WebGrillaBlazor.ApiClient { 
-    public class ApiClientTema
+public class ApiClientTema
     {
         private readonly HttpClient _httpClient;
 
@@ -26,7 +26,6 @@ namespace WebGrillaBlazor.ApiClient {
             var response = await _httpClient.GetAsync($"api/tema/{id}");
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                // Devolver null si el tema no existe
                 return null;
             }
             response.EnsureSuccessStatusCode();
@@ -55,22 +54,19 @@ namespace WebGrillaBlazor.ApiClient {
             {
                 var response = await _httpClient.DeleteAsync($"api/tema/{id}");
 
-                // Si la respuesta es exitosa (2xx)
+                // Si la respuesta es exitosa (2xx), incluido NoContent (204)
                 if (response.IsSuccessStatusCode)
                 {
-                    var content = await response.Content.ReadFromJsonAsync<TemaDTO>();
-                    return Result<TemaDTO>.Success(content);
+                    // DELETE normalmente devuelve 204 NoContent, no hay body para deserializar
+                    return Result<TemaDTO>.Success(new TemaDTO());
                 }
 
                 // Si hay error (4xx o 5xx)
                 var error = await response.Content.ReadAsStringAsync();
-                return Result<TemaDTO>.Failure(error);
-
+                return Result<TemaDTO>.Failure(string.IsNullOrEmpty(error) ? "Error al eliminar el tema" : error);
             }
             catch (Exception ex)
             {
-
-                // Errores de red (p.ej., API no disponible)
                 return Result<TemaDTO>.Failure($"Error de comunicación: {ex.Message}");
             }
         }

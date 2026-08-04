@@ -23,7 +23,7 @@
                 Contacta con un administrador si necesitas acceso a esta funcionalidad.
             </p>
             <div class="mt-3">
-                <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/index"))">
+                <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("index"))">
                     <Icon Name="IconName.ArrowLeft" class="me-1" />
                     Volver al Dashboard
                 </button>
@@ -44,7 +44,7 @@
             <div class="col-auto">
                 @if (AuthState.UserHasPermission("GRILLAS_WRITE"))
                 {
-                    <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddGrilla">
+                    <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AbrirModalAltaGrilla">
                         <Icon Name="IconName.Plus" class="me-1" />
                         Agregar Grilla
                     </Button>
@@ -91,11 +91,12 @@
                         </GridColumn>
                         <GridColumn TItem="GrillaDTO" HeaderText="Acciones">
                             <div class="d-flex gap-1">
-                                <a href="@($"/grillas/{@context.IdGrilla}/temas")" 
-                                   class="btn btn-info btn-sm" 
-                                   title="Ver temas">
+                                <Button Color="ButtonColor.Info" 
+                                        Size="ButtonSize.ExtraSmall" 
+                                        @onclick="() => VerTemas(context.IdGrilla)"
+                                        title="Ver temas">
                                     <Icon Name="IconName.Eye" />
-                                </a>
+                                </Button>
                                 @if (AuthState.UserHasPermission("GRILLAS_WRITE"))
                                 {
                                     <Button Color="ButtonColor.Primary" 
@@ -134,10 +135,13 @@
                                 </div>
                                 @if (AuthState.UserHasPermission("GRILLAS_READ") && currentIdGrilla > 0)
                                 {
-                                    <a href="@($"/grillas/{currentIdGrilla}/temas")" class="btn btn-outline-primary btn-sm">
+                                    <Button Color="ButtonColor.Primary" 
+                                            Outline="true" 
+                                            Size="ButtonSize.Small" 
+                                            @onclick="() => VerTemas(currentIdGrilla)">
                                         <Icon Name="IconName.List" class="me-1" />
                                         Ver Temas
-                                    </a>
+                                    </Button>
                                 }
                             </div>
                         }
@@ -148,7 +152,9 @@
 
         <!-- Ficha Edicion Grilla -->
         <Modal @ref="_EdicionGrilla" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
-        
+        <!-- Ficha Alta Grilla -->
+        <Modal @ref="_AltaGrilla" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
+
         <!-- Información adicional para usuarios sin permisos de escritura -->
         @if (!AuthState.UserHasPermission("GRILLAS_WRITE"))
         {
@@ -164,6 +170,8 @@
     private IEnumerable<GrillaDTO> grillas = default!;
     private int currentIdGrilla = 0;
     private Modal _EdicionGrilla = default!;
+    private Modal _AltaGrilla = default!;
+
     private Grid<GrillaDTO> gridGrilla = default!;
     private GrillaDTO selectedGrilla = new();
 
@@ -177,6 +185,12 @@
         await base.OnInitializedAsync();
     }
 
+    // Método para navegar a los temas de una grilla
+    private void VerTemas(int idGrilla)
+    {
+        Navigation.NavigateTo($"grillas/{idGrilla}/temas");
+    }
+
     private async Task<GridDataProviderResult<GrillaDTO>> GetAllGrillas(GridDataProviderRequest<GrillaDTO> request)
     {
         Console.WriteLine("GetAllGrillas");
@@ -186,7 +200,39 @@
 
         return await Task.FromResult(request.ApplyTo(grillas));
     }
+    private async Task AbrirModalAltaGrilla()
+    {
+        if (!AuthState.UserHasPermission("GRILLAS_WRITE"))
+        {
+            Console.WriteLine("Sin permisos para crear grilla");
+            return;
+        }
 
+        Console.WriteLine("Abriendo modal para agregar nueva grilla");
+
+        // Crear un nueva grilla vacia
+        var nuevaGrilla = CreateNuevaGrilla();
+
+        var param = new Dictionary<string, object>();
+        param.Add("OnClickCallBack", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalAltaGrilla));
+        param.Add("grilla", nuevaGrilla);
+
+        await _AltaGrilla.ShowAsync <FichaGrilla>(title: "Agregar Nueva Grilla", parameters: param);
+    }
+    private GrillaDTO CreateNuevaGrilla()
+    {
+        var nuevaGrilla = new GrillaDTO
+        {
+            IdGrilla = 0, // Nueva grilla, el ID lo asignará la base de datos
+            Nombre = "",
+            Descripcion = "",
+            FechaVigencia = DateTime.Today,
+            Estado = 1 // inactiva por defecto
+        };
+
+        Console.WriteLine($"Nueva grilla creada: {nuevaGrilla.IdGrilla}");
+        return nuevaGrilla;
+    }
     private async Task AddGrilla()
     {
         if (!AuthState.UserHasPermission("GRILLAS_WRITE"))
@@ -261,6 +307,13 @@
     {
         Console.WriteLine("OnCloseModalEdicionGrilla()");
         await _EdicionGrilla.HideAsync(); // Ocultar el formulario de Edicion
+        await RefreshGrid(); // Refrescar la grilla
+    }
+
+    private async Task OnCloseModalAltaGrilla()
+    {
+        Console.WriteLine("OnCloseModalAltaGrilla()");
+        await _AltaGrilla.HideAsync(); // Ocultar el formulario de alta
         await RefreshGrid(); // Refrescar la grilla
     }
 

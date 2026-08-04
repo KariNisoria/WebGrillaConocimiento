@@ -50,7 +50,7 @@ else if (AuthState.IsAuthenticated && AuthState.CurrentUser != null)
                         <p class="card-text">Crear y gestionar evaluaciones de conocimiento para recursos específicos usando grillas personalizadas.</p>
                         @if (AuthState.UserCanAccess("EVALUACIONES"))
                         {
-                            <a href="/evaluaciones" class="btn btn-success">Ir a Evaluaciones</a>
+                            <a href="evaluaciones" class="btn btn-success">Ir a Evaluaciones</a>
                         }
                         else
                         {
@@ -68,7 +68,7 @@ else if (AuthState.IsAuthenticated && AuthState.CurrentUser != null)
                         <p class="card-text">Configurar y administrar grillas con temas y subtemas para estructurar las evaluaciones.</p>
                         @if (AuthState.UserCanAccess("GRILLAS"))
                         {
-                            <a href="/grillas" class="btn btn-primary">Gestionar Grillas</a>
+                            <a href="grillas" class="btn btn-primary">Gestionar Grillas</a>
                         }
                         else
                         {
@@ -86,7 +86,7 @@ else if (AuthState.IsAuthenticated && AuthState.CurrentUser != null)
                         <p class="card-text">Administrar personas, equipos de desarrollo y sus roles dentro de la organización.</p>
                         @if (AuthState.UserCanAccess("RECURSOS"))
                         {
-                            <a href="/recursos" class="btn btn-info">Ver Recursos</a>
+                            <a href="recursos" class="btn btn-info">Ver Recursos</a>
                         }
                         else
                         {
@@ -107,7 +107,7 @@ else if (AuthState.IsAuthenticated && AuthState.CurrentUser != null)
                             <Icon Name="IconName.Diagram3" Size="IconSize.x3" class="text-warning mb-3" />
                             <h5 class="card-title">Supervisión</h5>
                             <p class="card-text">Gestionar relaciones supervisor-supervisado entre recursos del sistema.</p>
-                            <a href="/supervision" class="btn btn-warning">Gestionar Supervisión</a>
+                            <a href="supervision" class="btn btn-warning">Gestionar Supervisión</a>
                         </div>
                     </div>
                 </div>
@@ -124,15 +124,15 @@ else if (AuthState.IsAuthenticated && AuthState.CurrentUser != null)
                         <div class="d-flex gap-2">
                             @if (AuthState.UserCanAccess("TEMAS"))
                             {
-                                <a href="/temas" class="btn btn-outline-primary btn-sm">Temas</a>
+                                <a href="temas" class="btn btn-outline-primary btn-sm">Temas</a>
                             }
                             @if (AuthState.UserCanAccess("CLIENTES"))
                             {
-                                <a href="/clientes" class="btn btn-outline-primary btn-sm">Clientes</a>
+                                <a href="clientes" class="btn btn-outline-primary btn-sm">Clientes</a>
                             }
                             @if (AuthState.UserCanAccess("TIPOS_DOCUMENTO"))
                             {
-                                <a href="/tipos" class="btn btn-outline-primary btn-sm">Tipos Documento</a>
+                                <a href="tipos" class="btn btn-outline-primary btn-sm">Tipos Documento</a>
                             }
                         </div>
                     </div>
@@ -150,11 +150,11 @@ else if (AuthState.IsAuthenticated && AuthState.CurrentUser != null)
                         <div class="d-flex gap-2">
                             @if (AuthState.UserCanAccess("EQUIPOS"))
                             {
-                                <a href="/equipos" class="btn btn-outline-secondary btn-sm">Equipos</a>
+                                <a href="equipos" class="btn btn-outline-secondary btn-sm">Equipos</a>
                             }
                             @if (AuthState.UserCanAccess("ROLES"))
                             {
-                                <a href="/roles" class="btn btn-outline-secondary btn-sm">Roles</a>
+                                <a href="roles" class="btn btn-outline-secondary btn-sm">Roles</a>
                             }
                         </div>
                     </div>
@@ -175,7 +175,7 @@ else if (AuthState.IsAuthenticated && AuthState.CurrentUser != null)
                             </h5>
                             <p class="card-text">Panel de configuración avanzada y gestión de permisos del sistema.</p>
                             <div class="d-flex gap-2">
-                                <a href="/permisos" class="btn btn-outline-danger btn-sm">
+                                <a href="permisos" class="btn btn-outline-danger btn-sm">
                                     <Icon Name="IconName.Shield" class="me-1" />
                                     Gestión de Permisos
                                 </a>
@@ -272,7 +272,7 @@ else
     private void RedirectToLogin()
     {
         Console.WriteLine("🏠 Index: Redirección manual a login");
-        Navigation.NavigateTo("/login", forceLoad: true);
+        Navigation.NavigateTo("login", forceLoad: true);
     }
 }
 

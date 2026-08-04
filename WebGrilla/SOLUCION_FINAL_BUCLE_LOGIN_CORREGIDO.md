@@ -5,7 +5,7 @@ Después de implementar las mejoras de autenticación, el usuario podía hacer logi
 
 ### Flujo Problemático (ANTES):
 1. ? Usuario hace login en `/` ? Credenciales válidas
-2. ? Login exitoso ? `Navigation.NavigateTo("/index")`
+2. ? Login exitoso ? `Navigation.NavigateTo("index")`
 3. ? **AppStateInitializer se ejecuta en `/index`**
 4. ? **Detecta ruta "/index" y limpia localStorage**
 5. ? **AuthState pierde la sesión**

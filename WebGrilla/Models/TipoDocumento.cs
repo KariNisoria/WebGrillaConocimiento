@@ -8,7 +8,9 @@ namespace WebGrilla.Models
         public int IdTipoDocumento { get; set; }
         [Required]
         public string Nombre { get; set; }
-        // Relacion ...
+
+        public string Abreviacion { get; set; }
+
         public ICollection<Recurso> Recursos { get; set; }
     }
 }

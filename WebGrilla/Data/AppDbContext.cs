@@ -142,7 +142,7 @@ namespace WebGrilla.Data
             {
                 entity.HasKey(x => x.IdGrillaTema);
                 entity.Property(x => x.Nombre).IsRequired().HasMaxLength(100);
-                entity.Property(x => x.Ponderacion).IsRequired().HasPrecision(5,2);
+                entity.Property(x => x.Ponderacion).IsRequired().HasPrecision(5,3);
             });
 
             modelBuilder.Entity<GrillaTema>()
@@ -158,7 +158,7 @@ namespace WebGrilla.Data
             {
                 entity.Property("Ponderacion")
                 .IsRequired()
-                .HasPrecision(5, 2);
+                .HasPrecision(5, 3);
             });
 
             /*Cuarta + Evaluacion, ResultadoConocmiento, ConocimientoRecurso*/
@@ -186,8 +186,8 @@ namespace WebGrilla.Data
             modelBuilder.Entity<ResultadoConocimiento>(entity =>
             {
                 entity.HasKey(x => x.IdResultadoConocimiento);
-                entity.Property("ValorFuncional").IsRequired().HasPrecision(5, 2);
-                entity.Property("ValorTecnico").IsRequired().HasPrecision(5, 2);
+                entity.Property("ValorFuncional").IsRequired().HasPrecision(5, 3);
+                entity.Property("ValorTecnico").IsRequired().HasPrecision(5, 3);
             });
 
             modelBuilder.Entity<ResultadoConocimiento>()

@@ -22,8 +22,7 @@ namespace WebGrilla.Models
         [Required]
         [EmailAddress(ErrorMessage = "El correo electrónico no es válido.")]
         public string CorreoElectronico { get; set; } = string.Empty;
-        [Required]
-        public string PerfilSeguridad { get; set; } = string.Empty;
+
         
         // fk ...
         public int IdEquipoDesarrollo { get; set; }

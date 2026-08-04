@@ -54,7 +54,11 @@ namespace WebGrilla.Repository
 
         public async Task<IEnumerable<Recurso>> GetAllAsync()
         {
-            var resultado = await _contexto.Recursos.ToListAsync();
+            var resultado = await _contexto.Recursos
+            .Include(r => r.EquipoDesarrollo)
+            .Include(r => r.Rol)
+            .Include(r => r.TipoDocumento)
+            .ToListAsync();
             return resultado;
         }
 
@@ -82,7 +86,6 @@ namespace WebGrilla.Repository
                 encontrado.IdTipoDocumento = item.IdTipoDocumento;
                 encontrado.NumeroDocumento = item.NumeroDocumento;
                 encontrado.IdRol = item.IdRol;
-                encontrado.PerfilSeguridad = item.PerfilSeguridad;
                 encontrado.CorreoElectronico = item.CorreoElectronico;
 
                 try

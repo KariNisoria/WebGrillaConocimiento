@@ -108,7 +108,6 @@ namespace WebGrilla.Services
                     Apellido = recurso.Apellido,
                     CorreoElectronico = recurso.CorreoElectronico,
                     NumeroDocumento = recurso.NumeroDocumento,
-                    PerfilSeguridad = recurso.PerfilSeguridad,
                     IdRol = recurso.IdRol,
                     NombreRol = recurso.Rol?.Nombre ?? "Sin Rol",
                     IdEquipoDesarrollo = recurso.IdEquipoDesarrollo,

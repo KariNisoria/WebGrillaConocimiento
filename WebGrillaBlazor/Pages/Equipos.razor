@@ -42,7 +42,7 @@
             <div class="col-auto">
                 @if (AuthState.UserHasPermission("EQUIPOS_WRITE"))
                 {
-                    <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddEquipo">
+                    <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AbrirModalAltaEquipo">
                         <Icon Name="IconName.Plus" class="me-1" />
                         Agregar Equipo
                     </Button>
@@ -93,6 +93,8 @@
                 </Grid>
             </div>
         </div>
+        <!-- Modal para Alta de Equipo -->
+        <Modal @ref="_AltaEquipo" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
 
         <!-- Ficha Edicion Equipo -->
         <Modal @ref="_EdicionEquipo" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
@@ -112,8 +114,9 @@
     private IEnumerable<EquipoDesarrolloDTO> equipos = default!;
     private int currentIdEquipo = 0;
     private Modal _EdicionEquipo = default!;
+    private Modal _AltaEquipo = default!;
     private Grid<EquipoDesarrolloDTO> gridEquipo = default!;
-
+    private string successMessage = "";
     protected override async Task OnInitializedAsync()
     {
         Console.WriteLine("Equipos: Inicializando página...");
@@ -126,7 +129,7 @@
 
     private void NavigateToIndex()
     {
-        Navigation.NavigateTo("/index");
+        Navigation.NavigateTo("index");
     }
 
     private async Task<GridDataProviderResult<EquipoDesarrolloDTO>> GetAllEquipos(GridDataProviderRequest<EquipoDesarrolloDTO> request)
@@ -180,6 +183,36 @@
         await _EdicionEquipo.ShowAsync<FichaEquipo>(title: "Edición Equipo", parameters: param);
     }
 
+    private async Task AbrirModalAltaEquipo()
+    {
+        if (!AuthState.UserHasPermission("EQUIPOS_WRITE"))
+        {
+            Console.WriteLine("Sin permisos para crear equipos");
+            return;
+        }
+
+        Console.WriteLine("Abriendo modal para agregar nuevo equipo");
+
+        // Crear un nuevo equipo vacío
+        var nuevoEquipo = CreateNuevoEquipo();
+
+        var param = new Dictionary<string, object>();
+        param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalAltaEquipo));
+        param.Add("equipo", nuevoEquipo);
+
+        await _AltaEquipo.ShowAsync<FichaEquipo>(title: "Agregar Nuevo Equipo", parameters: param);
+    }
+    private EquipoDesarrolloDTO CreateNuevoEquipo()
+    {
+        var nuevoEquipo = new EquipoDesarrolloDTO
+        {
+            IdEquipoDesarrollo = 0, // Nuevo equipo, el ID lo asignará la base de datos
+            Nombre = "",
+            IdCliente = 0
+        };
+        return nuevoEquipo;
+    }
+
     private async Task OnEquipoDobleClick(GridRowEventArgs<EquipoDesarrolloDTO> args)
     {
         if (!AuthState.UserHasPermission("EQUIPOS_WRITE"))
@@ -195,6 +228,15 @@
         await _EdicionEquipo.ShowAsync<FichaEquipo>(title: "Edición Equipo", parameters: param);
     }
 
+    private async Task OnCloseModalAltaEquipo()
+    {
+       
+        await _AltaEquipo.HideAsync(); // Ocultar el modal de alta
+        await RefreshGrid(); // Refrescar la grilla
+
+        // Mostrar mensaje de éxito
+        ShowSuccessMessage("¡Equipo agregado exitosamente!");
+    }
     private async Task OnCloseModalEdicionEquipo()
     {
         Console.WriteLine("OnCloseModalEdicionEquipo()");
@@ -214,4 +256,25 @@
         Console.WriteLine($"OnRowClick Equipo current: {currentIdEquipo} nuevo: {args.Item.IdEquipoDesarrollo} ");
         currentIdEquipo = args.Item.IdEquipoDesarrollo;
     }
+    private void ShowSuccessMessage(string message)
+    {
+        successMessage = message;
+        StateHasChanged();
+
+        // Auto-ocultar el mensaje después de 5 segundos
+        var timer = new System.Timers.Timer(5000);
+        timer.Elapsed += (sender, e) =>
+        {
+            successMessage = "";
+            InvokeAsync(() => StateHasChanged());
+            timer.Dispose();
+        };
+        timer.Start();
+    }
+
+    private void ClearSuccessMessage()
+    {
+        successMessage = "";
+    }
+    
 }

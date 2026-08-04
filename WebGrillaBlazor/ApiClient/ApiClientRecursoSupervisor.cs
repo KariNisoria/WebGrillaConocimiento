@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+ï»¿using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using WebGrillaBlazor.DTOs;
@@ -8,7 +8,7 @@ namespace WebGrillaBlazor.ApiClient
     public class ApiClientRecursoSupervisor
     {
         private readonly HttpClient _httpClient;
-        private readonly string _baseUrl = "/api/RecursoSupervisor";
+        private readonly string _baseUrl = "api/RecursoSupervisor"; // âœ… Sin "/" inicial
 
         public ApiClientRecursoSupervisor(HttpClient httpClient)
         {
@@ -34,7 +34,7 @@ namespace WebGrillaBlazor.ApiClient
         }
 
         /// <summary>
-        /// Obtener todos los recursos disponibles para supervisión
+        /// Obtener todos los recursos disponibles para supervisiÃ³n
         /// </summary>
         public async Task<IEnumerable<RecursoSimpleDTO>> GetRecursosDisponiblesAsync()
         {
@@ -52,19 +52,20 @@ namespace WebGrillaBlazor.ApiClient
         }
 
         /// <summary>
-        /// Obtener la vista de supervisión para un supervisor específico
+        /// Obtener la vista de supervisiÃ³n para un supervisor especÃ­fico
         /// </summary>
         public async Task<SupervisionViewDTO?> GetSupervisionViewAsync(int idSupervisor)
         {
             try
             {
+                Console.WriteLine($"GET supervisiÃ³n: {_baseUrl}/supervision/{idSupervisor}");
                 var response = await _httpClient.GetAsync($"{_baseUrl}/supervision/{idSupervisor}");
                 response.EnsureSuccessStatusCode();
                 return await response.Content.ReadFromJsonAsync<SupervisionViewDTO>();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error al obtener vista de supervisión: {ex.Message}");
+                Console.WriteLine($"Error al obtener vista de supervisiÃ³n: {ex.Message}");
                 return null;
             }
         }
@@ -114,23 +115,25 @@ namespace WebGrillaBlazor.ApiClient
         }
 
         /// <summary>
-        /// Verificar si existe una relación supervisor-supervisado
+        /// Verificar si existe una relaciÃ³n supervisor-supervisado
         /// </summary>
         public async Task<bool> ExisteRelacionAsync(int idSupervisor, int idSupervisado)
         {
             try
             {
+                Console.WriteLine($"Usuario {idSupervisor} es supervisor de {idSupervisado}: verificando...");
                 var response = await _httpClient.GetAsync($"{_baseUrl}/existe-relacion/{idSupervisor}/{idSupervisado}");
                 if (response.IsSuccessStatusCode)
                 {
                     var result = await response.Content.ReadFromJsonAsync<bool>();
+                    Console.WriteLine($"Usuario {idSupervisor} es supervisor de {idSupervisado}: {result}");
                     return result;
                 }
                 return false;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error al verificar relación: {ex.Message}");
+                Console.WriteLine($"Error al verificar relaciÃ³n: {ex.Message}");
                 return false;
             }
         }

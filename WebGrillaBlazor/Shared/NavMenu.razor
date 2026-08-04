@@ -137,7 +137,7 @@
                 </div>
             }
 
-            <!-- Subtemas -->
+           /* <!-- Subtemas -->
             @if (AuthState.UserCanAccess("SUBTEMAS"))
             {
                 <div class="nav-item px-3">
@@ -145,7 +145,7 @@
                         <span class="bi bi-journal-text" aria-hidden="true"></span> Subtemas
                     </NavLink>
                 </div>
-            }
+            }*/
 
             <!-- Grillas -->
             @if (AuthState.UserCanAccess("GRILLAS"))
@@ -364,7 +364,7 @@
     private void GoToLogin()
     {
         Console.WriteLine("🧭 NavMenu: Navegando a login");
-        Navigation.NavigateTo("/login", forceLoad: false);
+        Navigation.NavigateTo("login", forceLoad: false);
     }
 
     private async Task HandleLogout()
@@ -372,7 +372,7 @@
         Console.WriteLine("🧭 NavMenu: Iniciando logout");
         await AuthState.LogoutAsync();
         Console.WriteLine("🧭 NavMenu: Logout completado, navegando a login");
-        Navigation.NavigateTo("/login", forceLoad: false);
+        Navigation.NavigateTo("login", forceLoad: false);
     }
 
     public void Dispose()

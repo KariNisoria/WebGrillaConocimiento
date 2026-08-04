@@ -130,7 +130,7 @@ Si no hay permisos en BD, el sistema usa los permisos hardcodeados en:
 ```csharp
 @if (AuthState.UserCanAccess("RECURSOS"))
 {
-    <a href="/recursos" class="btn btn-primary">Ver Recursos</a>
+    <a href="recursos" class="btn btn-primary">Ver Recursos</a>
 }
 
 @if (AuthState.UserHasPermission("RECURSOS_WRITE"))

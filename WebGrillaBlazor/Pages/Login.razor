@@ -280,7 +280,7 @@
     private void GoToDashboard()
     {
         Console.WriteLine("🔑 Login: Continuando con sesión actual");
-        Navigation.NavigateTo("/index", forceLoad: false);
+        Navigation.NavigateTo("index", forceLoad: false);
     }
 
     private async Task StartNewSession()
@@ -352,7 +352,7 @@
                 Console.WriteLine($"🔑 Redirigiendo a /index...");
                 
                 // Redirigir al índice
-                Navigation.NavigateTo("/index", forceLoad: false);
+                Navigation.NavigateTo("index", forceLoad: false);
             }
             else
             {

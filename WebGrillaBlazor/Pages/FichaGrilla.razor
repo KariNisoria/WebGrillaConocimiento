@@ -7,7 +7,16 @@
 
     <div class="form-group row mb-3">
         <label class="col-md-2 col-form-label">Id:</label>
-        <label class="col-md-10">@grilla.IdGrilla</label>
+        <label class="col-md-10">
+            @if (grilla.IdGrilla > 0)
+            {
+                <text>@grilla.IdGrilla</text>
+            }
+            else
+            {
+                <span class="text-muted fst-italic">Se asignará automáticamente</span>
+            }
+        </label>
     </div>
 
     <div class="form-group row mb-3">
@@ -35,8 +44,11 @@
 
 <div class="row">
     <div class="col-md-12 text-right">
-        <Button Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="ModificarGrilla">Grabar</Button>
-        <Button Type="ButtonType.Button" Color="ButtonColor.Warning" @onclick="EliminarGrilla">Eliminar</Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="GrabarGrilla">Grabar</Button>
+        @if (!_esNuevo)
+        {
+            <Button Type="ButtonType.Button" Color="ButtonColor.Warning" @onclick="EliminarGrilla">Eliminar</Button>
+        }
         <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" @onclick="OnClickCallBack"> Cerrar</Button>
     </div>
 </div>
@@ -54,7 +66,7 @@
     private EditContext editContext;
 
     private string errorMessage = "";
-    private System.Timers.Timer _timer;
+    private bool _esNuevo = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -62,68 +74,81 @@
 
         editContext = new EditContext(grilla);
 
-        var existeGrilla = await ExisteGrilla();
+        // Determinar si es un registro nuevo (Id = 0) o existente
+        _esNuevo = grilla.IdGrilla == 0;
 
-        Console.WriteLine($"OnInitializedAsync() existeGrilla: {existeGrilla}");
-
-        if (!existeGrilla)
-        {
-            Console.WriteLine("No existe Grilla");
-            await AltaGrilla();
-        }
+        Console.WriteLine($"OnInitializedAsync() esNuevo: {_esNuevo}");
 
         await base.OnInitializedAsync();
     }
 
     public void HandleOnValidSubmit()
     {
-        // additional check
         if (editContext.Validate())
         {
-            // do something
-            // submit the form
             Console.WriteLine("Form submitted successfully");
         }
     }
 
-    private async Task<bool> ExisteGrilla()
+    private async Task GrabarGrilla()
     {
-        Console.WriteLine($"ExisteGrilla() {grilla.IdGrilla}");
-        var encontrado = await _apiClient.GetByIdAsync(grilla.IdGrilla);
-        if (encontrado == null)
+        // Validar campos requeridos
+        if (string.IsNullOrWhiteSpace(grilla.Nombre))
         {
-            Console.WriteLine("No existe!");
-            return false;
+            errorMessage = "Debe ingresar un nombre para la grilla";
+            return;
         }
-        Console.WriteLine($"ExisteGrilla() variable idGrilla: {encontrado.IdGrilla}");
-        return (encontrado.IdGrilla != null);
-    }
 
-    private async Task AltaGrilla()
-    {
-        Console.WriteLine("AltaGrilla()");
-        var nuevo = await _apiClient.CreateAsync(grilla);
-        grilla.IdGrilla= nuevo.IdGrilla;
+        errorMessage = "";
 
-    }
+        try
+        {
+            if (_esNuevo)
+            {
+                Console.WriteLine("AltaGrilla()");
+                var nuevo = await _apiClient.CreateAsync(grilla);
+                grilla.IdGrilla = nuevo.IdGrilla;
+                _esNuevo = false;
+            }
+            else
+            {
+                Console.WriteLine("ModificarGrilla()");
+                await _apiClient.UpdateAsync(grilla.IdGrilla, grilla);
+            }
 
-    private async Task ModificarGrilla()
-    {
-        Console.WriteLine("ModificarGrilla()");
-        await _apiClient.UpdateAsync(grilla.IdGrilla, grilla);
+            if (OnClickCallBack.HasDelegate)
+            {
+                await OnClickCallBack.InvokeAsync(null);
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al guardar: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
     }
 
     private async Task EliminarGrilla()
     {
-        Console.WriteLine("EliminarGrilla()");
-        await _apiClient.DeleteAsync(grilla.IdGrilla);
+        if (_esNuevo || grilla.IdGrilla == 0)
         {
-            // Notificar al componente padre para cerrar la ficha
-            if (OnClickCallBack.HasDelegate)
-            {
-                await OnClickCallBack.InvokeAsync(null); // Dispara el callback
-            }
+            errorMessage = "No se puede eliminar un registro que no ha sido guardado";
+            return;
         }
 
+        try
+        {
+            Console.WriteLine("EliminarGrilla()");
+            await _apiClient.DeleteAsync(grilla.IdGrilla);
+
+            if (OnClickCallBack.HasDelegate)
+            {
+                await OnClickCallBack.InvokeAsync(null);
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al eliminar grilla: {ex.Message}";
+        }
     }
 }

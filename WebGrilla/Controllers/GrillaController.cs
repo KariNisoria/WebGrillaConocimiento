@@ -21,6 +21,7 @@ namespace WebGrilla.Controllers
             var resultado = await _service.GetAllGrilla();
             return Ok(resultado);
         }
+
         [HttpGet("{id}")]
         public async Task<ActionResult<GrillaDTO>> GetGrillaById(int id)
         {
@@ -31,6 +32,7 @@ namespace WebGrilla.Controllers
             }
             return Ok(resultado);
         }
+
         [HttpPost]
         public async Task<ActionResult<GrillaDTO>> AddGrilla([FromBody] GrillaDTO grilla)
         {
@@ -41,20 +43,16 @@ namespace WebGrilla.Controllers
             }
             return CreatedAtAction(nameof(GetGrillaById), new { id = resultado.value.IdGrilla }, resultado.value);
         }
+
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteGrilla(int id)
         {
-            _service.DeleteGrilla(id);
+            var resultado = await _service.DeleteGrilla(id);
+            if (!resultado.isSuccess)
             {
-                var resultado = await _service.DeleteGrilla(id);
-                if (!resultado.isSuccess)
-                {
-                    return BadRequest(resultado.message);
-                }
-                return NoContent();
+                return BadRequest(resultado.message);
             }
-
-
+            return NoContent();
         }
 
         [HttpPut("{id}")]

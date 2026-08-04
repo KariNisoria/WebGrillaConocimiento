@@ -615,7 +615,7 @@
         else
         {
             // Sin permisos - redireccionar
-            Navigation.NavigateTo("/", forceLoad: true);
+            Navigation.NavigateTo("", forceLoad: true);
             return;
         }
         
@@ -1025,7 +1025,7 @@
 
     private void AccederAEvaluacion(int idEvaluacion, int idRecurso)
     {
-        Navigation.NavigateTo($"/evaluacion/{idEvaluacion}/recurso/{idRecurso}");
+        Navigation.NavigateTo($"evaluacion/{idEvaluacion}/recurso/{idRecurso}");
     }
 
     private void MostrarToast(string mensaje, string tipo)

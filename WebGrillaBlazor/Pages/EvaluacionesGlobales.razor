@@ -400,12 +400,12 @@
 
     private void AccederAEvaluacion(int idEvaluacion, int idRecurso)
     {
-        Navigation.NavigateTo($"/evaluacion/{idEvaluacion}/recurso/{idRecurso}");
+        Navigation.NavigateTo($"evaluacion/{idEvaluacion}/recurso/{idRecurso}");
     }
 
     private void VolverAEvaluaciones()
     {
-        Navigation.NavigateTo("/evaluaciones");
+        Navigation.NavigateTo("evaluaciones");
     }
 
     private void MostrarToast(string mensaje, string tipo)

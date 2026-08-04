@@ -23,7 +23,7 @@
         <div class="col-12">
             <div class="alert @GetAlertClassForPonderacion() d-flex justify-content-between align-items-center">
                 <div>
-                    <strong>Total Ponderación: @totalPonderacion.ToString("F2")%</strong>
+                    <strong>Total Ponderación: @totalPonderacion.ToString("F3")%</strong>
                     <small class="ms-2">@GetMensajePonderacion()</small>
                 </div>
                 <div class="progress" style="width: 300px; height: 20px;">
@@ -33,7 +33,7 @@
                          aria-valuenow="@totalPonderacion" 
                          aria-valuemin="0" 
                          aria-valuemax="100">
-                        @totalPonderacion.ToString("F1")%
+                        @totalPonderacion.ToString("F3")%
                     </div>
                 </div>
             </div>
@@ -177,7 +177,7 @@
                             <div class="text-end">
                                 <small class="text-muted">Total: </small>
                                 <strong class="@(totalPonderacion > 100 ? "text-danger" : totalPonderacion < 100 ? "text-warning" : "text-success")">
-                                    @totalPonderacion.ToString("F2")%
+                                    @totalPonderacion.ToString("F3")%
                                 </strong>
                             </div>
                         }
@@ -231,7 +231,7 @@
                                 </GridColumn>
                                 <GridColumn TItem="GrillaTemaConCompletitud" HeaderText="Ponderación" PropertyName="Ponderacion" SortKeySelector="item => item.Ponderacion">
                                     <span class="@(context.Ponderacion > 50 ? "fw-bold" : "")">
-                                        @context.Ponderacion.ToString("F2")%
+                                        @context.Ponderacion.ToString("F3")%
                                     </span>
                                 </GridColumn>
                                 <GridColumn TItem="GrillaTemaConCompletitud" HeaderText="Completitud">
@@ -322,19 +322,19 @@
                 <label for="ponderacion" class="form-label">
                     Ponderación (%)
                     <small class="text-muted ms-1">
-                        - Total actual: @totalPonderacion.ToString("F2")%
+                        - Total actual: @totalPonderacion.ToString("F3")%
                     </small>
                 </label>
-                <input type="number" 
-                       class="form-control @(errorValidacionPonderacion ? "is-invalid" : "")" 
-                       id="ponderacion" 
-                       @bind="nuevaPonderacion" 
-                       @oninput="ValidarPonderacion"
-                       min="0" 
-                       max="100" 
-                       step="0.01"
-                       inputmode="decimal"
-                       pattern="[0-9]+([,\.][0-9]+)?" />
+                <input type="number"
+                       class="form-control @(errorValidacionPonderacion ? "is-invalid" : "")"
+                       id="ponderacion"
+                       @bind="nuevaPonderacion"
+                       @bind:event="oninput"
+                       @bind:after="ValidarPonderacion"
+                       min="0"
+                       max="100"
+                       step="0.001"
+                       inputmode="decimal" />
                 @if (errorValidacionPonderacion)
                 {
                     <div class="invalid-feedback">
@@ -345,7 +345,7 @@
                 {
                     <div class="form-text">
                         Total con este cambio: <strong class="@(totalPonderacionConCambio > 100 ? "text-danger" : totalPonderacionConCambio == 100 ? "text-success" : "text-info")">
-                            @totalPonderacionConCambio.ToString("F2")%
+                            @totalPonderacionConCambio.ToString("F3")%
                         </strong>
                         @if (totalPonderacionConCambio == 100)
                         {
@@ -353,7 +353,7 @@
                         }
                         else if (totalPonderacionConCambio < 100)
                         {
-                            <span class="text-info ms-2">Disponible: @((100 - totalPonderacionConCambio).ToString("F2"))%</span>
+                            <span class="text-info ms-2">Disponible: @((100 - totalPonderacionConCambio).ToString("F3"))%</span>
                         }
                     </div>
                 }
@@ -362,7 +362,7 @@
                     <small class="text-muted">
                         Máximo permitido para este tema: @{
                             var maximoTema = 100 - totalPonderacion + (grillaTemaoEditar?.Ponderacion ?? 0);
-                        } @maximoTema.ToString("F2")%
+                        } @maximoTema.ToString("F3")%
                     </small>
                 }
             </div>
@@ -552,31 +552,25 @@
     }
 
     // Validación de ponderación RESTRICTIVA - NO PERMITE superar 100%
-    private void ValidarPonderacion(ChangeEventArgs e)
+    private void ValidarPonderacion()
     {
-        if (decimal.TryParse(e.Value?.ToString(), out var valor))
+        // El valor ya cambió en 'nuevaPonderacion', trabajas directo con él
+        if (nuevaPonderacion > 100 || nuevaPonderacion < 0)
         {
-            nuevaPonderacion = valor;
+            errorValidacionPonderacion = true;
+            mensajeErrorPonderacion = "La ponderación debe estar entre 0 y 100";
         }
-        
-        errorValidacionPonderacion = false;
-        mensajeErrorPonderacion = string.Empty;
 
-        if (nuevaPonderacion < 0)
-        {
-            errorValidacionPonderacion = true;
-            mensajeErrorPonderacion = "La ponderación no puede ser negativa";
-        }
-        else if (nuevaPonderacion > 100)
-        {
-            errorValidacionPonderacion = true;
-            mensajeErrorPonderacion = "La ponderación no puede ser mayor a 100%";
-        }
         else if (totalPonderacionConCambio > 100)
         {
             errorValidacionPonderacion = true;
             var maximoPermitido = 100 - totalPonderacion + (grillaTemaoEditar?.Ponderacion ?? 0);
-            mensajeErrorPonderacion = $"? NO PERMITIDO: El total excedería 100% (sería {totalPonderacionConCambio:F2}%). Máximo permitido: {maximoPermitido:F2}%";
+            mensajeErrorPonderacion = $"? NO PERMITIDO: El total excedería 100% (sería {totalPonderacionConCambio:F3}%). Máximo permitido: {maximoPermitido:F3}%";
+        }
+        else
+        {
+            errorValidacionPonderacion = false;
+            // Tu lógica extra de suma de totales aquí...
         }
     }
 
@@ -610,10 +604,10 @@
         return totalPonderacion switch
         {
             100 => "? ¡Perfecto! Ponderación completa al 100%",
-            > 100 => $"? ERROR: Excede en {totalPonderacion - 100:F2}% - Total: {totalPonderacion:F2}%",
-            > 90 => $"?? Muy cerca del 100%. Faltan {100 - totalPonderacion:F2}%",
-            > 70 => $"?? En progreso. Faltan {100 - totalPonderacion:F2}% para completar",
-            _ => $"?? Inicio de asignación. Faltan {100 - totalPonderacion:F2}% para completar"
+            > 100 => $"? ERROR: Excede en {totalPonderacion - 100:F3}% - Total: {totalPonderacion:F3}%",
+            > 90 => $"?? Muy cerca del 100%. Faltan {100 - totalPonderacion:F3}%",
+            > 70 => $"?? En progreso. Faltan {100 - totalPonderacion:F3}% para completar",
+            _ => $"?? Inicio de asignación. Faltan {100 - totalPonderacion:F3}% para completar"
         };
     }
 
@@ -675,7 +669,7 @@
                 else
                 {
                     // NO HAY ESPACIO - BLOQUEAR OPERACIÓN
-                    mensajeToast = $"? NO se puede agregar '{nombreTema}'. No hay espacio disponible (Total actual: {totalPonderacion:F2}%)";
+                    mensajeToast = $"? NO se puede agregar '{nombreTema}'. No hay espacio disponible (Total actual: {totalPonderacion:F3}%)";
                     mostrarToast = true;
                     await Task.Delay(3000);
                     mostrarToast = false;
@@ -703,11 +697,11 @@
             var totalDespues = grillaTemas.Sum(gt => gt.Ponderacion);
             if (ponderacionPorDefecto < 10.0m)
             {
-                mensajeToast = $"?? Tema '{nombreTema}' agregado con {ponderacionPorDefecto:F2}% (espacio disponible limitado). Total: {totalDespues:F2}%";
+                mensajeToast = $"?? Tema '{nombreTema}' agregado con {ponderacionPorDefecto:F3}% (espacio disponible limitado). Total: {totalDespues:F3}%";
             }
             else
             {
-                mensajeToast = $"? Tema '{nombreTema}' agregado exitosamente con {ponderacionPorDefecto:F2}%";
+                mensajeToast = $"? Tema '{nombreTema}' agregado exitosamente con {ponderacionPorDefecto:F3}%";
             }
             
             mostrarToast = true;
@@ -790,12 +784,12 @@
 
     private void VolverAGrillas()
     {
-        Navigation.NavigateTo("/grillas");
+        Navigation.NavigateTo("grillas");
     }
 
     private void VerSubtemas(int idGrillaTema)
     {
-        Navigation.NavigateTo($"/grillas/{IdGrilla}/temas/{idGrillaTema}/subtemas");
+        Navigation.NavigateTo($"grillas/{IdGrilla}/temas/{idGrillaTema}/subtemas");
     }
 
     // Método para obtener la clase CSS del toast según el tipo de mensaje

@@ -7,7 +7,16 @@
 
     <div class="form-group row mb-3">
         <label class="col-md-2 col-form-label">Id:</label>
-        <label class="col-md-10">@rol.IdRol</label>
+        <label class="col-md-10">
+            @if (rol.IdRol > 0)
+            {
+                <text>@rol.IdRol</text>
+            }
+            else
+            {
+                <span class="text-muted fst-italic">Se asignará automáticamente</span>
+            }
+        </label>
     </div>
 
     <div class="form-group row mb-3">
@@ -21,8 +30,11 @@
 
 <div class="row">
     <div class="col-md-12 text-right">
-        <Button Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="ModificarRol">Grabar</Button>
-        <Button Type="ButtonType.Button" Color="ButtonColor.Warning" @onclick="EliminarRol">Eliminar</Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="GrabarRol">Grabar</Button>
+        @if (!_esNuevo)
+        {
+            <Button Type="ButtonType.Button" Color="ButtonColor.Warning" @onclick="EliminarRol">Eliminar</Button>
+        }
         <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" @onclick="OnClickCallBack"> Cerrar</Button>
     </div>
 </div>
@@ -40,7 +52,7 @@
     private EditContext editContext;
 
     private string errorMessage = "";
-    private System.Timers.Timer _timer;
+    private bool _esNuevo = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -48,92 +60,73 @@
 
         editContext = new EditContext(rol);
 
-        // Solo crear si el ID es 0 (nuevo registro)
-        if (rol.IdRol == 0)
-        {
-            var existeRol = await ExisteRol();
-            Console.WriteLine($"OnInitializedAsync() existeRol: {existeRol}");
+        // Determinar si es un registro nuevo (Id = 0) o existente
+        _esNuevo = rol.IdRol == 0;
 
-            if (!existeRol)
-            {
-                Console.WriteLine("No existe Rol - Creando nuevo");
-                try
-                {
-                    await AltaRol();
-                }
-                catch (Exception ex)
-                {
-                    errorMessage = $"Error al crear rol: {ex.Message}";
-                    Console.WriteLine($"Error en AltaRol: {ex.Message}");
-                }
-            }
-        }
+        Console.WriteLine($"OnInitializedAsync() esNuevo: {_esNuevo}");
 
-        base.OnInitialized();
+        await base.OnInitializedAsync();
     }
 
     public void HandleOnValidSubmit()
     {
-        // additional check
         if (editContext.Validate())
         {
             Console.WriteLine("Form submitted successfully");
         }
     }
 
-    private async Task<bool> ExisteRol()
+    private async Task GrabarRol()
     {
+        // Validar campos requeridos
+        if (string.IsNullOrWhiteSpace(rol.Nombre))
+        {
+            errorMessage = "Debe ingresar un nombre para el rol";
+            return;
+        }
+
+        errorMessage = "";
+
         try
         {
-            Console.WriteLine("ExisteRol()");
-            var encontrado = await _apiClient.GetByIdAsync(rol.IdRol);
-            if (encontrado == null)
+            if (_esNuevo)
             {
-                return false;
+                Console.WriteLine("AltaRol()");
+                var nuevo = await _apiClient.CreateAsync(rol);
+                rol.IdRol = nuevo.IdRol;
+                _esNuevo = false;
             }
-            Console.WriteLine($"ExisteRol() variable idRol: {encontrado.IdRol}");
-            return (encontrado.IdRol > 0);
-        }
-        catch
-        {
-            return false;
-        }
-    }
+            else
+            {
+                Console.WriteLine("ModificarRol()");
+                await _apiClient.UpdateAsync(rol.IdRol, rol);
+            }
 
-    private async Task AltaRol()
-    {
-        Console.WriteLine("AltaRol()");
-        
-        // Validar que los campos requeridos tengan valores válidos
-        if (string.IsNullOrEmpty(rol.Nombre))
-            rol.Nombre = "Nuevo Rol";
-            
-        var nuevo = await _apiClient.CreateAsync(rol);
-        rol.IdRol = nuevo.IdRol;
-    }
-
-    private async Task ModificarRol()
-    {
-        try
-        {
-            Console.WriteLine("ModificarRol()");
-            await _apiClient.UpdateAsync(rol.IdRol, rol);
-            errorMessage = "";
+            if (OnClickCallBack.HasDelegate)
+            {
+                await OnClickCallBack.InvokeAsync(null);
+            }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error al modificar rol: {ex.Message}";
+            errorMessage = $"Error al guardar: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
         }
     }
 
     private async Task EliminarRol()
     {
+        if (_esNuevo || rol.IdRol == 0)
+        {
+            errorMessage = "No se puede eliminar un registro que no ha sido guardado";
+            return;
+        }
+
         try
         {
             Console.WriteLine("EliminarRol()");
             await _apiClient.DeleteAsync(rol.IdRol);
-            
-            // Notificar al componente padre para cerrar la ficha
+
             if (OnClickCallBack.HasDelegate)
             {
                 await OnClickCallBack.InvokeAsync(null);

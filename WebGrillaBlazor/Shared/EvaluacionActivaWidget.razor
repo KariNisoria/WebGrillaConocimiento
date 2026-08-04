@@ -67,11 +67,11 @@
         {
             if (evaluacionActiva.IdRecurso > 0)
             {
-                Navigation.NavigateTo($"/evaluacion/{evaluacionActiva.IdEvaluacion}/recurso/{evaluacionActiva.IdRecurso}");
+                Navigation.NavigateTo($"evaluacion/{evaluacionActiva.IdEvaluacion}/recurso/{evaluacionActiva.IdRecurso}");
             }
             else
             {
-                Navigation.NavigateTo("/evaluaciones");
+                Navigation.NavigateTo("evaluaciones");
             }
         }
     }

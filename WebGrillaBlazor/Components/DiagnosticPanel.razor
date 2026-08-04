@@ -165,7 +165,7 @@
             await AuthState.ForceLogoutAsync();
             await JSRuntime.InvokeVoidAsync("localStorage.clear");
             await Task.Delay(500);
-            Navigation.NavigateTo("/", forceLoad: true);
+            Navigation.NavigateTo("", forceLoad: true);
         }
         catch (Exception ex)
         {
@@ -177,7 +177,7 @@
 
     private void GoToLogin()
     {
-        Navigation.NavigateTo("/", forceLoad: true);
+        Navigation.NavigateTo("", forceLoad: true);
     }
 
     private void ToggleExpanded()

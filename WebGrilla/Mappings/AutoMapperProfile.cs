@@ -26,8 +26,25 @@ namespace WebGrilla.Mappings
                 .ForMember(dest => dest.Conocimientos, opt => opt.Ignore());
 
             // ===== RECURSO =====
-            CreateMap<Recurso, RecursoDTO>().ReverseMap();
+            //CreateMap<Recurso, RecursoDTO>().ReverseMap();
+            // configuración más completa:
+            CreateMap<Recurso, RecursoDTO>()
+                .ForMember(dest => dest.NombreEquipo,
+                    opt => opt.MapFrom(src => src.EquipoDesarrollo != null ? src.EquipoDesarrollo.Nombre : null))
+                .ForMember(dest => dest.NombreRol,
+                    opt => opt.MapFrom(src => src.Rol != null ? src.Rol.Nombre : null))
+                .ForMember(dest => dest.NombreTipoDocumento,
+                    opt => opt.MapFrom(src => src.TipoDocumento != null ? src.TipoDocumento.Nombre : null));
 
+            CreateMap<RecursoDTO, Recurso>()
+                .ForMember(dest => dest.EquipoDesarrollo, opt => opt.Ignore())
+                .ForMember(dest => dest.Rol, opt => opt.Ignore())
+                .ForMember(dest => dest.TipoDocumento, opt => opt.Ignore())
+                .ForMember(dest => dest.Resultados, opt => opt.Ignore())
+                .ForMember(dest => dest.Conocimientos, opt => opt.Ignore())
+                .ForMember(dest => dest.Evaluaciones, opt => opt.Ignore())
+                .ForMember(dest => dest.RecursosSupervisados, opt => opt.Ignore())
+                .ForMember(dest => dest.Supervisores, opt => opt.Ignore());
             // ===== GRILLA =====
             CreateMap<Grilla, GrillaDTO>().ReverseMap();
 
@@ -54,6 +71,9 @@ namespace WebGrilla.Mappings
 
             // ===== EQUIPO DESARROLLO =====
             CreateMap<EquipoDesarrollo, EquipoDesarrolloDTO>().ReverseMap();
+
+            // ===== TIPOS DE DOCUMENTO =====
+            CreateMap<TipoDocumento, TipoDocumentoDTO>().ReverseMap();
 
             // Agrega aquí otros mapeos según los necesites...
         }

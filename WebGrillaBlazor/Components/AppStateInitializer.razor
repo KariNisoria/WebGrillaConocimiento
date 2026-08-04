@@ -158,7 +158,7 @@ else
             loadingMessage = "Acceso denegado - Redirigiendo al login...";
             StateHasChanged();
             await Task.Delay(1000); // Pausa para debug
-            Navigation.NavigateTo("/login", forceLoad: false);
+            Navigation.NavigateTo("login", forceLoad: false);
             return;
         }
         
@@ -169,7 +169,7 @@ else
             loadingMessage = "Ya autenticado - Redirigiendo al dashboard...";
             StateHasChanged();
             await Task.Delay(1000); // Pausa para debug
-            Navigation.NavigateTo("/index", forceLoad: false);
+            Navigation.NavigateTo("index", forceLoad: false);
             return;
         }
         
@@ -180,7 +180,7 @@ else
             loadingMessage = "Acceso requerido - Redirigiendo al login...";
             StateHasChanged();
             await Task.Delay(1000); // Pausa para debug
-            Navigation.NavigateTo("/login", forceLoad: false);
+            Navigation.NavigateTo("login", forceLoad: false);
             return;
         }
         

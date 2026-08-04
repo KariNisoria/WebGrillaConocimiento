@@ -8,7 +8,16 @@
 
     <div class="form-group row mb-3">
         <label class="col-md-2 col-form-label">Id:</label>
-        <label class="col-md-10">@tipoDocumento.IdTipoDocumento</label>
+        <label class="col-md-10">
+            @if (tipoDocumento.IdTipoDocumento > 0)
+            {
+                <text>@tipoDocumento.IdTipoDocumento</text>
+            }
+            else
+            {
+                <span class="text-muted fst-italic">Se asignará automáticamente</span>
+            }
+        </label>
     </div>
 
     <div class="form-group row mb-3">
@@ -29,8 +38,11 @@
 
 <div class="row">
     <div class="col-md-12 text-right">
-        <Button Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="ModificarTipoDocumento">Grabar</Button>
-        <Button Type="ButtonType.Button" Color="ButtonColor.Warning" @onclick="EliminarTipoDocumento">Eliminar</Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="GrabarTipoDocumento">Grabar</Button>
+        @if (!_esNuevo)
+        {
+            <Button Type="ButtonType.Button" Color="ButtonColor.Warning" @onclick="EliminarTipoDocumento">Eliminar</Button>
+        }
         <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" @onclick="OnClickCallBack"> Cerrar</Button>
     </div>
 </div>
@@ -49,6 +61,7 @@
 
     private string errorMessage = "";
     private System.Timers.Timer _timer;
+    private bool _esNuevo = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -56,95 +69,74 @@
 
         editContext = new EditContext(tipoDocumento);
 
-        // Solo crear si el ID es 0 (nuevo registro)
-        if (tipoDocumento.IdTipoDocumento == 0)
-        {
-            var existeTipoDocumento = await ExisteTipoDocumento();
-            Console.WriteLine($"OnInitializedAsync() existeTipoDocumento: {existeTipoDocumento}");
+        // Determinar si es un registro nuevo (Id = 0) o existente
+        _esNuevo = tipoDocumento.IdTipoDocumento == 0;
 
-            if (!existeTipoDocumento)
-            {
-                Console.WriteLine("No existe TipoDocumento - Creando nuevo");
-                try
-                {
-                    await AltaTipoDocumento();
-                }
-                catch (Exception ex)
-                {
-                    errorMessage = $"Error al crear tipo de documento: {ex.Message}";
-                    Console.WriteLine($"Error en AltaTipoDocumento: {ex.Message}");
-                }
-            }
-        }
+        Console.WriteLine($"OnInitializedAsync() esNuevo: {_esNuevo}");
 
-        base.OnInitialized();
+        await base.OnInitializedAsync();
     }
 
     public void HandleOnValidSubmit()
     {
-        // additional check
         if (editContext.Validate())
         {
             Console.WriteLine("Form submitted successfully");
         }
     }
 
-    private async Task<bool> ExisteTipoDocumento()
+    private async Task GrabarTipoDocumento()
     {
+        // Validar campos requeridos
+        if (string.IsNullOrWhiteSpace(tipoDocumento.Nombre))
+        {
+            errorMessage = "Debe ingresar un nombre para el tipo de documento";
+            return;
+        }
+
+        errorMessage = "";
+
         try
         {
-            Console.WriteLine("ExisteTipoDocumento()");
-            var encontrado = await _apiClient.GetByIdAsync(tipoDocumento.IdTipoDocumento);
-            if (encontrado == null)
+            if (_esNuevo)
             {
-                Console.WriteLine("Retorna false");
-                return false;
+                Console.WriteLine("AltaTipoDocumento()");
+                var nuevo = await _apiClient.CreateAsync(tipoDocumento);
+                tipoDocumento.IdTipoDocumento = nuevo.IdTipoDocumento;
+                _esNuevo = false; // Ya no es nuevo después de crearlo
             }
-            Console.WriteLine($"ExisteTipoDocumento() variable idTipoDocumento: {encontrado.IdTipoDocumento}");
-            return (encontrado.IdTipoDocumento > 0);
-        }
-        catch
-        {
-            return false;
-        }
-    }
+            else
+            {
+                Console.WriteLine("ModificarTipoDocumento()");
+                await _apiClient.UpdateAsync(tipoDocumento.IdTipoDocumento, tipoDocumento);
+            }
 
-    private async Task AltaTipoDocumento()
-    {
-        Console.WriteLine("AltaTipoDocumento()");
-        
-        // Validar que los campos requeridos tengan valores válidos
-        if (string.IsNullOrEmpty(tipoDocumento.Nombre))
-            tipoDocumento.Nombre = "Nuevo Tipo Documento";
-        if (string.IsNullOrEmpty(tipoDocumento.Abreviacion))
-            tipoDocumento.Abreviacion = "NTD";
-        
-        var nuevo = await _apiClient.CreateAsync(tipoDocumento);
-        tipoDocumento.IdTipoDocumento = nuevo.IdTipoDocumento;
-    }
-
-    private async Task ModificarTipoDocumento()
-    {
-        try
-        {
-            Console.WriteLine("ModificarTipoDocumento()");
-            await _apiClient.UpdateAsync(tipoDocumento.IdTipoDocumento, tipoDocumento);
-            errorMessage = "";
+            // Cerrar el modal después de grabar exitosamente
+            if (OnClickCallBack.HasDelegate)
+            {
+                await OnClickCallBack.InvokeAsync(null);
+            }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error al modificar tipo de documento: {ex.Message}";
+            errorMessage = $"Error al guardar: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
         }
     }
 
     private async Task EliminarTipoDocumento()
     {
+        if (_esNuevo || tipoDocumento.IdTipoDocumento == 0)
+        {
+            errorMessage = "No se puede eliminar un registro que no ha sido guardado";
+            return;
+        }
+
         try
         {
             Console.WriteLine("EliminarTipoDocumento()");
             await _apiClient.DeleteAsync(tipoDocumento.IdTipoDocumento);
-            
-            // Notificar al componente padre para cerrar la ficha
+
             if (OnClickCallBack.HasDelegate)
             {
                 await OnClickCallBack.InvokeAsync(null);

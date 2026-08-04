@@ -42,7 +42,7 @@
             <div class="col-auto">
                 @if (AuthState.UserHasPermission("CLIENTES_WRITE"))
                 {
-                    <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddCliente">
+                    <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AbrirModalAltaCliente">
                         <Icon Name="IconName.Plus" class="me-1" />
                         Agregar Cliente
                     </Button>
@@ -95,7 +95,9 @@
 
         <!-- Ficha Edicion Cliente -->
         <Modal @ref="_EdicionCliente" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
-        
+        <!-- Modal para Alta de Cliente -->
+        <Modal @ref="_AltaCliente" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
+
         <!-- Información adicional para usuarios sin permisos de escritura -->
         @if (!AuthState.UserHasPermission("CLIENTES_WRITE"))
         {
@@ -111,6 +113,9 @@
     private List<ClienteDTO> clientes;
     private int currentIdCliente = 0;
     private Modal _EdicionCliente = default!;
+    private Modal _AltaCliente = default!;
+    private string successMessage = "";
+
     private Grid<ClienteDTO> gridCliente = default!;
 
     protected override async Task OnInitializedAsync()
@@ -126,7 +131,7 @@
 
     private void NavigateToIndex()
     {
-        Navigation.NavigateTo("/index");
+        Navigation.NavigateTo("index");
     }
 
     private async Task<GridDataProviderResult<ClienteDTO>> GetAllClientes(GridDataProviderRequest<ClienteDTO> request)
@@ -138,7 +143,34 @@
 
         return await Task.FromResult(request.ApplyTo(clientes));
     }
+    private async Task AbrirModalAltaCliente()
+    {
+        if (!AuthState.UserHasPermission("CLIENTES_WRITE"))
+        {
+            Console.WriteLine("Sin permisos para crear clientes");
+            return;
+        }
 
+        Console.WriteLine("Abriendo modal para agregar nuevo cliente");
+
+        // Crear un nuevo equipo vacío
+        var nuevoCliente = CreateNuevoCliente();
+
+        var param = new Dictionary<string, object>();
+        param.Add("OnClickCallBack", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalAltaCliente));
+        param.Add("cliente", nuevoCliente);
+
+        await _AltaCliente.ShowAsync<FichaCliente>(title: "Agregar Nuevo Cliente", parameters: param);
+    }
+    private ClienteDTO CreateNuevoCliente()
+    {
+        var nuevoCliente = new ClienteDTO
+        {
+            IdCliente = 0, // Nuevo cliente, el ID lo asignará la base de datos
+            Nombre = ""
+        };
+        return nuevoCliente;
+    }
     private async Task AddCliente()
     {
         if (!AuthState.UserHasPermission("CLIENTES_WRITE"))
@@ -200,6 +232,12 @@
     {
         Console.WriteLine("OnCloseModalEdicionCliente()");
         await _EdicionCliente.HideAsync(); // Ocultar el formulario de Edicion
+        await RefreshGrid(); // Refrescar la grilla
+    }
+    private async Task OnCloseModalAltaCliente()
+    {
+        Console.WriteLine("OnCloseModalAltaCliente()");
+        await _AltaCliente.HideAsync(); // Ocultar el formulario de alta
         await RefreshGrid(); // Refrescar la grilla
     }
 

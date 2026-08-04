@@ -34,7 +34,7 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
-
+/*
 // 🎯 CONFIGURAR KESTREL PARA ESCUCHAR EN IP LOCAL Y LOCALHOST
 builder.WebHost.ConfigureKestrel(options =>
 {
@@ -49,7 +49,7 @@ builder.WebHost.ConfigureKestrel(options =>
 
     // También escuchar en todas las interfaces (0.0.0.0)
     options.Listen(IPAddress.Any, 8080);
-});
+});*/
 
 // Resto de tu configuración actual...
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -108,7 +108,8 @@ builder.Services.AddScoped<IConocimientoRecursoService, ConocimientoRecursoServi
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IRecursoSupervisorRepository, RecursoSupervisorRepository>();
 builder.Services.AddScoped<IRecursoSupervisorService, RecursoSupervisorService>();
-
+/* builder.WebHost.
+ * UseIIS();*/
 var app = builder.Build();
 
 //------
@@ -117,12 +118,13 @@ var app = builder.Build();
 app.UseCors("AllowAll");
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+//if (app.Environment.IsDevelopment())
+//{
+    //app.UsePathBase("/GrillaConocimiento");
     app.UseSwagger();
     app.UseSwaggerUI();
-}
-
+//
+/*
 // 🎯 MOSTRAR INFORMACIÓN DE CONEXIÓN
 Console.WriteLine("╔════════════════════════════════════════════════════════════╗");
 Console.WriteLine("║         🚀 API WebGrilla INICIADA                         ║");
@@ -134,7 +136,7 @@ Console.WriteLine($"📚 Swagger (Red):     http://{localIP}:8080/swagger");
 Console.WriteLine($"⏰ Iniciada:          {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 Console.WriteLine("════════════════════════════════════════════════════════════");
 Console.WriteLine($"💡 Comparte esta URL con otros PCs: http://{localIP}:8080");
-Console.WriteLine("════════════════════════════════════════════════════════════");
+Console.WriteLine("════════════════════════════════════════════════════════════");*/
 
 app.UseAuthorization();
 app.MapControllers();

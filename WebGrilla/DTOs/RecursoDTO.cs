@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.VisualBasic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using WebGrilla.Models;
 
 namespace WebGrilla.DTOs
@@ -14,8 +15,14 @@ namespace WebGrilla.DTOs
         public int IdTipoDocumento { get; set; }
         public decimal NumeroDocumento { get; set; }
         public string CorreoElectronico { get; set; }
-        public string PerfilSeguridad { get; set; }
+
+       // public string PerfilSeguridad { get; set; }
         public int IdEquipoDesarrollo { get; set; }
         public int IdRol { get; set; }
+
+        //Propiedades adicionales para mostrar información relacionada
+        public string? NombreEquipo { get; set; }
+        public string? NombreRol { get; set; }
+        public string? NombreTipoDocumento { get; set; }
     }
 }

@@ -21,7 +21,7 @@
                 Contacta con un administrador si necesitas acceso a esta funcionalidad.
             </p>
             <div class="mt-3">
-                <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/index"))">
+                <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("index"))">
                     <Icon Name="IconName.ArrowLeft" class="me-1" />
                     Volver al Dashboard
                 </button>
@@ -42,7 +42,7 @@
             <div class="col-auto">
                 @if (AuthState.UserHasPermission("RECURSOS_WRITE"))
                 {
-                    <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AddRecurso">
+                    <Button Color="ButtonColor.Success" Size="ButtonSize.Small" @onclick="AbrirModalAltaRecurso">
                         <Icon Name="IconName.Plus" class="me-1" />
                         Agregar Recurso
                     </Button>
@@ -105,6 +105,8 @@
                 </Grid>
             </div>
         </div>
+        <!-- Modal para Alta de Recurso -->
+        <Modal @ref="_AltaRecurso" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
 
         <!-- Ficha Edicion Recurso -->
         <Modal @ref="_EdicionRecurso" UseStaticBackdrop="true" CloseOnEscape="false" Size="ModalSize.Large" />
@@ -122,8 +124,11 @@
 
 @code {
     Modal _EdicionRecurso = default!;
+    private Modal _AltaRecurso = default!;
     Grid<RecursoDTO> gridRecurso;
     IEnumerable<RecursoDTO> recursos;
+    private string successMessage = "";
+
     int currentIdRecurso = 0;
 
     protected override async Task OnInitializedAsync()
@@ -146,42 +151,6 @@
         return await Task.FromResult(request.ApplyTo(recursos));
     }
 
-    private async Task AddRecurso()
-    {
-        if (!AuthState.UserHasPermission("RECURSOS_WRITE"))
-        {
-            Console.WriteLine("Sin permisos para crear recurso");
-            return;
-        }
-
-        var lista = recursos.ToList();
-        var nuevo = CreateRecurso();
-        lista.Add(nuevo);
-        recursos = lista;
-        await gridRecurso.RefreshDataAsync();
-    }
-
-    private RecursoDTO CreateRecurso()
-    {
-        // Usar verificación para manejar colecciones vacías de forma segura
-        var numero = (recursos?.Any() == true) ? recursos.Max(x => x.IdRecurso) + 1 : 1;
-
-        var nuevo = new RecursoDTO();
-
-        nuevo.IdRecurso = 0;
-        nuevo.Nombre = $"Nombre Nuevo {numero}";
-        nuevo.Apellido = $"Apellido Nuevo {numero}";
-        nuevo.IdTipoDocumento = 1;
-        nuevo.IdEquipoDesarrollo = 1;
-        nuevo.IdRol = 1;
-        nuevo.PerfilSeguridad = "resource";
-        nuevo.CorreoElectronico = "nuevo@censys.com";
-        nuevo.FechaIngreso = DateTime.Today;
-        nuevo.NumeroDocumento = 11789123;
-
-        return nuevo;
-    }
-
     private async Task EditarRecurso(RecursoDTO recurso)
     {
         if (!AuthState.UserHasPermission("RECURSOS_WRITE"))
@@ -191,9 +160,45 @@
         }
         
         var param = new Dictionary<string, object>();
-        param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionRecurso));
+        param.Add("OnClickCallBack", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionRecurso));
         param.Add("recurso", recurso);
         await _EdicionRecurso.ShowAsync<FichaRecurso>(title: "Edición Recurso", parameters: param);
+    }
+
+    private async Task AbrirModalAltaRecurso()
+    {
+        if (!AuthState.UserHasPermission("RECURSOS_WRITE"))
+        {
+            Console.WriteLine("Sin permisos para crear recursos");
+            return;
+        }
+
+        Console.WriteLine("Abriendo modal para agregar nuevo recurso");
+
+        var nuevoRecurso = CreateNuevoRecurso();
+
+        var param = new Dictionary<string, object>();
+        param.Add("OnClickCallBack", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalAltaRecurso));
+        param.Add("recurso", nuevoRecurso);
+
+        await _AltaRecurso.ShowAsync<FichaRecurso>(title: "Agregar Nuevo Recurso", parameters: param);
+    }
+
+    private RecursoDTO CreateNuevoRecurso()
+    {
+        var nuevoRecurso = new RecursoDTO
+        {
+            IdRecurso = 0,
+            Nombre = "",
+            Apellido = "",
+            IdTipoDocumento = 0,
+            IdEquipoDesarrollo = 0,
+            IdRol = 0,
+            CorreoElectronico = "",
+            FechaIngreso = DateTime.Today,
+            NumeroDocumento = 0
+        };
+        return nuevoRecurso;
     }
 
     private async Task OnRecursoDobleClick(GridRowEventArgs<RecursoDTO> args)
@@ -206,28 +211,50 @@
         
         Console.WriteLine("Evento OnRecursoDobleClick");
         var param = new Dictionary<string, object>();
-        param.Add("OnClickCallback", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionRecurso));
+        param.Add("OnClickCallBack", EventCallback.Factory.Create<MouseEventArgs>(this, OnCloseModalEdicionRecurso));
         param.Add("recurso", args.Item);
         await _EdicionRecurso.ShowAsync<FichaRecurso>(title: "Edición Recurso", parameters: param);
+    }
+
+    private async Task OnCloseModalAltaRecurso()
+    {
+        await _AltaRecurso.HideAsync();
+        await RefreshGrid();
+        ShowSuccessMessage("¡Recurso agregado exitosamente!");
     }
 
     private async Task OnCloseModalEdicionRecurso()
     {
         Console.WriteLine("OnCloseModalEdicionRecurso()");
-        await _EdicionRecurso.HideAsync(); // Ocultar el formulario de Edicion
-        await RefreshGrid(); // Refrescar la grilla
+        await _EdicionRecurso.HideAsync();
+        await RefreshGrid();
     }
 
     private async Task RefreshGrid()
     {
-        recursos = null; // Limpiar la caché local de recursos
+        recursos = null;
         await gridRecurso.RefreshDataAsync();
-        StateHasChanged(); // Forzar la actualización de la grilla
+        StateHasChanged();
     }
 
     private async Task OnRowClick(GridRowEventArgs<RecursoDTO> args)
     {
         Console.WriteLine($"OnRowClick Recurso current: {currentIdRecurso} nuevo: {args.Item.IdRecurso} ");
         currentIdRecurso = args.Item.IdRecurso;
+    }
+
+    private void ShowSuccessMessage(string message)
+    {
+        successMessage = message;
+        StateHasChanged();
+
+        var timer = new System.Timers.Timer(5000);
+        timer.Elapsed += (sender, e) =>
+        {
+            successMessage = "";
+            InvokeAsync(() => StateHasChanged());
+            timer.Dispose();
+        };
+        timer.Start();
     }
 }

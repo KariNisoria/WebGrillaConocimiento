@@ -7,7 +7,16 @@
 
     <div class="form-group row mb-3">
         <label class="col-md-2 col-form-label">Id:</label>
-        <label class="col-md-10">@cliente.IdCliente</label>
+        <label class="col-md-10">
+            @if (cliente.IdCliente > 0)
+            {
+                <text>@cliente.IdCliente</text>
+            }
+            else
+            {
+                <span class="text-muted fst-italic">Se asignará automáticamente</span>
+            }
+        </label>
     </div>
 
     <div class="form-group row mb-3">
@@ -21,8 +30,11 @@
 
 <div class="row">
     <div class="col-md-12 text-right">
-        <Button Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="ModificarCliente">Grabar</Button>
-        <Button Type="ButtonType.Button" Color="ButtonColor.Warning" @onclick="EliminarCliente">Eliminar</Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="GrabarCliente">Grabar</Button>
+        @if (!_esNuevo)
+        {
+            <Button Type="ButtonType.Button" Color="ButtonColor.Warning" @onclick="EliminarCliente">Eliminar</Button>
+        }
         <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" @onclick="OnClickCallBack"> Cerrar</Button>
     </div>
 </div>
@@ -40,7 +52,7 @@
     private EditContext editContext;
 
     private string errorMessage = "";
-    private System.Timers.Timer _timer;
+    private bool _esNuevo = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -48,82 +60,81 @@
 
         editContext = new EditContext(cliente);
 
-        var existeCliente = await ExisteCliente();
+        // Determinar si es un registro nuevo (Id = 0) o existente
+        _esNuevo = cliente.IdCliente == 0;
 
-        Console.WriteLine($"OnInitializedAsync() existeCliente: {existeCliente}");
+        Console.WriteLine($"OnInitializedAsync() esNuevo: {_esNuevo}");
 
-        if (!existeCliente)
-        {
-            await AltaCliente();
-        }
-
-        base.OnInitialized();
+        await base.OnInitializedAsync();
     }
 
     public void HandleOnValidSubmit()
     {
-        // additional check
         if (editContext.Validate())
         {
-            // do something
-            // submit the form
             Console.WriteLine("Form submitted successfully");
         }
     }
 
-    private async Task<bool> ExisteCliente()
+    private async Task GrabarCliente()
     {
-        var encontrado = await _apiClient.GetByIdAsync(cliente.IdCliente);
-        if (encontrado == null)
+        // Validar campos requeridos
+        if (string.IsNullOrWhiteSpace(cliente.Nombre))
         {
-            return false;
+            errorMessage = "Debe ingresar un nombre para el cliente";
+            return;
         }
-        Console.WriteLine($"ExisteCliente() variable idCliente: {encontrado.IdCliente}");
-        return (encontrado.IdCliente != null);
-    }
 
-    private async Task AltaCliente()
-    {
-        Console.WriteLine("AltaCliente()");
-        var nuevo = await _apiClient.CreateAsync(cliente);
-        cliente.IdCliente = nuevo.IdCliente;
+        errorMessage = "";
 
-    }
+        try
+        {
+            if (_esNuevo)
+            {
+                Console.WriteLine("AltaCliente()");
+                var nuevo = await _apiClient.CreateAsync(cliente);
+                cliente.IdCliente = nuevo.IdCliente;
+                _esNuevo = false;
+            }
+            else
+            {
+                Console.WriteLine("ModificarCliente()");
+                await _apiClient.UpdateAsync(cliente.IdCliente, cliente);
+            }
 
-    private async Task ModificarCliente()
-    {
-        Console.WriteLine("ModificarCliente()");
-        await _apiClient.UpdateAsync(cliente.IdCliente, cliente);
+            if (OnClickCallBack.HasDelegate)
+            {
+                await OnClickCallBack.InvokeAsync(null);
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al guardar: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
     }
 
     private async Task EliminarCliente()
     {
-        Console.WriteLine("EliminarCliente()");
-        //var resultado = await _apiClient.DeleteAsync(cliente.IdCliente);
-        await _apiClient.DeleteAsync(cliente.IdCliente);
-
-        /*if (!resultado.IsSuccess)
+        if (_esNuevo || cliente.IdCliente == 0)
         {
-            Console.WriteLine("Error en el borrado");
-            errorMessage = resultado.Error; //muestra el mensaje de la api
-
-            // Inicia Temporizador
-            _timer = new System.Timers.Timer(3000); // 3000ms = 3 segundos
-            _timer.Elapsed += async (sender, e) =>
-            {
-                errorMessage = ""; // retorna a vacio
-                StateHasChanged();
-            };
-            _timer.Start();
+            errorMessage = "No se puede eliminar un registro que no ha sido guardado";
+            return;
         }
-        else*/
+
+        try
         {
-            // Notificar al componente padre para cerrar la ficha
+            Console.WriteLine("EliminarCliente()");
+            await _apiClient.DeleteAsync(cliente.IdCliente);
+
             if (OnClickCallBack.HasDelegate)
             {
-                await OnClickCallBack.InvokeAsync(null); // Dispara el callback
+                await OnClickCallBack.InvokeAsync(null);
             }
         }
-
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al eliminar cliente: {ex.Message}";
+        }
     }
 }

@@ -18,8 +18,15 @@ namespace WebGrilla.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RecursoDTO>>> GetAllRecurso()
         {
-            var resultado = await _service.GetAllRecurso();
-            return Ok(resultado);
+            try
+            {
+                var resultado = await _service.GetAllRecurso();
+                return Ok(resultado);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.ToString());
+            }
         }
         [HttpGet("{id}")]
         public async Task<ActionResult<RecursoDTO>> GetRecursoById(int id)

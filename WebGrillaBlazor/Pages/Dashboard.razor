@@ -15,7 +15,7 @@
         // Si no está autenticado, redirigir al login (página principal)
         if (!AuthState.IsAuthenticated)
         {
-            Navigation.NavigateTo("/", forceLoad: false);
+            Navigation.NavigateTo("", forceLoad: false);
             return;
         }
     }
@@ -59,7 +59,7 @@
                         <p class="card-text">Crear y gestionar evaluaciones de conocimiento para recursos específicos usando grillas personalizadas.</p>
                         @if (AuthState.UserCanAccess("EVALUACIONES"))
                         {
-                            <a href="/evaluaciones" class="btn btn-success">
+                            <a href="evaluaciones" class="btn btn-success">
                                 <Icon Name="IconName.Play" class="me-1" />
                                 Ir a Evaluaciones
                             </a>
@@ -83,7 +83,7 @@
                         <p class="card-text">Configurar y administrar grillas con temas y subtemas para estructurar las evaluaciones.</p>
                         @if (AuthState.UserCanAccess("GRILLAS"))
                         {
-                            <a href="/grillas" class="btn btn-primary">
+                            <a href="grillas" class="btn btn-primary">
                                 <Icon Name="IconName.Gear" class="me-1" />
                                 Gestionar Grillas
                             </a>
@@ -107,7 +107,7 @@
                         <p class="card-text">Administrar personas, equipos de desarrollo y sus roles dentro de la organización.</p>
                         @if (AuthState.UserCanAccess("RECURSOS"))
                         {
-                            <a href="/recursos" class="btn btn-info">
+                            <a href="recursos" class="btn btn-info">
                                 <Icon Name="IconName.PersonGear" class="me-1" />
                                 Ver Recursos
                             </a>
@@ -139,21 +139,21 @@
                         <div class="d-flex gap-2 flex-wrap">
                             @if (AuthState.UserCanAccess("TEMAS"))
                             {
-                                <a href="/temas" class="btn btn-outline-primary btn-sm">
+                                <a href="temas" class="btn btn-outline-primary btn-sm">
                                     <Icon Name="IconName.Journal" class="me-1" />
                                     Temas
                                 </a>
                             }
                             @if (AuthState.UserCanAccess("CLIENTES"))
                             {
-                                <a href="/clientes" class="btn btn-outline-primary btn-sm">
+                                <a href="clientes" class="btn btn-outline-primary btn-sm">
                                     <Icon Name="IconName.Building" class="me-1" />
                                     Clientes
                                 </a>
                             }
                             @if (AuthState.UserCanAccess("TIPOS_DOCUMENTO"))
                             {
-                                <a href="/tipos" class="btn btn-outline-primary btn-sm">
+                                <a href="tipos" class="btn btn-outline-primary btn-sm">
                                     <Icon Name="IconName.FileText" class="me-1" />
                                     Tipos Documento
                                 </a>
@@ -176,21 +176,21 @@
                         <div class="d-flex gap-2 flex-wrap">
                             @if (AuthState.UserCanAccess("EQUIPOS"))
                             {
-                                <a href="/equipos" class="btn btn-outline-secondary btn-sm">
+                                <a href="equipos" class="btn btn-outline-secondary btn-sm">
                                     <Icon Name="IconName.People" class="me-1" />
                                     Equipos
                                 </a>
                             }
                             @if (AuthState.UserCanAccess("ROLES"))
                             {
-                                <a href="/roles" class="btn btn-outline-secondary btn-sm">
+                                <a href="roles" class="btn btn-outline-secondary btn-sm">
                                     <Icon Name="IconName.PersonBadge" class="me-1" />
                                     Roles
                                 </a>
                             }
                             @if (AuthState.UserHasPermission("PERMISOS_ADMIN"))
                             {
-                                <a href="/permisos" class="btn btn-outline-warning btn-sm">
+                                <a href="permisos" class="btn btn-outline-warning btn-sm">
                                     <Icon Name="IconName.ShieldCheck" class="me-1" />
                                     Permisos
                                 </a>
@@ -241,13 +241,13 @@
                         </div>
                         <div class="card-body">
                             <div class="d-flex gap-3 flex-wrap">
-                                <a href="/evaluaciones-globales" class="btn btn-outline-primary">
+                                <a href="evaluaciones-globales" class="btn btn-outline-primary">
                                     <Icon Name="IconName.GraphUp" class="me-1" />
                                     Ver Estadísticas Globales
                                 </a>
                                 @if (AuthState.UserCanAccess("EVALUACIONES", "WRITE"))
                                 {
-                                    <a href="/evaluaciones" class="btn btn-outline-success">
+                                    <a href="evaluaciones" class="btn btn-outline-success">
                                         <Icon Name="IconName.Plus" class="me-1" />
                                         Nueva Evaluación
                                     </a>

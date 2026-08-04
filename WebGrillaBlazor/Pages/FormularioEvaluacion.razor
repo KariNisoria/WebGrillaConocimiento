@@ -242,6 +242,7 @@
                                                                    step="1"
                                                                    value="@(conocimiento?.ValorFuncional ?? 0)"
                                                                    @onchange="@(e => ActualizarValorFuncional(subtema.IdSubtema, e))"
+                                                                   oninput="if(this.value > 5) this.value = 5; if(this.value < 0) this.value = 0;"
                                                                    disabled="@(!esRecursoDueño)"
                                                                    title="@(esRecursoDueño ? "Puedes editar este valor" : "Solo el recurso puede editar este valor")" />
                                                         </td>
@@ -255,12 +256,13 @@
                                                                    step="1"
                                                                    value="@(conocimiento?.ValorTecnico ?? 0)"
                                                                    @onchange="@(e => ActualizarValorTecnico(subtema.IdSubtema, e))"
+                                                                   oninput="if(this.value > 5) this.value = 5; if(this.value < 0) this.value = 0;"
                                                                    disabled="@(!esRecursoDueño)"
                                                                    title="@(esRecursoDueño ? "Puedes editar este valor" : "Solo el recurso puede editar este valor")" />
                                                         </td>
 
                                                         <!-- Valor Funcional Verificado - Solo supervisor y si valores > 0 -->
-                                                        <td class="text-center">
+                                                        <td class="text-center @GetClaseColorVerificacion(conocimiento?.ValorFuncionalVerif, conocimiento?.ValorFuncional)">
                                                             <input type="number"
                                                                    class="form-control form-control-sm text-center @(puedeEditarVerificacion ? "border-warning" : "")"
                                                                    min="0"
@@ -268,13 +270,14 @@
                                                                    step="1"
                                                                    value="@(conocimiento?.ValorFuncionalVerif ?? 0)"
                                                                    @onchange="@(e => ActualizarValorFuncionalVerif(subtema.IdSubtema, e))"
+                                                                   oninput="if(this.value > 5) this.value = 5; if(this.value < 0) this.value = 0;"
                                                                    disabled="@(!puedeEditarVerificacion)"
                                                                    title="@(puedeEditarVerificacion ? "Puedes verificar este valor como supervisor" : !esSupervisor ? "Solo supervisores pueden verificar" : "Primero deben cargarse los valores funcional y técnico")" />
 
                                                         </td>
 
                                                         <!-- Valor Técnico Verificado - Solo supervisor y si valores > 0 -->
-                                                        <td class="text-center">
+                                                        <td class="text-center @GetClaseColorVerificacion(conocimiento?.ValorTecnicoVerif, conocimiento?.ValorTecnico)">
                                                             <input type="number"
                                                                    class="form-control form-control-sm text-center @(puedeEditarVerificacion ? "border-warning" : "")"
                                                                    min="0"
@@ -282,6 +285,7 @@
                                                                    step="1"
                                                                    value="@(conocimiento?.ValorTecnicoVerif ?? 0)"
                                                                    @onchange="@(e => ActualizarValorTecnicoVerif(subtema.IdSubtema, e))"
+                                                                   oninput="if(this.value > 5) this.value = 5; if(this.value < 0) this.value = 0;"
                                                                    disabled="@(!puedeEditarVerificacion)"
                                                                    title="@(puedeEditarVerificacion ? "Puedes verificar este valor como supervisor" : !esSupervisor ? "Solo supervisores pueden verificar" : "Primero deben cargarse los valores funcional y técnico")" />
 
@@ -618,7 +622,7 @@
             {
                 MostrarToast("No tienes permisos para acceder a esta evaluación", "error");
                 await Task.Delay(2000);
-                Navigation.NavigateTo("/evaluaciones");
+                Navigation.NavigateTo("evaluaciones");
             }
         }
         catch (Exception ex)
@@ -722,7 +726,7 @@
 
                 // Redirigir después de 3 segundos
                 await Task.Delay(3000);
-                Navigation.NavigateTo("/evaluaciones");
+                Navigation.NavigateTo("evaluaciones");
             }
             else
             {
@@ -1182,7 +1186,7 @@
 
     private void VolverAEvaluaciones()
     {
-        Navigation.NavigateTo("/evaluaciones");
+        Navigation.NavigateTo("evaluaciones");
     }
 
     private void MostrarToast(string mensaje, string tipo)
@@ -1195,5 +1199,25 @@
             mostrarToast = false;
             StateHasChanged();
         }));
+    }
+    private string GetClaseColorVerificacion(int? valorVerificado, int? valorOriginal)
+    {
+        // Si no hay valor verificado cargado, no aplicamos color
+        if (!valorVerificado.HasValue)
+            return string.Empty;
+
+        int verif = valorVerificado.Value;
+        int orig = valorOriginal ?? 0;
+
+        if (verif < orig)
+        {
+            return "bg-danger text-white"; // Pintar celda de rojo si es menor
+        }
+        else if (verif > orig)
+        {
+            return "bg-success text-white"; // Pintar celda de verde si es mayor
+        }
+
+        return string.Empty; // Si son iguales (verif == orig)
     }
 }
