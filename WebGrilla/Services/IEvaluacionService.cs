@@ -16,6 +16,7 @@ namespace WebGrilla.Services
         Task<List<EvaluacionDTO>> GetEvaluacionesPorSupervisionAsync(int idSupervisor);
         Task<List<EvaluacionDTO>> GetEvaluacionesPorRecursoYSupervisionAsync(int idRecurso);
         Task<EvaluacionDTO> IniciarEvaluacionParaRecursoAsync(int idRecurso, int idGrilla, string descripcion);
+        Task<EvaluacionDTO?> CambiarEstadoAsync(int id, short nuevoEstado);
         Task<List<ConocimientoRecursoDTO>> GenerarConocimientosTemporalesAsync(int idEvaluacion, int idRecurso, int idGrilla);
         
         // Métodos para evaluación global

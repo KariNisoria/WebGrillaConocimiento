@@ -354,5 +354,30 @@ namespace WebGrillaBlazor.ApiClient
                 return new List<EvaluacionDTO>();
             }
         }
+
+        public async Task<EvaluacionDTO?> CambiarEstadoAsync(int id, short nuevoEstado)
+        {
+            try
+            {
+                Console.WriteLine($"PATCH cambiar estado: {_endpoint}/{id}/estado -> {nuevoEstado}");
+
+                var jsonContent = JsonSerializer.Serialize(new { Estado = nuevoEstado });
+                var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PatchAsync($"{_baseUrl}{_endpoint}/{id}/estado", content);
+                response.EnsureSuccessStatusCode();
+
+                var jsonString = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<EvaluacionDTO>(jsonString, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en CambiarEstadoAsync: {ex.Message}");
+                return null;
+            }
+        }
     }
 }

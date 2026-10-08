@@ -854,6 +854,6 @@ C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release
 C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\refint\WebGrillaBlazor.dll
 C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\WebGrillaBlazor.pdb
 C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\ref\WebGrillaBlazor.dll
-C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\compressed\tavjk12k2h-hgzaozi8nh.gz
-C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\compressed\y2k2hq3qtk-wi2rn2f08b.gz
-C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\compressed\dyjae803e8-a88o2rjpw2.gz
+C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\compressed\tavjk12k2h-9hopa0d8n4.gz
+C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\compressed\y2k2hq3qtk-g7ytkciola.gz
+C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\compressed\dyjae803e8-6zk10d2zd0.gz

@@ -13,7 +13,11 @@ namespace WebGrilla.Models
         public DateTime FechaInicio { get; set; }
         [Required]
         public DateTime FechaFin { get; set; }
-        
+        /// <summary>
+        /// 0=Iniciada | 1=Finalizada | 2=Verificada | 3=Expirada
+        /// </summary>
+        public short Estado { get; set; } = (short)EvaluacionEstado.Iniciada;
+
         // FK para asociar evaluación a un recurso y grilla específicos
         public int IdRecurso { get; set; }
         public int IdGrilla { get; set; }

@@ -70,14 +70,16 @@
                         </div>
                         
                         <div class="form-floating mb-4">
-                            <InputNumber @bind-Value="loginRequest.NumeroDocumento" 
-                                         class="@GetInputCssClass("NumeroDocumento")"
-                                         id="inputDocument" 
-                                         placeholder="12345678"
-                                         disabled="@isLoading" />
+                            <InputText @bind-Value="documentoTexto"
+                                       @oninput="OnDocumentoInput"
+                                       class="@GetInputCssClass("NumeroDocumento")"
+                                       id="inputDocument"
+                                       placeholder="20-12345678-9"
+                                       maxlength="13"
+                                       disabled="@isLoading" />
                             <label for="inputDocument">
                                 <Icon Name="IconName.CardText" class="me-1" />
-                                Número de Documento
+                                Número de CUIL
                             </label>
                             <ValidationMessage For="@(() => loginRequest.NumeroDocumento)" class="invalid-feedback" />
                         </div>
@@ -282,7 +284,40 @@
         Console.WriteLine("🔑 Login: Continuando con sesión actual");
         Navigation.NavigateTo("index", forceLoad: false);
     }
+    // Variable local para manejar la máscara sin '0' por defecto
+    private string documentoTexto = string.Empty;
 
+    private void OnDocumentoInput(ChangeEventArgs e)
+    {
+        var input = e.Value?.ToString() ?? string.Empty;
+
+        // 1. Filtrar dejando unicamente digitos (máximo 11)
+        var soloNumeros = new string(input.Where(char.IsDigit).Take(11).ToArray());
+
+        // 2. Aplicar formato xx-xxxxxxxx-x sobre los digitos ingresados
+        if (soloNumeros.Length > 10)
+        {
+            documentoTexto = $"{soloNumeros.Substring(0, 2)}-{soloNumeros.Substring(2, 8)}-{soloNumeros.Substring(10, 1)}";
+        }
+        else if (soloNumeros.Length > 2)
+        {
+            documentoTexto = $"{soloNumeros.Substring(0, 2)}-{soloNumeros.Substring(2)}";
+        }
+        else
+        {
+            documentoTexto = soloNumeros;
+        }
+
+        // 3. Asignar el valor limpio de nuevo al DTO (como numérico)
+        if (long.TryParse(soloNumeros, out var docNumero))
+        {
+            loginRequest.NumeroDocumento = docNumero;
+        }
+        else
+        {
+            loginRequest.NumeroDocumento = 0;
+        }
+    }
     private async Task StartNewSession()
     {
         Console.WriteLine("🔑 Login: Iniciando nueva sesión - limpiando datos anteriores");
@@ -392,22 +427,33 @@
         {
             case "admin":
                 loginRequest.Email = "admin@censys.com";
-                loginRequest.NumeroDocumento = 12345678;
+                loginRequest.NumeroDocumento = 20123456789;
                 break;
             case "manager":
                 loginRequest.Email = "manager@censys.com";
-                loginRequest.NumeroDocumento = 87654321;
+                loginRequest.NumeroDocumento = 27876543210;
                 break;
             case "evaluador":
                 loginRequest.Email = "evaluador@censys.com";
-                loginRequest.NumeroDocumento = 11111111;
+                loginRequest.NumeroDocumento = 20111111119;
                 break;
             case "dev":
                 loginRequest.Email = "dev@censys.com";
-                loginRequest.NumeroDocumento = 22222222;
+                loginRequest.NumeroDocumento = 20222222229;
                 break;
         }
-        
+
+        // Reflejar el valor numérico cargado en la máscara de texto
+        var docStr = loginRequest.NumeroDocumento.ToString();
+        if (docStr.Length == 11)
+        {
+            documentoTexto = $"{docStr.Substring(0, 2)}-{docStr.Substring(2, 8)}-{docStr.Substring(10, 1)}";
+        }
+        else
+        {
+            documentoTexto = docStr;
+        }
+
         StateHasChanged();
     }
 

@@ -272,6 +272,23 @@ namespace WebGrilla.Controllers
                 return StatusCode(500, $"Error interno del servidor: {ex.Message}");
             }
         }
+        [HttpPatch("{id}/estado")]
+        public async Task<ActionResult<EvaluacionDTO>> CambiarEstado(int id, [FromBody] CambiarEstadoRequest request)
+        {
+            try
+            {
+                var updated = await _service.CambiarEstadoAsync(id, request.Estado);
+                if (updated == null)
+                    return NotFound($"Evaluación con ID {id} no encontrada.");
+
+                return Ok(updated);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno del servidor: {ex.Message}");
+            }
+        }
+
     }
 
     public class IniciarEvaluacionRequest
@@ -286,5 +303,9 @@ namespace WebGrilla.Controllers
         public int IdGrilla { get; set; }
         public string Descripcion { get; set; } = string.Empty;
         public DateTime FechaFin { get; set; }
+    }
+    public class CambiarEstadoRequest
+    {
+        public short Estado { get; set; }
     }
 }

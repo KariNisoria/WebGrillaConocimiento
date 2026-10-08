@@ -440,20 +440,7 @@
                                                         <td>@evaluacion.IdEvaluacion</td>
                                                         <td>@evaluacion.NombreRecurso</td>
                                                         <td>@evaluacion.Descripcion</td>
-                                                        <td>
-                                                            @if (evaluacion.FechaFin <= DateTime.Now)
-                                                            {
-                                                                <span class="badge bg-secondary">
-                                                                    <Icon Name="IconName.Clock" /> Expirada
-                                                                </span>
-                                                            }
-                                                            else
-                                                            {
-                                                                <span class="badge bg-info">
-                                                                    <Icon Name="IconName.PlayFill" /> Activa
-                                                                </span>
-                                                            }
-                                                        </td>
+                                                        <td>@ObtenerNombreEstado(evaluacion.Estado)</td>
                                                         <td>@evaluacion.FechaInicio.ToString("dd/MM/yyyy HH:mm")</td>
                                                         <td>@evaluacion.FechaFin.ToString("dd/MM/yyyy HH:mm")</td>
                                                         <td>
@@ -671,12 +658,24 @@
             // Solo mostrar recursos supervisados
             try
             {
-                var supervisionView = await RecursoSupervisorClient.GetSupervisionViewAsync(AuthState.GetCurrentUserId());
-                if (supervisionView != null && supervisionView.RecursosSupervisados.Any())
+                var currentUserId = AuthState.GetCurrentUserId();
+               // Inicializar el set incluyendo al supervisor actual
+                var idsPermitidos = new HashSet<int> { currentUserId };
+
+                var supervisionView = await RecursoSupervisorClient.GetSupervisionViewAsync(currentUserId);
+            // if (supervisionView != null && supervisionView.RecursosSupervisados.Any())
+            //  {
+            //       var idRecursosSupervisados = supervisionView.RecursosSupervisados.Select(s => s.IdRecurso).ToList();
+            //       recursosDisponibles = recursos.Where(r => idRecursosSupervisados.Contains(r.IdRecurso)).ToList();
+            //   }
+                if (supervisionView?.RecursosSupervisados != null)
                 {
-                    var idRecursosSupervisados = supervisionView.RecursosSupervisados.Select(s => s.IdRecurso).ToList();
-                    recursosDisponibles = recursos.Where(r => idRecursosSupervisados.Contains(r.IdRecurso)).ToList();
+                    foreach (var s in supervisionView.RecursosSupervisados)
+                    {
+                        idsPermitidos.Add(s.IdRecurso);
+                    }
                 }
+                recursosDisponibles = recursos.Where(r => idsPermitidos.Contains(r.IdRecurso)).ToList();
             }
             catch (Exception ex)
             {
@@ -747,7 +746,22 @@
             
             if (soloSupervision && AuthState.CanSupervise())
             {
-                evaluacionesBase = await EvaluacionClient.GetEvaluacionesPorSupervisionAsync(AuthState.GetCurrentUserId());
+                var currentUserId = AuthState.GetCurrentUserId();
+                // 1. Iniciar ambas peticiones HTTP en paralelo
+                var tareaSupervision = EvaluacionClient.GetEvaluacionesPorSupervisionAsync(currentUserId);
+                var tareaPropias = EvaluacionClient.GetMisEvaluacionesAsync(currentUserId);
+                await Task.WhenAll(tareaSupervision, tareaPropias);
+
+                var evSupervision = await tareaSupervision ?? new List<EvaluacionDTO>();
+                var evPropias = await tareaPropias ?? new List<EvaluacionDTO>();
+
+                // 2. Unir ambas listas y eliminar duplicados por IdEvaluacion
+                evaluacionesBase = evSupervision
+                    .Concat(evPropias)
+                    .GroupBy(e => e.IdEvaluacion)
+                    .Select(g => g.First())
+                    .ToList();
+
             }
             else if (!soloSupervision && AuthState.CanViewAllEvaluations())
             {
@@ -1095,5 +1109,17 @@
             }
         }
         StateHasChanged();
+    }
+
+    private string ObtenerNombreEstado(short estado)
+    {
+        return estado switch
+        {
+            0 => "Iniciada",
+            1 => "Finalizada",
+            2 => "Verificada",
+            3 => "Expirada"
+          
+        };
     }
 }

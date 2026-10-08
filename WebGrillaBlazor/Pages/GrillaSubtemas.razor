@@ -130,7 +130,7 @@
                                     }
                                     else
                                     {
-                                        <Button Color="ButtonColor.Primary" Size="ButtonSize.Small" @onclick="() => AgregarSubtemaAGrilla(context.IdSubtema, context.Nombre)">
+                                        <Button Color="ButtonColor.Primary" Size="ButtonSize.Small" @onclick="() => AgregarSubtemaAGrilla(context.IdSubtema, context.Nombre, context.Orden)">
                                             <Icon Name="IconName.Plus" /> Agregar
                                         </Button>
                                     }
@@ -182,8 +182,8 @@
                               AllowSorting="true"
                               Responsive="true">
                             <GridColumns>
-                                <GridColumn TItem="GrillaSubtemaDTO" HeaderText="ID" PropertyName="IdGrillaSubtema" SortKeySelector="item => item.IdGrillaSubtema">
-                                    @context.IdGrillaSubtema
+                                <GridColumn TItem="GrillaSubtemaDTO" HeaderText="Orden" PropertyName="Orden" SortKeySelector="item => item.Orden">
+                                    @context.Orden
                                 </GridColumn>
                                 <GridColumn TItem="GrillaSubtemaDTO" HeaderText="Subtema" PropertyName="Nombre" SortKeySelector="item => item.Nombre">
                                     @context.Nombre
@@ -332,16 +332,15 @@
     {
         try
         {
-            // Cargar datos en paralelo
-            var tareasAsync = new List<Task>
-            {
-                CargarTemaActual(),
+            // 1. Cargar primero el tema actual para obtener su IdTema
+            await CargarTemaActual();
+
+            // 2. Ahora que temaActual no es null, cargar subtemas y grilla en paralelo
+            await Task.WhenAll(
                 CargarSubtemasDisponibles(),
                 CargarGrillaSubtemas()
-            };
-            
-            await Task.WhenAll(tareasAsync);
-            
+            );
+
             // Aplicar filtro inicial
             AplicarFiltro();
         }
@@ -368,10 +367,10 @@
         try
         {
             var todosLosSubtemas = await SubtemaClient.GetAllAsync();
-            // Filtrar solo los subtemas que corresponden al tema actual
             if (temaActual != null)
             {
                 subtemasDisponibles = todosLosSubtemas.Where(s => s.IdTema == temaActual.IdTema).ToList();
+                AsignarOrdenAGrillaSubtemas();
             }
         }
         catch (Exception ex)
@@ -385,12 +384,31 @@
     {
         try
         {
-            grillaSubtemas = await GrillaSubtemaClient.GetAsync($"ByGrillaTema/{IdGrillaTema}");
+            grillaSubtemas = await GrillaSubtemaClient.GetAsync($"ByGrillaTema/{IdGrillaTema}") ?? new List<GrillaSubtemaDTO>();
+            AsignarOrdenAGrillaSubtemas();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error al cargar subtemas de grilla: {ex.Message}");
             grillaSubtemas = new List<GrillaSubtemaDTO>();
+        }
+    }
+
+    private void AsignarOrdenAGrillaSubtemas()
+    {
+        if (subtemasDisponibles.Any() && grillaSubtemas.Any())
+        {
+            var ordenesPorSubtema = subtemasDisponibles
+                .GroupBy(s => s.IdSubtema)
+                .ToDictionary(g => g.Key, g => g.First().Orden);
+
+            foreach (var gs in grillaSubtemas)
+            {
+                if (ordenesPorSubtema.TryGetValue(gs.IdSubtema, out var ordenReal))
+                {
+                    gs.Orden = ordenReal;
+                }
+            }
         }
     }
 
@@ -525,10 +543,11 @@
 
     private async Task<GridDataProviderResult<GrillaSubtemaDTO>> GetGrillaSubtemas(GridDataProviderRequest<GrillaSubtemaDTO> request)
     {
-        return await Task.FromResult(request.ApplyTo(grillaSubtemas));
+        var grillaSubtemasOrdenados = grillaSubtemas.OrderBy(gs => gs.Orden).ToList();
+        return await Task.FromResult(request.ApplyTo(grillaSubtemasOrdenados));
     }
 
-    private async Task AgregarSubtemaAGrilla(int idSubtema, string nombreSubtema)
+    private async Task AgregarSubtemaAGrilla(int idSubtema, string nombreSubtema, int Orden)
     {
         try
         {
@@ -566,7 +585,8 @@
                 IdGrillaTema = IdGrillaTema,
                 IdSubtema = idSubtema,
                 Nombre = nombreSubtema,
-                Ponderacion = ponderacionPorDefecto
+                Ponderacion = ponderacionPorDefecto,
+                Orden = Orden
             };
 
             await GrillaSubtemaClient.CreateAsync(nuevoGrillaSubtema);

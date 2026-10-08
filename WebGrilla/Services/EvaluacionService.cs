@@ -36,7 +36,17 @@ namespace WebGrilla.Services
         public async Task<EvaluacionDTO?> GetByIdAsync(int id)
         {
             var evaluacion = await _repository.GetByIdAsync(id);
-            return evaluacion != null ? _mapper.Map<EvaluacionDTO>(evaluacion) : null;
+            if (evaluacion == null) return null;
+
+            // Marcar como expirada automáticamente si venció sin completarse
+            if (evaluacion.Estado == (short)EvaluacionEstado.Iniciada &&
+                evaluacion.FechaFin < DateTime.Now)
+            {
+                evaluacion.Estado = (short)EvaluacionEstado.Expirada;
+                await _repository.UpdateAsync(evaluacion);
+            }
+
+            return _mapper.Map<EvaluacionDTO>(evaluacion);
         }
 
         public async Task<EvaluacionDTO> CreateAsync(EvaluacionDTO evaluacionDto)
@@ -104,11 +114,21 @@ namespace WebGrilla.Services
                 Descripcion = descripcion,
                 FechaInicio = fechaInicio,
                 FechaFin = fechaFin,
+                Estado = (short)EvaluacionEstado.Iniciada,   // 0 explícito
                 IdRecurso = idRecurso,
                 IdGrilla = idGrilla
             };
 
             return await CreateAsync(evaluacionDto, false);
+        }
+        public async Task<EvaluacionDTO?> CambiarEstadoAsync(int id, short nuevoEstado)
+        {
+            var evaluacion = await _repository.GetByIdAsync(id);
+            if (evaluacion == null) return null;
+
+            evaluacion.Estado = nuevoEstado;
+            var updated = await _repository.UpdateAsync(evaluacion);
+            return _mapper.Map<EvaluacionDTO>(updated);
         }
 
         public async Task<EvaluacionDTO?> GetEvaluacionActivaPorRecursoAsync(int idRecurso)

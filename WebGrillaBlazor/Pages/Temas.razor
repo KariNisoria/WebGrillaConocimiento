@@ -6,7 +6,7 @@
 @inject AuthStateService AuthState
 @inject NavigationManager Navigation
 
-<PageTitle>Gestión de Temas</PageTitle>
+<PageTitle>Gestión de Modulos</PageTitle>
 
 <WebGrillaBlazor.Components.AuthorizeView RedirectToLogin="true">
     @if (!AuthState.UserCanAccess("TEMAS"))
@@ -46,7 +46,7 @@
                     <Icon Name="IconName.JournalBookmark" class="me-2 text-primary" />
                     Gestión de Temas y Subtemas
                 </h3>
-                <p class="text-muted">Administrar temas y subtemas para estructurar el conocimiento del sistema</p>
+                <p class="text-muted">Administrar modulos y temas para estructurar el conocimiento del sistema</p>
             </div>
             <div class="col-auto">
                 @if (AuthState.UserHasPermission("TEMAS_WRITE"))
@@ -88,7 +88,7 @@
                             @context.IdTema
                         </GridColumn>
 
-                        <GridColumn TItem="TemaDTO" HeaderText="Nombre del Tema" PropertyName="Descripcion" SortKeySelector="item => item.Nombre">
+                        <GridColumn TItem="TemaDTO" HeaderText="Nombre del Modulo" PropertyName="Descripcion" SortKeySelector="item => item.Nombre">
                             <strong>@context.Nombre</strong>
                         </GridColumn>
 
@@ -170,7 +170,7 @@
         {
             <div class="alert alert-info mt-3">
                 <Icon Name="IconName.InfoCircle" class="me-2" />
-                <strong>Modo solo lectura:</strong> Puedes consultar temas y subtemas, pero no realizar modificaciones.
+                <strong>Modo solo lectura:</strong> Puedes consultar modulos y subtemas, pero no realizar modificaciones.
             </div>
         }
     </div>
@@ -242,7 +242,7 @@
     {
         if (!AuthState.UserHasPermission("TEMAS_WRITE"))
         {
-            Console.WriteLine("Sin permisos para crear tema");
+            Console.WriteLine("Sin permisos para crear modulos");
             return;
         }
 

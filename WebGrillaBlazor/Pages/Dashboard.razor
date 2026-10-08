@@ -135,13 +135,13 @@
                         </h5>
                     </div>
                     <div class="card-body">
-                        <p class="card-text">Administre temas, subtemas y estructure el conocimiento de manera organizada.</p>
+                        <p class="card-text">Administre modulos, subtemas y estructure el conocimiento de manera organizada.</p>
                         <div class="d-flex gap-2 flex-wrap">
                             @if (AuthState.UserCanAccess("TEMAS"))
                             {
                                 <a href="temas" class="btn btn-outline-primary btn-sm">
                                     <Icon Name="IconName.Journal" class="me-1" />
-                                    Temas
+                                    Modulos
                                 </a>
                             }
                             @if (AuthState.UserCanAccess("CLIENTES"))
@@ -212,7 +212,7 @@
                     <div class="row">
                         <div class="col-md-6">
                             <ol class="mb-0">
-                                <li><strong>Configurar:</strong> Crear grillas con temas y subtemas de conocimiento</li>
+                                <li><strong>Configurar:</strong> Crear grillas con modulos y subtemas de conocimiento</li>
                                 <li><strong>Asignar:</strong> Asignar recursos (personas) a equipos y roles</li>
                             </ol>
                         </div>
