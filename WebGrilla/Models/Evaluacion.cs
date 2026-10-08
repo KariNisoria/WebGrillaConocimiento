@@ -17,7 +17,8 @@ namespace WebGrilla.Models
         /// 0=Iniciada | 1=Finalizada | 2=Verificada | 3=Expirada
         /// </summary>
         public short Estado { get; set; } = (short)EvaluacionEstado.Iniciada;
-
+        public int? IdRecursoSupervisor { get; set; }
+        public DateTime? FechaSupervision { get; set; }
         // FK para asociar evaluación a un recurso y grilla específicos
         public int IdRecurso { get; set; }
         public int IdGrilla { get; set; }
@@ -26,7 +27,8 @@ namespace WebGrilla.Models
         public Recurso? Recurso { get; set; }
         [ForeignKey("IdGrilla")]
         public Grilla? Grilla { get; set; }
-        
+        [ForeignKey("IdRecursoSupervisor")]
+        public Recurso? RecursoSupervisor { get; set; }
         // Relaciones
         public ICollection<ResultadoConocimiento> Resultados { get; set; } = new List<ResultadoConocimiento>();
         public ICollection<ConocimientoRecurso> Conocimientos { get; set; } = new List<ConocimientoRecurso>();

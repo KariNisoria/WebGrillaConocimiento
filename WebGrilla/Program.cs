@@ -108,6 +108,8 @@ builder.Services.AddScoped<IConocimientoRecursoService, ConocimientoRecursoServi
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IRecursoSupervisorRepository, RecursoSupervisorRepository>();
 builder.Services.AddScoped<IRecursoSupervisorService, RecursoSupervisorService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 /* builder.WebHost.
  * UseIIS();*/
 var app = builder.Build();

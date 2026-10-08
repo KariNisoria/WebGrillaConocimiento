@@ -37,6 +37,7 @@ builder.Services.AddScoped<ApiClientAuthentication>();
 builder.Services.AddScoped<AuthStateService>();
 builder.Services.AddScoped<ApiClientRecursoSupervisor>();
 
+
 builder.Services.AddBlazorBootstrap();
 
 var app = builder.Build();

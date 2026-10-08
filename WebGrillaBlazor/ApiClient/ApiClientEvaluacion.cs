@@ -379,5 +379,30 @@ namespace WebGrillaBlazor.ApiClient
                 return null;
             }
         }
+        public async Task NotificarVerificacionAsync(int idEvaluacion, string nombreSupervisor, DateTime fechaVerificacion)
+        {
+            try
+            {
+                Console.WriteLine($"POST notificar verificación: {_endpoint}/{idEvaluacion}/notificar-verificacion");
+
+                var jsonContent = JsonSerializer.Serialize(new
+                {
+                    NombreSupervisor = nombreSupervisor,
+                    FechaVerificacion = fechaVerificacion
+                });
+                var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync(
+                    $"{_baseUrl}{_endpoint}/{idEvaluacion}/notificar-verificacion", content);
+
+                if (!response.IsSuccessStatusCode)
+                    Console.WriteLine($"Advertencia: el mail de verificación no pudo enviarse. Status: {response.StatusCode}");
+            }
+            catch (Exception ex)
+            {
+                // No lanzar — el mail es notificación, no debe interrumpir el flujo del usuario
+                Console.WriteLine($"Error al notificar verificación: {ex.Message}");
+            }
+        }
     }
 }

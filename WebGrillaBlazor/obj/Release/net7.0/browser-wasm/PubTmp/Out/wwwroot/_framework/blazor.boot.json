@@ -1,7 +1,7 @@
 {
   "entryAssembly": "WebGrillaBlazor",
   "resources": {
-    "hash": "sha256-8g+Na+FPtgdOrUGMix8nFqtu4Vcr0dqvr9YYsHzWXR0=",
+    "hash": "sha256-bBkRF2VFkDS+oGEOxIwPXaO08eaNN5ez89Nt0Xq9aXM=",
     "runtime": {
       "dotnet.js": "sha256-eaJTmow4t8eE7FZMZR5Ja41JMOefGCbIYDTdpclGsac=",
       "dotnet.timezones.blat": "sha256-gbATD5HDsHYtW8vdPYh9iSBY4O5CjvMeCSF5xXWF1xo=",
@@ -66,7 +66,7 @@
       "System.Threading.dll": "sha256-hxJcr1R+rg/7VeiV6f+e48L21fXGxBjvWlF3ltWjnS4=",
       "System.dll": "sha256-X00CS76RYP+1bonecVV1Cn/0jOHeoVQUo1GS8UHpHpM=",
       "System.Private.CoreLib.dll": "sha256-uLm/HbzNPpEJ4V+zS7rPgrNRZlcl6MzQauTWFFhYlRs=",
-      "WebGrillaBlazor.dll": "sha256-LWL/6u9fKfd7ciSqGG5AMGoC9zNljeIRimoT+bws+dE="
+      "WebGrillaBlazor.dll": "sha256-yUYU3Ib1f90XwooXyIwclOBZyW+zmkGGd3RQID6SKcY="
     },
     "runtimeAssets": {
       "dotnet.wasm": {

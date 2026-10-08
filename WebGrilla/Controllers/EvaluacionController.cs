@@ -10,11 +10,16 @@ namespace WebGrilla.Controllers
     {
         private readonly IEvaluacionService _service;
         private readonly IRecursoSupervisorService _supervisionService;
+        private readonly IEmailService _emailService;
+        private readonly IRecursoService _recursoService;
 
-        public EvaluacionController(IEvaluacionService service, IRecursoSupervisorService supervisionService)
+        public EvaluacionController(IEvaluacionService service, IRecursoSupervisorService supervisionService, IEmailService emailService,
+        IRecursoService recursoService)
         {
             _service = service;
             _supervisionService = supervisionService;
+            _emailService = emailService;
+            _recursoService = recursoService;
         }
 
         [HttpGet]
@@ -241,6 +246,35 @@ namespace WebGrilla.Controllers
                 return StatusCode(500, $"Error interno del servidor: {ex.Message}");
             }
         }
+        [HttpPost("{id}/notificar-verificacion")]
+        public async Task<ActionResult> NotificarVerificacion(
+            int id,
+            [FromBody] NotificarVerificacionRequest request)
+        {
+            try
+            {
+                var evaluacion = await _service.GetByIdAsync(id);
+                if (evaluacion == null)
+                    return NotFound($"Evaluación con ID {id} no encontrada.");
+
+                var recurso = await _recursoService.GetRecursoById(evaluacion.IdRecurso);
+                if (recurso == null)
+                    return NotFound($"Recurso con ID {evaluacion.IdRecurso} no encontrado.");
+
+                await _emailService.EnviarNotificacionVerificacionAsync(
+                    emailDestinatario: recurso.CorreoElectronico,
+                    nombreDestinatario: $"{recurso.Nombre} {recurso.Apellido}",
+                    nombreSupervisor: request.NombreSupervisor,
+                    descripcionEvaluacion: evaluacion.Descripcion,
+                    fechaVerificacion: request.FechaVerificacion);
+
+                return Ok(new { mensaje = "Notificación enviada correctamente." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error al enviar la notificación: {ex.Message}");
+            }
+        }
 
         [HttpPut("{id}")]
         public async Task<ActionResult<EvaluacionDTO>> Update(int id, EvaluacionDTO evaluacionDto)
@@ -307,5 +341,10 @@ namespace WebGrilla.Controllers
     public class CambiarEstadoRequest
     {
         public short Estado { get; set; }
+    }
+    public class NotificarVerificacionRequest
+    {
+        public string NombreSupervisor { get; set; } = string.Empty;
+        public DateTime FechaVerificacion { get; set; }
     }
 }

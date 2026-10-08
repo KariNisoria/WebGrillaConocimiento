@@ -10,24 +10,29 @@ namespace WebGrilla.Mappings
         {
             // ===== EVALUACION =====
             CreateMap<Evaluacion, EvaluacionDTO>()
-                .ForMember(dest => dest.NombreRecurso, 
-                    opt => opt.MapFrom(src => src.Recurso != null 
-                        ? $"{src.Recurso.Nombre} {src.Recurso.Apellido}" 
+                .ForMember(dest => dest.NombreRecurso,
+                    opt => opt.MapFrom(src => src.Recurso != null
+                        ? $"{src.Recurso.Nombre} {src.Recurso.Apellido}"
                         : null))
-                .ForMember(dest => dest.NombreGrilla, 
-                    opt => opt.MapFrom(src => src.Grilla != null 
-                        ? src.Grilla.Nombre 
+                .ForMember(dest => dest.NombreGrilla,
+                    opt => opt.MapFrom(src => src.Grilla != null
+                        ? src.Grilla.Nombre
+                        : null))
+                .ForMember(dest => dest.NombreRecursoSupervisor,
+                    opt => opt.MapFrom(src => src.RecursoSupervisor != null
+                        ? $"{src.RecursoSupervisor.Nombre} {src.RecursoSupervisor.Apellido}"
                         : null));
-            
+
             CreateMap<EvaluacionDTO, Evaluacion>()
                 .ForMember(dest => dest.Recurso, opt => opt.Ignore())
                 .ForMember(dest => dest.Grilla, opt => opt.Ignore())
+                .ForMember(dest => dest.RecursoSupervisor, opt => opt.Ignore())
                 .ForMember(dest => dest.Resultados, opt => opt.Ignore())
                 .ForMember(dest => dest.Conocimientos, opt => opt.Ignore());
 
             // ===== RECURSO =====
             //CreateMap<Recurso, RecursoDTO>().ReverseMap();
-            // configuración más completa:
+            // configuracin ms completa:
             CreateMap<Recurso, RecursoDTO>()
                 .ForMember(dest => dest.NombreEquipo,
                     opt => opt.MapFrom(src => src.EquipoDesarrollo != null ? src.EquipoDesarrollo.Nombre : null))
@@ -75,7 +80,7 @@ namespace WebGrilla.Mappings
             // ===== TIPOS DE DOCUMENTO =====
             CreateMap<TipoDocumento, TipoDocumentoDTO>().ReverseMap();
 
-            // Agrega aquí otros mapeos según los necesites...
+            
         }
     }
 }

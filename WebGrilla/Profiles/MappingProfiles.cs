@@ -18,9 +18,21 @@ namespace WebGrilla.Profiles
             CreateMap<Grilla, GrillaDTO>().ReverseMap();
             CreateMap<GrillaTema, GrillaTemaDTO>().ReverseMap();
             CreateMap<GrillaSubtema, GrillaSubtemaDTO>().ReverseMap();
-            
+
             // Mapeos para evaluaciones y conocimientos
-            CreateMap<Evaluacion, EvaluacionDTO>().ReverseMap();
+            
+            CreateMap<Evaluacion, EvaluacionDTO>()
+                .ForMember(dest => dest.NombreRecurso, opt => opt.MapFrom(src =>
+                    src.Recurso != null ? $"{src.Recurso.Nombre} {src.Recurso.Apellido}" : null))
+                .ForMember(dest => dest.NombreGrilla, opt => opt.MapFrom(src =>
+                    src.Grilla != null ? src.Grilla.Nombre : null))
+                .ForMember(dest => dest.NombreRecursoSupervisor, opt => opt.MapFrom(src =>
+                    src.RecursoSupervisor != null ? $"{src.RecursoSupervisor.Nombre} {src.RecursoSupervisor.Apellido}" : null))
+                .ReverseMap()
+                .ForMember(dest => dest.Recurso, opt => opt.Ignore())
+                .ForMember(dest => dest.Grilla, opt => opt.Ignore())
+                .ForMember(dest => dest.RecursoSupervisor, opt => opt.Ignore());
+            //CreateMap<Evaluacion, EvaluacionDTO>().ReverseMap();
             CreateMap<ConocimientoRecurso, ConocimientoRecursoDTO>()
                 .ForMember(dest => dest.NombreRecurso, opt => opt.MapFrom(src => 
                     src.Recurso != null ? $"{src.Recurso.Nombre} {src.Recurso.Apellido}" : null))

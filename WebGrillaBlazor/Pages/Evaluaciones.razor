@@ -424,6 +424,8 @@
                                                     <th>Estado</th>
                                                     <th>Fecha Inicio</th>
                                                     <th>Fecha Fin</th>
+                                                    <th>Recurso Supervisor</th>
+                                                    <th>Fecha Supervisión</th>
                                                     <th>Acciones</th>
                                                 </tr>
                                             </thead>
@@ -443,6 +445,8 @@
                                                         <td>@ObtenerNombreEstado(evaluacion.Estado)</td>
                                                         <td>@evaluacion.FechaInicio.ToString("dd/MM/yyyy HH:mm")</td>
                                                         <td>@evaluacion.FechaFin.ToString("dd/MM/yyyy HH:mm")</td>
+                                                        <td>@evaluacion.NombreRecursoSupervisor</td>
+                                                        <td>@((evaluacion.FechaSupervision?.ToString("dd/MM/yyyy HH:mm")) ?? "-")</td>
                                                         <td>
                                                             <div class="btn-group" role="group">
                                                                 <Button Color="ButtonColor.Primary" 

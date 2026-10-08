@@ -183,6 +183,13 @@ namespace WebGrilla.Data
                 .WithMany(x => x.Evaluaciones)
                 .HasForeignKey(x => x.IdGrilla);
 
+            modelBuilder.Entity<Evaluacion>()
+                .HasOne(e => e.RecursoSupervisor)
+                .WithMany()
+                .HasForeignKey(e => e.IdRecursoSupervisor)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<ResultadoConocimiento>(entity =>
             {
                 entity.HasKey(x => x.IdResultadoConocimiento);
