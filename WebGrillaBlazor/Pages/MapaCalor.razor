@@ -1,0 +1,596 @@
+@page "/mapa-calor"
+
+@using WebGrillaBlazor.DTOs.MapaCalor
+@using WebGrillaBlazor.Services
+@using WebGrillaBlazor.DTOs
+@using Microsoft.JSInterop
+
+@inject MapaCalorApiService MapaCalorApiService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+@implements IDisposable
+
+<h3>Mapa de calor</h3>
+
+<div class="panel-filtros">
+
+    <div class="panel-filtros-header">
+        <i class="bi bi-funnel-fill"></i>
+        Filtros
+    </div>
+
+    <div class="panel-filtros-body">
+
+        <!-- GRILLA -->
+        <div class="filtro-campo">
+            <label>Grilla</label>
+
+            <select class="form-select"
+                    @onchange="OnGrillaChanged"
+                    values="@_idGrillaSeleccionada"
+                    disabled="@_cargando">
+
+                <option value="0">
+                    Seleccione una grilla
+                </option>
+
+                @foreach (var grilla in _grillas)
+                {
+                    <option value="@grilla.IdGrilla">
+                        @grilla.Nombre
+                    </option>
+                }
+            </select>
+        </div>
+
+        <!-- ROL -->
+        <div class="filtro-campo">
+            <label>Rol</label>
+
+            <select class="form-select"
+                    @onchange="OnRolChanged"
+                    values="@_idRolSeleccionado"
+                    disabled="@_cargando">
+
+                <option value="0">Todos los roles</option>
+
+                @foreach (var rol in _roles)
+                {
+                    <option value="@rol.IdRol">
+                        @rol.Nombre
+                    </option>
+                }
+            </select>
+        </div>
+
+        <!-- TEMA -->
+        <div class="filtro-campo">
+            <label>Tema</label>
+
+            <select class="form-select"
+                    @onchange="OnTemaChanged"
+                    values="@_idTemaSeleccionado"
+                    disabled="@_cargando">
+
+                <option value="0">
+                    Todos los temas
+                </option>
+                
+                @if (_mapa != null)
+                {
+                    @foreach (var tema in _mapa.Temas.OrderBy(x => x.Orden))
+                    {
+                        <option value="@tema.IdGrillaTema">
+                            @tema.NombreTema
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+
+        <!-- ORDENAMIENTO -->
+        <div class="filtro-campo">
+            <label>Ordenar recursos</label>
+
+            <select class="form-select"
+                    value="@_ordenRecursos"
+                    @onchange="OnOrdenChanged"
+                    disabled="@(_cargando || _idTemaSeleccionado == 0)">
+
+                <option value="0">Sin ordenar</option>
+                <option value="1">Mayor a menor</option>
+                <option value="2">Menor a mayor</option>
+
+            </select>
+        </div>
+
+        <!-- FUNCIONAL / TÉCNICO -->
+        <div class="filtro-campo">
+            <label>Tipo de conocimiento</label>
+
+            <div class="selector-mapa">
+
+                <button type="button"
+                        class="btn @(_tipoMapa == TipoMapa.Funcional ? "btn-primary" : "btn-outline-primary")"
+                        @onclick="() => CambiarTipoMapa(TipoMapa.Funcional)">
+                    Funcional
+                </button>
+
+                <button type="button"
+                        class="btn @(_tipoMapa == TipoMapa.Tecnico ? "btn-primary" : "btn-outline-primary")"
+                        @onclick="() => CambiarTipoMapa(TipoMapa.Tecnico)">
+                    Técnico
+                </button>
+
+            </div>
+        </div>
+
+        <!-- EXPORTAR EXCEL -->
+        <div class="filtros-acciones">
+
+            <button type="button"
+                    class="btn btn-success btn-sm"
+                    @onclick="ExportarExcel"
+                    disabled="@(_cargando || _mapa == null)">
+
+                <i class="bi bi-file-earmark-excel"></i>
+                Exportar Excel
+
+            </button>
+
+        </div>
+    </div>
+</div>
+
+@if (_idGrillaSeleccionada == 0)
+{
+    <p class="text-muted">
+        Seleccione una grilla para visualizar el mapa de calor.
+    </p>
+}
+else if (_cargando)
+{
+    <p>Cargando...</p>
+}
+else if (_mapa == null)
+{
+    <p>No se pudo obtener el mapa de calor.</p>
+}
+else
+{
+    <div class="mapa-visor @(_mapaMaximizado ? "mapa-visor-maximizado" : "")">
+        @if (!_mapaMaximizado)
+        {
+            <div class="mapa-visor">
+
+                <div class="mapa-visor-header">
+                    <h4 class="mb-0">
+                        @_mapa.NombreGrilla
+                    </h4>
+
+                    <button type="button"
+                            class="btn btn-outline-primary btn-sm"
+                            @onclick="AbrirMapa">
+                        ⛶ Maximizar
+                    </button>
+                </div>
+                    @TablaMapa
+            </div>
+        }
+
+        <dialog @ref="_dialogMapa"
+                class="mapa-modal"
+                aria-label="Mapa de calor">
+
+            <div class="mapa-modal-header">
+
+                <h4 class="mb-0">
+                    @_mapa.NombreGrilla
+                    -
+                    @(_tipoMapa == TipoMapa.Funcional ? "Funcional" : "Técnico")
+                </h4>
+
+                <button type="button"
+                        class="btn btn-outline-danger btn-sm"
+                        @onclick="RestaurarMapa"
+                        autofocus>
+                    ✕ Restaurar
+                </button>
+
+            </div>
+
+            @if (_mapaMaximizado)
+            {
+               @TablaMapa
+            }
+
+        </dialog>  
+    </div>  
+}
+
+@code {
+
+    private MapaCalorDTO? _mapa;
+
+    private bool _cargando = true;
+
+    private List<GrillaDTO> _grillas = new();
+
+    private int _idGrillaSeleccionada = 0;
+
+    private List<RolDTO> _roles = new();
+
+    private int _idRolSeleccionado = 0;
+
+    private List<GrillaTemaDTO> _temas = new();
+
+    private int _idTemaSeleccionado = 0;
+
+    private ElementReference _dialogMapa;
+
+    private DotNetObjectReference<MapaCalor>? _referenciaDialogo;
+
+    private int _ordenRecursos = 0;
+
+    private bool _mapaMaximizado = false;
+    private bool _dialogAbierto = false;
+
+    private void AbrirMapa()
+    {
+        _mapaMaximizado = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_mapaMaximizado && !_dialogAbierto)
+        {
+            _referenciaDialogo ??=
+                DotNetObjectReference.Create(this);
+
+            await JS.InvokeVoidAsync(
+                "mapaDialog.abrir",
+                _dialogMapa,
+                _referenciaDialogo
+            );
+
+            _dialogAbierto = true;
+        }
+    }
+
+    private async Task RestaurarMapa()
+    {
+        await JS.InvokeVoidAsync(
+            "mapaDialog.cerrar",
+            _dialogMapa
+        );
+    }
+
+    [JSInvokable]
+    public Task AlCerrarMapa()
+    {
+        _dialogAbierto = false;
+        _mapaMaximizado = false;
+
+        return InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        _referenciaDialogo?.Dispose();
+    }
+
+    private RenderFragment TablaMapa => 
+    @<div class="mapa-scroll">
+        <table class="table table-bordered mapa-table">
+            <thead>
+                <tr>
+                    <th class="col-tema">Tema</th>
+
+                    @foreach (var recurso in RecursosOrdenados)
+                    {
+                        <th class="col-recurso">
+                            @recurso.NombreRecurso
+                        </th>
+                    }
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @foreach (var tema in TemasFiltrados)
+                {
+                    <tr>
+
+                        <td class="col-tema">
+                            @tema.NombreTema
+                        </td>
+
+                        @foreach (var recurso in RecursosOrdenados)
+                        {
+                            var valor = BuscarValor(
+                                tema.IdGrillaTema,
+                                recurso.IdRecurso,
+                                recurso.IdEvaluacion
+                            );
+
+                            @if (valor != null)
+                            {
+                                var resultado = ObtenerResultado(valor);
+
+                                var porcentaje = CalcularPorcentaje(
+                                    resultado,
+                                    tema.PonderacionTema
+                                );
+
+                                var clase = ObtenerClasePorcentaje(porcentaje);
+
+                                <td class="col-valor @clase">
+                                    <strong>
+                                        @porcentaje.ToString("0.00") %
+                                    </strong>
+
+                                    <div class="valor-detalle">
+                                        @resultado.ToString("0.000")
+                                        /
+                                        @tema.PonderacionTema.ToString("0.000")
+                                    </div>
+                                </td>
+                            }
+                            else
+                            {
+                                <td class="col-valor nivel-1">
+                                    <strong>0.00 %</strong>
+                                </td>
+                            }
+
+                        }
+
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+    </div>
+    ;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _cargando = true;
+
+            _grillas = await MapaCalorApiService.GetGrillasAsync();
+
+            _roles = await MapaCalorApiService.GetRolesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar grillas: {ex}");
+        }
+        finally
+        {
+            _cargando = false;
+        }
+    }
+
+
+    private MapaCalorValorDTO? BuscarValor(
+        int idGrillaTema,
+        int idRecurso,
+        int idEvaluacion)
+    {
+        return _mapa?.Valores.FirstOrDefault(x =>
+            x.IdGrillaTema == idGrillaTema &&
+            x.IdRecurso == idRecurso &&
+            x.IdEvaluacion == idEvaluacion
+        );
+    }
+
+    private decimal CalcularPorcentaje(
+        decimal resultado,
+        decimal ponderacionTema)
+    {
+        if (ponderacionTema <= 0)
+        {
+            return 0m;
+        }
+
+        return (resultado / ponderacionTema) * 100m;
+    }
+    private string ObtenerClasePorcentaje(decimal porcentaje)
+    {
+        if (porcentaje <= 10m)
+            return "nivel-1";
+
+        if (porcentaje <= 20m)
+            return "nivel-2";
+
+        if (porcentaje <= 30m)
+            return "nivel-3";
+
+        if (porcentaje <= 40m)
+            return "nivel-4";
+
+        if (porcentaje <= 50m)
+            return "nivel-5";
+
+        if (porcentaje <= 60m)
+            return "nivel-6";
+
+        if (porcentaje <= 70m)
+            return "nivel-7";
+
+        if (porcentaje <= 80m)
+            return "nivel-8";
+
+        if (porcentaje <= 90m)
+            return "nivel-9";
+
+        return "nivel-10";
+    }
+
+    private TipoMapa _tipoMapa = TipoMapa.Funcional;
+
+    private enum TipoMapa
+    {
+        Funcional,
+        Tecnico
+    }
+
+    private void CambiarTipoMapa(TipoMapa tipo)
+    {
+        _tipoMapa = tipo;
+    }
+
+    private decimal ObtenerResultado(MapaCalorValorDTO valor)
+    {
+        return _tipoMapa == TipoMapa.Funcional
+            ? valor.ResultadoFuncional
+            : valor.ResultadoTecnico;
+    }
+
+    private async Task OnGrillaChanged(ChangeEventArgs e)
+    {
+        _idTemaSeleccionado = 0;
+        _ordenRecursos = 0;
+
+        if (!int.TryParse(e.Value?.ToString(), out int idGrilla))
+            return;
+
+        _idGrillaSeleccionada = idGrilla;
+
+        _mapa = null;
+
+        if (idGrilla == 0)
+            return;
+
+        try
+        {
+            _cargando = true;
+
+            _mapa = await MapaCalorApiService
+                .GetMapaCalorAsync(idGrilla);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar mapa: {ex}");
+        }
+        finally
+        {
+            _cargando = false;
+        }
+    }
+
+    private void OnRolChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int idRol))
+        {
+            _idRolSeleccionado = idRol;
+        }
+    }
+
+    private void OnTemaChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int IdGrillaTema))
+        {
+            _idTemaSeleccionado = IdGrillaTema;
+        }        
+    }
+
+    private void OnOrdenChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int orden))
+        {
+            _ordenRecursos = orden;
+        }
+    }
+
+    private IEnumerable<MapaCalorRecursoDTO> RecursosOrdenados
+    {
+        get
+        {
+            // Primero respetamos el filtro por rol existente.
+            var recursos = RecursosFiltrados.ToList();
+
+            if (_mapa == null ||
+                _idTemaSeleccionado == 0 ||
+                _ordenRecursos == 0)
+            {
+                return recursos;
+            }
+
+            var tema = _mapa.Temas.FirstOrDefault(
+                t => t.IdGrillaTema == _idTemaSeleccionado
+            );
+
+            if (tema == null)
+                return recursos;
+
+            decimal ObtenerPorcentajeRecurso(MapaCalorRecursoDTO recurso)
+            {
+                var valor = BuscarValor(
+                    tema.IdGrillaTema,
+                    recurso.IdRecurso,
+                    recurso.IdEvaluacion
+                );
+
+                if (valor == null)
+                    return 0m;
+
+                var resultado = ObtenerResultado(valor);
+
+                // Evitamos que valores negativos alteren el orden.
+                resultado = Math.Max(resultado, 0m);
+
+                return CalcularPorcentaje(
+                    resultado,
+                    tema.PonderacionTema
+                );
+            }
+
+            if (_ordenRecursos == 1)
+            {
+                return recursos
+                    .OrderByDescending(ObtenerPorcentajeRecurso)
+                    .ThenBy(r => r.NombreRecurso)
+                    .ToList();
+            }
+
+            return recursos
+                .OrderBy(ObtenerPorcentajeRecurso)
+                .ThenBy(r => r.NombreRecurso)
+                .ToList();
+        }
+    }
+
+    private IEnumerable<MapaCalorRecursoDTO> RecursosFiltrados =>
+    _mapa?.Recursos.Where(r =>
+        _idRolSeleccionado == 0 ||
+        r.IdRol == _idRolSeleccionado
+    ) ?? Enumerable.Empty<MapaCalorRecursoDTO>();
+
+    private IEnumerable<MapaCalorTemaDTO> TemasFiltrados =>
+    _mapa?.Temas.Where(t =>
+        _idTemaSeleccionado == 0 ||
+        t.IdGrillaTema == _idTemaSeleccionado
+    ).OrderBy(t => t.Orden) ?? Enumerable.Empty<MapaCalorTemaDTO>();
+
+    private void ExportarExcel()
+    {
+        if (_mapa == null || _idGrillaSeleccionada == 0)
+            return;
+
+        string url = MapaCalorApiService.ObtenerUrlExcel(
+            _idGrillaSeleccionada,
+            _idRolSeleccionado
+        );
+
+        Navigation.NavigateTo(url, forceLoad: true);
+    }
+
+    private void AlternarMaximizado()
+    {
+        _mapaMaximizado = !_mapaMaximizado;
+    }
+}
