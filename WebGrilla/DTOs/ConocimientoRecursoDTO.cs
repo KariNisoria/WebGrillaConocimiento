@@ -11,7 +11,9 @@ namespace WebGrilla.DTOs
         public int IdGrilla { get; set; }
         public int IdSubtema { get; set; }
         public int IdEvaluacion { get; set; }
-        
+        public decimal? ResultadoFuncionalPonderado { get; set; }
+        public decimal? ResultadoTecnicoPonderado { get; set; }
+
         // Propiedades adicionales para mostrar información relacionada
         public string? NombreRecurso { get; set; }
         public string? NombreSubtema { get; set; }

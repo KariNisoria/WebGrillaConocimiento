@@ -31,6 +31,31 @@ namespace WebGrilla.Services
             _mapper = mapper;
         }
 
+        private async Task CalcularResultadosPonderadosAsync(ConocimientoRecurso conocimiento)
+        {
+            var ponderacion = await _repository
+                .ObtenerPonderacionSubtemaAsync(
+                    conocimiento.IdGrilla,
+                    conocimiento.IdSubtema
+                );
+
+            if (!ponderacion.HasValue)
+            {
+                throw new InvalidOperationException(
+                    $"No se encontró ponderación para la grilla " +
+                    $"{conocimiento.IdGrilla} y el subtema " +
+                    $"{conocimiento.IdSubtema}."
+                );
+            }
+
+            conocimiento.ResultadoFuncionalPonderado =
+                ponderacion.Value *
+                (conocimiento.ValorFuncionalVerif ?? 0) / 5m;
+
+            conocimiento.ResultadoTecnicoPonderado =
+                ponderacion.Value *
+                (conocimiento.ValorTecnicoVerif ?? 0) / 5m;
+        }
         public async Task<List<ConocimientoRecursoDTO>> GetAllAsync()
         {
             var conocimientos = await _repository.GetAllAsync();
@@ -48,6 +73,8 @@ namespace WebGrilla.Services
             var conocimiento = _mapper.Map<ConocimientoRecurso>(conocimientoDto);
             conocimiento.IdConocimientoRecurso = 0; // Asegurar que sea nuevo
 
+            await CalcularResultadosPonderadosAsync(conocimiento);
+
             var conocimientoCreado = await _repository.AddAsync(conocimiento);
             return _mapper.Map<ConocimientoRecursoDTO>(conocimientoCreado);
         }
@@ -56,6 +83,9 @@ namespace WebGrilla.Services
         {
             var conocimiento = _mapper.Map<ConocimientoRecurso>(conocimientoDto);
             conocimiento.IdConocimientoRecurso = id;
+
+            await CalcularResultadosPonderadosAsync(conocimiento);
+
             var updated = await _repository.UpdateAsync(conocimiento);
             return _mapper.Map<ConocimientoRecursoDTO>(updated);
         }
@@ -135,6 +165,8 @@ namespace WebGrilla.Services
                 conocimientoExistente.ValorTecnicoVerif = conocimientoDto.ValorTecnicoVerif;
                 conocimientoExistente.IdGrilla = conocimientoDto.IdGrilla;
 
+                await CalcularResultadosPonderadosAsync(conocimientoExistente);
+
                 var actualizado = await _repository.UpdateAsync(conocimientoExistente);
                 return _mapper.Map<ConocimientoRecursoDTO>(actualizado);
             }
@@ -143,6 +175,8 @@ namespace WebGrilla.Services
                 // Crear nuevo
                 var nuevoConocimiento = _mapper.Map<ConocimientoRecurso>(conocimientoDto);
                 nuevoConocimiento.IdConocimientoRecurso = 0;
+
+                await CalcularResultadosPonderadosAsync(nuevoConocimiento);
 
                 var creado = await _repository.AddAsync(nuevoConocimiento);
                 return _mapper.Map<ConocimientoRecursoDTO>(creado);

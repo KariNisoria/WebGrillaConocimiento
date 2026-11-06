@@ -13,7 +13,9 @@ namespace WebGrilla.Models
         public int ValorTecnico { get; set; }
         public int? ValorFuncionalVerif { get; set; }
         public int? ValorTecnicoVerif { get; set; }
-        
+        public decimal? ResultadoFuncionalPonderado { get; set; }
+        public decimal? ResultadoTecnicoPonderado { get; set; }
+
         //Fk
         public int IdRecurso { get; set; }
         public int IdGrilla { get; set; }

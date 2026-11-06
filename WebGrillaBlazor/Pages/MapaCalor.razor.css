@@ -1,0 +1,316 @@
+/* CSS for MapaCalor component */
+.mapa-scroll {
+    width: 100%;
+    max-height: calc(100vh - 180px);
+    overflow: auto;
+    position: relative;
+    border: 1px solid #dee2e6;
+}
+
+.mapa-table {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 0;
+}
+
+.mapa-table th,
+.mapa-table td {
+    border-right: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+    padding: 8px 10px;
+    vertical-align: middle;
+}
+
+.col-tema {
+    min-width: 155px;
+    width: 155px;
+    max-width: 175px;
+    white-space: normal;
+    overflow-wrap: break-word;
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 2;
+    font-weight: 500;
+}
+
+.mapa-table thead th {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 3;
+    font-weight: 600;
+}
+
+.mapa-table thead .col-tema {
+    left: 0;
+    z-index: 4;
+}
+
+.col-recurso {
+    min-width: 130px;
+    width: 130px;
+    max-width: 170px;
+    white-space: normal;
+    text-align: center;
+}
+
+.col-valor {
+    min-width: 130px;
+    width: 130px;
+    white-space: nowrap;
+    text-align: center;
+    font-weight: 500;
+}
+/* ESCALA DE CONOCIMIENTO - 10 NIVELES */
+
+/* 0 - 10 %: Azul */
+.nivel-1 {
+    background-color: #B9D9F5;
+}
+
+/* >10 - 20 %: Azul intermedio */
+.nivel-2 {
+    background-color: #A5C9F0;
+}
+
+/* >20 - 30 %: Celeste */
+.nivel-3 {
+    background-color: #9CDCEB;
+}
+
+/* >30 - 40 %: Turquesa */
+.nivel-4 {
+    background-color: #96DDD5;
+}
+
+/* >40 - 50 %: Verde agua */
+.nivel-5 {
+    background-color: #ADE2BA;
+}
+
+/* >50 - 60 %: Verde lima */
+.nivel-6 {
+    background-color: #CFE59C;
+}
+
+/* >60 - 70 %: Amarillo suave */
+.nivel-7 {
+    background-color: #F6E89A;
+}
+
+/* >70 - 80 %: Amarillo naranja */
+.nivel-8 {
+    background-color: #F8C789;
+}
+
+/* >80 - 90 %: Naranja salmón */
+.nivel-9 {
+    background-color: #F3A182;
+}
+
+/* >90 - 100 %: Rojo */
+.nivel-10 {
+    background-color: #E97878;
+}
+
+.valor-detalle {
+    margin-top: 2px;
+    font-size: 11px;
+    font-weight: normal;
+    opacity: 0.75;
+}
+
+.mapa-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.selector-mapa {
+    display: flex;
+    gap: 8px;
+}
+
+.selector-mapa .btn {
+    min-width: 110px;
+}
+
+.panel-filtros {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    background: white;
+    overflow: hidden;
+}
+
+.panel-filtros-header {
+    background-color: #f8f9fa;
+    padding: 8px 12px;
+    border-bottom: 1px solid #dee2e6;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.panel-filtros-body {
+    display: grid;
+    grid-template-columns: minmax(200px, 2fr) minmax(150px, 1fr) minmax(230px, 1.5fr) auto;
+    gap: 16px;
+    padding: 16px;
+    align-items: end;
+}
+
+.filtro-campo {
+    min-width: 0;
+}
+
+.filtro-campo label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.filtro-campo .form-select {
+    width: 100%;
+    font-size: 13px;
+}
+
+.selector-mapa {
+    display: flex;
+    gap: 6px;
+}
+
+    .selector-mapa .btn {
+        min-width: 95px;
+        font-size: 13px;
+    }
+
+/* BUSCAR / LIMPIAR */
+
+.filtros-acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filtros-acciones .btn {
+    min-width: 90px;
+}
+
+@media (max-width: 950px) {
+    .panel-filtros-body {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 550px) {
+    .panel-filtros-body {
+        grid-template-columns: 1fr;
+    }
+
+    .filtros-acciones {
+        flex-direction: row;
+    }
+}
+
+/* BOTÓN EXPORTAR EXCEL */
+
+.filtros-acciones {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+}
+
+.filtros-acciones .btn {
+    min-width: 130px;
+    white-space: nowrap;
+    font-size: 13px;
+    height: 34px;
+}
+
+.mapa-visor {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: white;
+}
+
+.mapa-visor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    flex-shrink: 0;
+}
+
+.mapa-visor-maximizado {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    z-index: 9999;
+    background: white;
+    padding: 12px;
+    overflow: auto;
+    box-sizing: border-box;
+}
+
+.mapa-visor-maximizado .mapa-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    overflow: auto;
+}
+
+.mapa-modal {
+    width: calc(100vw - 24px);
+    max-width: none;
+    height: calc(100dvh - 24px);
+    max-height: none;
+    padding: 0;
+    margin: auto;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    background: white;
+    box-sizing: border-box;
+}
+
+.mapa-modal[open] {
+    display: flex;
+    flex-direction: column;
+}
+
+.mapa-modal::backdrop {
+    background-color: rgba(0, 0, 0, 0.55);
+}
+
+.mapa-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 18px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    flex-shrink: 0;
+}
+
+.mapa-modal-header h4 {
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.mapa-modal .mapa-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    overflow: auto;
+}

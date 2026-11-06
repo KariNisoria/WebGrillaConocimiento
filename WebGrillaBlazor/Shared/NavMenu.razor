@@ -5,34 +5,34 @@
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">WebGrillaBlazor</a>
-        
-        <div class="d-flex align-items-center ms-auto">
-            @if (AuthState.IsAuthenticated)
-            {
-                <!-- Información del usuario -->
-                <div class="d-flex align-items-center text-white me-3">
-                    <Icon Name="IconName.PersonCircle" class="me-2" />
-                    <div class="d-none d-md-flex flex-column">
-                        <div class="fw-semibold small">@AuthState.GetUserDisplayName()</div>
-                        <small class="text-white-50 lh-1">@AuthState.CurrentUser?.NombreRol</small>
+        <a class="navbar-brand" href="">
+            <div class="d-flex align-items-center ms-auto">
+                @if (AuthState.IsAuthenticated)
+                {
+                    <!-- Información del usuario -->
+                    <div class="d-flex align-items-center text-white me-3">
+                        <Icon Name="IconName.PersonCircle" class="me-2" />
+                        <div class="d-none d-md-flex flex-column">
+                            <div class="fw-semibold small">@AuthState.GetUserDisplayName()</div>
+                            <small class="text-white-50 lh-1">@AuthState.CurrentUser?.NombreRol</small>
+                        </div>
                     </div>
-                </div>
-            }
-            else
-            {
-                <Button Color="ButtonColor.Primary" Size="ButtonSize.Small" Class="me-2" @onclick="GoToLogin">
-                    <Icon Name="IconName.BoxArrowInRight" class="me-1" />
-                    <span class="d-none d-sm-inline">Iniciar Sesión</span>
-                    <span class="d-sm-none">Login</span>
-                </Button>
-            }
+                }
+                else
+                {
+                    <Button Color="ButtonColor.Primary" Size="ButtonSize.Small" Class="me-2" @onclick="GoToLogin">
+                        <Icon Name="IconName.BoxArrowInRight" class="me-1" />
+                        <span class="d-none d-sm-inline">Iniciar Sesión</span>
+                        <span class="d-sm-none">Login</span>
+                    </Button>
+                }
             
-            <!-- Botón hamburguesa siempre al final -->
-            <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-        </div>
+                <!-- Botón hamburguesa siempre al final -->
+                <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+        </a>
     </div>
 </div>
 
@@ -161,6 +161,16 @@
             <div class="nav-section-header px-3 mt-3 mb-2">
                 <small class="text-muted fw-semibold">EVALUACIONES</small>
             </div>
+
+            <!-- Mapa de calor -->
+            @if (AuthState.CanAccessEvaluations())
+            {
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="mapa-calor">
+                        <span class="bi bi-clipboard-check-fill" aria-hidden="true"></span> Mapa de calor
+                    </NavLink>
+                </div>
+            }
 
             <!-- Evaluaciones -->
             @if (AuthState.CanAccessEvaluations())
