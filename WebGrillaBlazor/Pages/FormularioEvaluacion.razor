@@ -39,12 +39,9 @@
                             <Icon Name="IconName.ShieldCheck" /> Supervisor
                         </span>
                     }
-                    @if (evaluacionFinalizada)
-                    {
-                        <span class="badge bg-danger">
-                            <Icon Name="IconName.StopCircleFill" /> Finalizada
-                        </span>
-                    }
+                    <span class="badge @ObtenerClaseEstado(evaluacion.Estado)">
+                        <Icon Name="@ObtenerIconoEstado(evaluacion.Estado)" /> @ObtenerNombreEstado(evaluacion.Estado)
+                    </span>
                 </div>
             }
         </div>
@@ -272,9 +269,10 @@
                                                             </select>
                                                         </td>
                                                         <!-- Valor Funcional Verificado - Solo supervisor y si la evaluación tiene valores iniciados -->
+                                                        <!-- Valor Funcional Verificado -->
                                                         <td class="text-center @GetClaseColorVerificacion(conocimiento?.ValorFuncionalVerif, conocimiento?.ValorFuncional)">
                                                             <select class="form-select form-select-sm text-center @(puedeEditarVerificacion ? "border-warning" : "") @(conocimiento == null || conocimiento.ValorFuncionalVerif == null || conocimiento.ValorFuncionalVerif == -1 ? "border-danger bg-warning-subtle" : "")"
-                                                                    value="@(conocimiento?.ValorFuncionalVerif ?? -1)"
+                                                                    value="@(conocimiento?.ValorFuncionalVerif == null || conocimiento.ValorFuncionalVerif == -1 ? conocimiento?.ValorFuncional : conocimiento.ValorFuncionalVerif)"
                                                                     @onchange="@(e => ActualizarValorFuncionalVerif(subtema.IdSubtema, e))"
                                                                     disabled="@(!puedeEditarVerificacion)">
                                                                 <option value="-1">N/A (Pendiente)</option>
@@ -287,10 +285,10 @@
                                                             </select>
                                                         </td>
 
-                                                        <!-- Valor Técnico Verificado - Solo supervisor y si la evaluación tiene valores iniciados -->
+                                                        <!-- Valor Técnico Verificado -->
                                                         <td class="text-center @GetClaseColorVerificacion(conocimiento?.ValorTecnicoVerif, conocimiento?.ValorTecnico)">
                                                             <select class="form-select form-select-sm text-center @(puedeEditarVerificacion ? "border-warning" : "") @(conocimiento == null || conocimiento.ValorTecnicoVerif == null || conocimiento.ValorTecnicoVerif == -1 ? "border-danger bg-warning-subtle" : "")"
-                                                                    value="@(conocimiento?.ValorTecnicoVerif ?? -1)"
+                                                                    value="@(conocimiento?.ValorTecnicoVerif == null || conocimiento.ValorTecnicoVerif == -1 ? conocimiento?.ValorTecnico : conocimiento.ValorTecnicoVerif)"
                                                                     @onchange="@(e => ActualizarValorTecnicoVerif(subtema.IdSubtema, e))"
                                                                     disabled="@(!puedeEditarVerificacion)">
                                                                 <option value="-1">N/A (Pendiente)</option>
@@ -363,7 +361,9 @@
                                                 <strong>Tema: @tema.Nombre</strong>
                                                 <small class="text-muted d-block">
                                                     @tema.Subtemas.Count subtemas •
-                                                    @tema.Subtemas.Count(s => conocimientos.Any(c => c.IdSubtema == s.IdSubtema && (c.ValorFuncional > 0 || c.ValorTecnico > 0))) evaluados
+                                                    @tema.Subtemas.Count(s => conocimientos.Any(c => c.IdSubtema == s.IdSubtema && (c.ValorFuncional > 0 || c.ValorTecnico > 0))) evaluados •
+                                                    @(conocimientos.Where(c => tema.Subtemas.Any(s => s.IdSubtema == c.IdSubtema && c.ValorFuncional >= 0)).Sum(c => c.ValorFuncional)) puntos funcionales •
+                                                    @(conocimientos.Where(c => tema.Subtemas.Any(s => s.IdSubtema == c.IdSubtema && c.ValorTecnico >= 0)).Sum(c => c.ValorTecnico)) puntos técnicos
                                                 </small>
                                             </div>
                                             <div class="btn-group" role="group">
@@ -457,7 +457,9 @@
                                 <h6 class="mb-1">Acciones Globales de Evaluación</h6>
                                 <small class="text-muted">
                                     Progreso actual: @progresoTotal.ToString("F1")% completado •
-                                    @temasBinarizados.Count temas • @totalSubtemas subtemas totales
+                                    @temasBinarizados.Count temas • @totalSubtemas subtemas totales •
+                                    @(conocimientos.Where(c => temasBinarizados.SelectMany(t => t.Subtemas).Any(s => s.IdSubtema == c.IdSubtema) && c.ValorFuncional > 0).Sum(c => c.ValorFuncional)) puntos funcionales •
+                                    @(conocimientos.Where(c => temasBinarizados.SelectMany(t => t.Subtemas).Any(s => s.IdSubtema == c.IdSubtema) && c.ValorTecnico > 0).Sum(c => c.ValorTecnico)) puntos técnicos
                                     @if (esRecursoDueño)
                                     {
                                         <br />
@@ -527,6 +529,7 @@
                                         Verificar Todo el Progreso
                                     </Button>
                                 }
+
                             </div>
                         </div>
                     </div>
@@ -775,11 +778,12 @@
 
             if (evaluacionActualizada != null)
             {
-                // 3. Cambiar estado a Finalizada (1)
+                evaluacion = evaluacionActualizada;
+
                 var estadoActualizado = await EvaluacionClient.CambiarEstadoAsync(IdEvaluacion, 1);
                 if (estadoActualizado != null)
                     evaluacion.Estado = estadoActualizado.Estado;
-                evaluacion = evaluacionActualizada;
+
                 await OcultarModalFinalizarEvaluacion();
                 MostrarToast($"Evaluación finalizada correctamente. Se guardaron {conocimientosPendientes.Count} registros pendientes.", "success");
                 StateHasChanged();
@@ -1134,6 +1138,17 @@
         try
         {
             var conocimiento = conocimientos.First(c => c.IdSubtema == idSubtema);
+
+            // Si es supervisor y los valores verificados aún están pendientes/sin cambiar, adoptar el valor evaluado
+            if (esSupervisor)
+            {
+                if (!conocimiento.ValorFuncionalVerif.HasValue || conocimiento.ValorFuncionalVerif < 0)
+                    conocimiento.ValorFuncionalVerif = conocimiento.ValorFuncional;
+
+                if (!conocimiento.ValorTecnicoVerif.HasValue || conocimiento.ValorTecnicoVerif < 0)
+                    conocimiento.ValorTecnicoVerif = conocimiento.ValorTecnico;
+            }
+
             var conocimientoGuardado = await ConocimientoClient.CrearOActualizarAsync(conocimiento);
 
             var index = conocimientos.FindIndex(c => c.IdSubtema == idSubtema);
@@ -1205,16 +1220,26 @@
             .Where(c => subtemasDelTema.Contains(c.IdSubtema))
             .ToList();
 
-        // Solo guardar los que tienen valores verificados completos
-        var conocimientosVerificados = conocimientosDelTema
-            .Where(c => c.ValorFuncionalVerif.HasValue && c.ValorTecnicoVerif.HasValue)
-            .ToList();
-
-        if (!conocimientosVerificados.Any())
+        if (!conocimientosDelTema.Any())
         {
-            MostrarToast($"No hay valores verificados para guardar en el tema '{tema.Nombre}'.", "warning");
+            MostrarToast($"No hay conocimientos cargados para verificar en el tema '{tema.Nombre}'.", "warning");
             return;
         }
+
+        // Normalizar los valores verificados: Si siguen en -1 o null, adoptar los valores autoevaluados (ValorFuncional / ValorTecnico)
+        var conocimientosVerificados = conocimientosDelTema.Select(c =>
+        {
+            // Actualizamos en memoria el objeto actual
+            c.ValorFuncionalVerif = (!c.ValorFuncionalVerif.HasValue || c.ValorFuncionalVerif < 0)
+                ? (c.ValorFuncional < 0 ? 0 : c.ValorFuncional)
+                : c.ValorFuncionalVerif;
+
+            c.ValorTecnicoVerif = (!c.ValorTecnicoVerif.HasValue || c.ValorTecnicoVerif < 0)
+                ? (c.ValorTecnico < 0 ? 0 : c.ValorTecnico)
+                : c.ValorTecnicoVerif;
+
+            return c;
+        }).ToList();
 
         verificandoTema = true;
         try
@@ -1414,6 +1439,35 @@
         }
         return true;
     }
+
+    // 0=Iniciada | 1=Finalizada | 2=Verificada | 3=Vencida
+    private string ObtenerNombreEstado(short estado) => estado switch
+    {
+        0 => "Iniciada",
+        1 => "Finalizada",
+        2 => "Verificada",
+        3 => "Expirada",
+        _ => "Desconocido"
+    };
+
+    private string ObtenerClaseEstado(short estado) => estado switch
+    {
+        0 => "bg-primary",
+        1 => "bg-danger",
+        2 => "bg-success",
+        3 => "bg-secondary",
+        _ => "bg-dark"
+    };
+
+    private IconName ObtenerIconoEstado(short estado) => estado switch
+    {
+        0 => IconName.PlayCircleFill,
+        1 => IconName.StopCircleFill,
+        2 => IconName.ShieldCheck,
+        3 => IconName.ClockHistory,
+        _ => IconName.QuestionCircle
+    };
+    //Leyenda
     private const string LeyendaValores =
     "0: No conoce nada del tema.\n" +
     "1: Tiene un conocimiento básico, puede no haber trabajado nunca en el tema pero lo conoce básicamente.\n" +
