@@ -109,6 +109,9 @@ builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IRecursoSupervisorRepository, RecursoSupervisorRepository>();
 builder.Services.AddScoped<IRecursoSupervisorService, RecursoSupervisorService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IMapaCalorRepository, MapaCalorRepository>();
+builder.Services.AddScoped<IMapaCalorService, MapaCalorService>();
+builder.Services.AddScoped<MapaCalorExcelService>();
 
 /* builder.WebHost.
  * UseIIS();*/

@@ -444,7 +444,12 @@
             </div>
         </div>
     }
-
+    @if (!string.IsNullOrEmpty(mensajeError))
+    {
+        <div class="alert alert-danger">
+            @mensajeError
+        </div>
+    }
     <!-- Botones de acción globales -->
     @if (temasBinarizados.Any() && (esRecursoDueño || esSupervisor))
     {
@@ -625,6 +630,8 @@
     private bool mostrarToast = false;
     private string mensajeToast = string.Empty;
     private string tipoToast = "success";
+
+    private string mensajeError = string.Empty ;
 
     // Control de tabs
     private int temaActivo = 0;
@@ -930,7 +937,7 @@
             conocimientos = await ConocimientoClient.GetConocimientosPorEvaluacionYRecursoAsync(IdEvaluacion, IdRecurso);
             Console.WriteLine($"Conocimientos cargados desde BD: {conocimientos.Count}");
 
-   
+
             foreach (var st in grillaSubtemas)
             {
                 var c = conocimientos.FirstOrDefault(x => x.IdSubtema == st.IdSubtema);
@@ -1305,6 +1312,7 @@
     }
     private async Task VerificarTodoElProgreso()
     {
+        mensajeError = string.Empty;
         if (!esSupervisor)
         {
             MostrarToast("Solo los supervisores pueden verificar el progreso", "warning");
@@ -1320,6 +1328,22 @@
                 return;
         }
 
+        var conocimientoInvalido = conocimientos.FirstOrDefault(c =>
+            c.ValorFuncional < 0 ||
+            c.ValorTecnico < 0 ||
+            c.ValorFuncionalVerif is null or < 0 ||
+            c.ValorTecnicoVerif is null or < 0
+        );
+
+
+        if (conocimientoInvalido != null)
+        {
+            mensajeError =
+                $"No se puede guardar todo el progreso. Hay subtemas que no fueron verificados.";
+
+            return;
+        }
+        
         // Clonamos la lista normalizando los valores -1 a 0 para persistir en BD
         var conocimientosVerificados = conocimientos.Select(c => new ConocimientoRecursoDTO
         {

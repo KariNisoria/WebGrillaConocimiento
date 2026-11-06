@@ -13,8 +13,8 @@ namespace WebGrilla.Repository
         Task<Dictionary<int, decimal>> GetCompletitudSubtemasPorGrillaAsync(int idGrilla);
         Task<List<ConocimientoRecurso>> GetByEvaluacionAndRecursoAsync(int idEvaluacion, int idRecurso);
         Task<int> GetConocimientosEvaluadosCountAsync(int idEvaluacion, int idRecurso);
+        Task<decimal?> ObtenerPonderacionSubtemaAsync(int idGrilla, int idSubtema);
     }
-
     public class ConocimientoRecursoRepository : IConocimientoRecursoRepository
     {
         private readonly AppDbContext _context;
@@ -23,7 +23,18 @@ namespace WebGrilla.Repository
         {
             _context = context;
         }
-
+        public async Task<decimal?> ObtenerPonderacionSubtemaAsync( int idGrilla, int idSubtema)
+        {
+            return await (
+                from gs in _context.GrillaSubtemas
+                join gt in _context.GrillaTemas
+                    on gs.IdGrillaTema equals gt.IdGrillaTema
+                where gt.IdGrilla == idGrilla
+                    && gs.IdSubtema == idSubtema
+                select (decimal?)gs.Ponderacion
+            )
+            .SingleOrDefaultAsync();
+        }
         public async Task<IEnumerable<ConocimientoRecurso>> GetAllAsync()
         {
             return await _context.ConocimientoRecurso
