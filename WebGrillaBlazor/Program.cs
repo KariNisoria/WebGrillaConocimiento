@@ -17,8 +17,7 @@ builder.Services.AddScoped(sp =>
 {
     var httpClient = new HttpClient
     {
-        BaseAddress = new Uri("https://localhost:7093/"),
-        Timeout = TimeSpan.FromMinutes(5)
+        BaseAddress = new Uri(apiBaseUrl)
     };
 
     // Agregar headers necesarios
@@ -37,7 +36,6 @@ builder.Services.AddScoped(typeof(ApiClientGeneric<>));
 builder.Services.AddScoped<ApiClientAuthentication>();
 builder.Services.AddScoped<AuthStateService>();
 builder.Services.AddScoped<ApiClientRecursoSupervisor>();
-builder.Services.AddScoped<MapaCalorApiService>();
 
 
 builder.Services.AddBlazorBootstrap();
