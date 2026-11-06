@@ -854,6 +854,7 @@ C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release
 C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\refint\WebGrillaBlazor.dll
 C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\WebGrillaBlazor.pdb
 C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\ref\WebGrillaBlazor.dll
-C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\compressed\tavjk12k2h-p890kx6sje.gz
-C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\compressed\y2k2hq3qtk-nqqun5d04z.gz
-C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\compressed\dyjae803e8-wt7lhef1cw.gz
+C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\scopedcss\Pages\MapaCalor.razor.rz.scp.css
+C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\compressed\tavjk12k2h-0o9dfs4kx8.gz
+C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\compressed\y2k2hq3qtk-ir0m40c04l.gz
+C:\Users\knisoria\Source\Repos\WebGrillaConocimiento\WebGrillaBlazor\obj\Release\net7.0\compressed\dyjae803e8-1jg61dqeq2.gz
