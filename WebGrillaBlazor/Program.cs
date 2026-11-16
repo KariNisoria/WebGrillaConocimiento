@@ -36,6 +36,7 @@ builder.Services.AddScoped(typeof(ApiClientGeneric<>));
 builder.Services.AddScoped<ApiClientAuthentication>();
 builder.Services.AddScoped<AuthStateService>();
 builder.Services.AddScoped<ApiClientRecursoSupervisor>();
+builder.Services.AddScoped<MapaCalorApiService>();
 
 
 builder.Services.AddBlazorBootstrap();
