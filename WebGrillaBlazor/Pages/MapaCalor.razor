@@ -64,6 +64,28 @@
             </select>
         </div>
 
+        <!-- EQUIPO -->
+        <div class="filtro-campo">
+            <label>Equipo</label>
+
+            <select class="form-select"
+                    @bind="_idEquipoSeleccionado"
+                    disabled="@_cargando">
+
+                <option value="0">
+                    Todos los equipos
+                </option>
+
+                @foreach (var equipo in _equipos.OrderBy(e => e.Nombre))
+                {
+                    <option value="@equipo.IdEquipoDesarrollo">
+                        @equipo.Nombre
+                    </option>
+                }
+
+            </select>
+        </div>
+
         <!-- TEMA -->
         <div class="filtro-campo">
             <label>Tema</label>
@@ -236,6 +258,9 @@ else
     private bool _mapaMaximizado = false;
     private bool _dialogAbierto = false;
 
+    private int _idEquipoSeleccionado = 0;
+    private List<EquipoDesarrolloDTO> _equipos = new();
+
     private void AbrirMapa()
     {
         _mapaMaximizado = true;
@@ -363,6 +388,8 @@ else
             _grillas = await MapaCalorApiService.GetGrillasAsync();
 
             _roles = await MapaCalorApiService.GetRolesAsync();
+
+            _equipos = await MapaCalorApiService.GetEquiposAsync();
         }
         catch (Exception ex)
         {
@@ -566,8 +593,8 @@ else
 
     private IEnumerable<MapaCalorRecursoDTO> RecursosFiltrados =>
     _mapa?.Recursos.Where(r =>
-        _idRolSeleccionado == 0 ||
-        r.IdRol == _idRolSeleccionado
+        (_idRolSeleccionado == 0 || r.IdRol == _idRolSeleccionado) && 
+        (_idEquipoSeleccionado == 0 || r.IdEquipoDesarrollo == _idEquipoSeleccionado)
     ) ?? Enumerable.Empty<MapaCalorRecursoDTO>();
 
     private IEnumerable<MapaCalorTemaDTO> TemasFiltrados =>

@@ -9,5 +9,7 @@
         public string NombreRecurso { get; set; } = string.Empty;
 
         public int? IdRol { get; set; }
+
+        public int? IdEquipoDesarrollo { get; set; }
     }
 }

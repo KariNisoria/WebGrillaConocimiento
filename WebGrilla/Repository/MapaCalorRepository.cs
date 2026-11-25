@@ -65,7 +65,8 @@ namespace WebGrilla.Repository
                     IdRecurso = r.IdRecurso,
                     IdEvaluacion = e.IdEvaluacion,
                     NombreRecurso = r.Nombre + " " + r.Apellido,
-                    IdRol = r.IdRol
+                    IdRol = r.IdRol,
+                    IdEquipoDesarrollo = r.IdEquipoDesarrollo
                 }
             )
             .AsNoTracking()
