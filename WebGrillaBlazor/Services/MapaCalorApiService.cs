@@ -51,6 +51,14 @@ namespace WebGrillaBlazor.Services
             return roles ?? new List<RolDTO>();
         }
 
+        public async Task<List<EquipoDesarrolloDTO>> GetEquiposAsync()
+        {
+            var equipos = await _httpClient
+                .GetFromJsonAsync<List<EquipoDesarrolloDTO>>("api/EquipoDesarrollo");
+
+            return equipos ?? new List<EquipoDesarrolloDTO>();
+        }
+
         public string ObtenerUrlExcel(int idGrilla, int idRol)
         {
             string ruta = $"api/MapaCalor/{idGrilla}/excel";

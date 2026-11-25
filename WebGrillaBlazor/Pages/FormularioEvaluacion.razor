@@ -1291,32 +1291,121 @@
             guardandoTema = false;
         }
     }
-    private Task VerificarTema(int idGrillaTema)
+    private async Task VerificarTema(int idGrillaTema)
     {
         if (!esSupervisor)
         {
             MostrarToast("Solo los supervisores pueden verificar valores", "warning");
-            return Task.CompletedTask;
+            return;
         }
 
-        var tema = temasBinarizados.FirstOrDefault(t => t.IdGrillaTema == idGrillaTema);
-        if (tema == null) return Task.CompletedTask;
+        var tema = temasBinarizados.FirstOrDefault(t =>
+            t.IdGrillaTema == idGrillaTema);
+
+        if (tema == null) return;
+
         if (!tema.Subtemas.Any())
         {
             MostrarToast($"El tema '{tema.Nombre}' no tiene subtemas para verificar.", "warning");
-            return Task.CompletedTask;
+            return;
         }
 
-        // No completar ni guardar notas en bloque: cada subtema debe haberse guardado individualmente.
-        var pendiente = tema.Subtemas.FirstOrDefault(s => !SubtemaVerificadoGuardado(s.IdSubtema));
-        if (pendiente != null)
+        var conocimientosVerificados = new List<ConocimientoRecursoDTO>();
+
+        foreach (var subtema in tema.Subtemas)
         {
-            MostrarToast($"No se puede verificar el tema '{tema.Nombre}'. Falta confirmar el subtema '{pendiente.Nombre}' usando su botón Guardar.", "warning");
-            return Task.CompletedTask;
+            var conocimiento = conocimientos.FirstOrDefault(c =>
+                c.IdSubtema == subtema.IdSubtema);
+
+            if (conocimiento == null ||
+                conocimiento.IdConocimientoRecurso <= 0 ||
+                conocimiento.ValorFuncional is not (>= 0 and <= 5) ||
+                conocimiento.ValorTecnico is not (>= 0 and <= 5))
+            {
+                MostrarToast(
+                    $"El subtema '{subtema.Nombre}' no tiene una autoevaluación válida guardada.",
+                    "warning");
+
+                return;
+            }
+
+            // Obtener los valores seleccionados o precargados visualmente.
+            int funcional = ObtenerValorFuncionalVerifMostrado(conocimiento);
+            int tecnico = ObtenerValorTecnicoVerifMostrado(conocimiento);
+
+            if (funcional is < 0 or > 5 || tecnico is < 0 or > 5)
+            {
+                MostrarToast(
+                    $"El subtema '{subtema.Nombre}' tiene valores verificados inválidos.",
+                    "warning");
+
+                return;
+            }
+
+            conocimientosVerificados.Add(new ConocimientoRecursoDTO
+            {
+                IdConocimientoRecurso = conocimiento.IdConocimientoRecurso,
+                IdSubtema = conocimiento.IdSubtema,
+                IdRecurso = conocimiento.IdRecurso,
+                IdEvaluacion = conocimiento.IdEvaluacion,
+                IdGrilla = conocimiento.IdGrilla,
+                ValorFuncional = conocimiento.ValorFuncional,
+                ValorTecnico = conocimiento.ValorTecnico,
+                ValorFuncionalVerif = funcional,
+                ValorTecnicoVerif = tecnico
+            });
         }
 
-        MostrarToast($"Todos los subtemas del tema '{tema.Nombre}' ya están verificados y guardados.", "success");
-        return Task.CompletedTask;
+        verificandoTema = true;
+
+        try
+        {
+            var guardados = await ConocimientoClient
+                .GuardarMultiplesAsync(conocimientosVerificados);
+
+            foreach (var guardado in guardados)
+            {
+                var index = conocimientos.FindIndex(c =>
+                    c.IdSubtema == guardado.IdSubtema);
+
+                if (index >= 0)
+                    conocimientos[index] = guardado;
+
+                if (guardado.IdConocimientoRecurso > 0 &&
+                    ConocimientoVerificadoValido(guardado))
+                {
+                    _funcionalVerifSeleccionado.Remove(guardado.IdSubtema);
+                    _tecnicoVerifSeleccionado.Remove(guardado.IdSubtema);
+                    _subtemasVerificadosGuardados.Add(guardado.IdSubtema);
+                }
+            }
+
+            if (conocimientosVerificados.Any(c =>
+                !guardados.Any(g =>
+                    g.IdSubtema == c.IdSubtema &&
+                    g.IdConocimientoRecurso > 0 &&
+                    ConocimientoVerificadoValido(g))))
+            {
+                MostrarToast(
+                    $"No se confirmó el guardado de todos los subtemas del tema '{tema.Nombre}'.",
+                    "warning");
+                return;
+            }
+
+            MostrarToast(
+                $"Valores verificados del tema '{tema.Nombre}' guardados correctamente.",
+                "success");
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            MostrarToast("Error al verificar el tema: " + ex.Message, "error");
+        }
+        finally
+        {
+            verificandoTema = false;
+        }
     }
 
     private async Task GuardarTodoElProgreso()

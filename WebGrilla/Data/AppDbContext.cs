@@ -225,6 +225,8 @@ namespace WebGrilla.Data
                 entity.Property("ValorTecnico").IsRequired();
                 entity.Property("ValorFuncionalVerif").IsRequired(false);
                 entity.Property("ValorTecnicoVerif").IsRequired(false);
+                entity.Property("ResultadoFuncionalPonderado").IsRequired(false).HasPrecision(18,8);
+                entity.Property("ResultadoTecnicoPonderado").IsRequired(false).HasPrecision(18, 8);
             });
 
             modelBuilder.Entity<ConocimientoRecurso>()
